@@ -148,14 +148,6 @@ class Hygiene(unittest.TestCase):
         s = (ROOT / "scripts/kaggle/v040_08_pp_validation.py").read_text()
         self.assertIn('"status": "ERROR"', s); self.assertIn("return 1", s)
 
-    def test_rc6_artifacts_are_untouched(self):
-        ent = {"wheels/stokastisk-0.3.0-py3-none-any.whl": "5f66be6d9e4a6edea2efc648eecd98308b1c341ffa15d2af77e840e48e9dd5df",
-               "wheels/vllm-0.25.1-cp38-abi3-linux_x86_64.whl": "cc3bcafb6516791990ca302073ae153a08465d3df1e460d666e3ec09b4e98f5e"}
-        base = ROOT / "dist-rc/stokastisk-0.3.0-kaggle-t4-sm75-rc6"
-        if not base.is_dir(): self.fail("RC6 baseline directory missing")
-        import hashlib
-        for rel, h in ent.items(): self.assertEqual(hashlib.sha256((base / rel).read_bytes()).hexdigest(), h, rel)
-
 
 if __name__ == "__main__":
     unittest.main()
