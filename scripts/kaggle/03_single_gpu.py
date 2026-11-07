@@ -64,7 +64,7 @@ def _a():
         except md.PackageNotFoundError: info.setdefault("dists", {})[dist] = None
     EXTRA["imports"] = info
     print(info)
-    check(R, "stokastisk 0.3.0 / vllm 0.25.1 versions", stokastisk.__version__ == "0.3.0" and vllm.__version__ == "0.25.1",
+    check(R, "stokastisk == its installed dist version / vllm 0.25.1", stokastisk.__version__ == md.version("stokastisk") and vllm.__version__ == "0.25.1",
           f"{stokastisk.__version__} / {vllm.__version__}")
 
 

@@ -1,6 +1,8 @@
 # Build / reproduce
 Toolchain (verified before any build): CPython 3.13, PyTorch 2.11.0+cu130, **CUDA Toolkit 13.0 only** (local 13.0.48; Kaggle runs 13.0.88), GCC 13.3, `TORCH_CUDA_ARCH_LIST=7.5`. CUDA 12.x toolkits must not be on `PATH`/`CUDA_HOME`.
 * `scripts/build_vllm_sm75.sh` — the original native vLLM build (SM75). `scripts/release/build_t4_tree.py`, `build_t4_wheel.py`, `repack_vllm_wheel.py`, `patch_vllm_wheel_t4.py` — derive the T4-only Python tree/wheel from that build and `patches/0001–0003`.
+* `scripts/make_notebooks_040.py` — generates the unexecuted 0.4.0 notebooks 07–12 into `notebooks/` (`v040_*.py` stage scripts live in `scripts/kaggle`). `scripts/release/assemble_040.py NEW BASE` assembles a 0.4.0 candidate from the RC6 base (vLLM wheel byte-identical, SDK wheel rebuilt, tests run, manifests and ZIP generated and re-verified; RC6 is never modified).
+* `native/host_staged_xfer.cpp` — optional experimental transport; `nvcc -O2 -std=c++17 -shared -Xcompiler -fPIC -gencode arch=compute_75,code=sm_75 host_staged_xfer.cpp -o libstokastisk_xfer.so -lcudart` (no device code; links `libcudart.so.13`). It is not packaged in the wheel.
 * `scripts/fetch_release.py` — stdlib CDN downloader (also uploaded to the Hub). `notebooks/` is intentionally empty: end-user notebooks are authored separately and are bundled automatically if present when a release is assembled.
 * `scripts/release/assemble_release.py NEW BASE` — assembles `dist-rc/NEW` from `dist-rc/BASE` (vLLM wheel carried over byte-identical, SDK wheel rebuilt and checked against `sdk/`), runs the CPU tests, writes manifests/SHA256SUMS, builds and re-verifies the ZIP.
 * `scripts/release/make_kaggle_input_zip.py NAME` — reproducible, idempotent Kaggle/Hub ZIP + `.sha256`.

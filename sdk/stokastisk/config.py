@@ -5,11 +5,14 @@ import os
 from dataclasses import dataclass, field, asdict
 from typing import Any
 
-from .errors import ConfigurationError
+from .errors import ConfigurationError, UnsupportedParallelismError
 from .limits import LIMITS, cpu_thread_env
 
 ALLOWED_ATTENTION_BACKENDS = ("TRITON_ATTN",)
 FORBIDDEN_ATTENTION_MARKERS = ("FLASH", "FA2", "FA3", "FA4")
+EXECUTION_STRATEGIES = ("single_gpu", "tensor_parallel", "pipeline_parallel", "replica_parallel", "auto")
+EXPERIMENTAL_STRATEGIES = ("pipeline_parallel", "replica_parallel")   # not Kaggle-verified until notebooks 08/09 pass
+MAX_GPUS = LIMITS.gpu_count
 _BOOL = {"1": True, "true": True, "yes": True, "on": True, "0": False, "false": False, "no": False, "off": False}
 
 # NCCL settings for 2x T4 without CUDA peer access (Kaggle: PHB topology, no P2P).
@@ -29,6 +32,9 @@ VLLM_ENV_NO_FLASHINFER: dict[str, str] = {
 @dataclass
 class StokastiskConfig:
     tensor_parallel_size: int = 1                # 1 or 2; TP=2 adds NCCL traffic over PCIe/SHM (no P2P)
+    pipeline_parallel_size: int = 1              # 1 or 2 (0.4.0, experimental until Kaggle notebook 08 passes)
+    execution_strategy: str | None = None        # None = inferred from TP (0.3.0 behaviour); "auto" is recommendation-only
+    replica_devices: tuple[int, ...] | None = None   # replica_parallel only: one TP=1 engine per listed GPU index
     dtype: str = "half"                       # T4 has no bf16 tensor cores
     kv_cache_dtype: str = "auto"
     attention_backend: str = "TRITON_ATTN"    # vLLM built-in Triton backend; FlashAttention is never used
@@ -42,6 +48,23 @@ class StokastiskConfig:
     def __post_init__(self) -> None:
         self.validate()
 
+    @property
+    def strategy(self) -> str:
+        """Effective strategy. ``None`` keeps the 0.3.0 meaning: TP=2 -> tensor_parallel, otherwise single_gpu (PP>1 -> pipeline_parallel)."""
+        if self.execution_strategy is not None:
+            return self.execution_strategy
+        if self.pipeline_parallel_size > 1:
+            return "pipeline_parallel"
+        return "tensor_parallel" if self.tensor_parallel_size > 1 else "single_gpu"
+
+    @property
+    def world_size(self) -> int:
+        return self.tensor_parallel_size * self.pipeline_parallel_size
+
+    @property
+    def is_experimental(self) -> bool:
+        return self.strategy in EXPERIMENTAL_STRATEGIES
+
     def validate(self) -> None:
         b = str(self.attention_backend).upper()
         if any(m in b for m in FORBIDDEN_ATTENTION_MARKERS):
@@ -51,6 +74,28 @@ class StokastiskConfig:
         self.attention_backend = b
         if self.tensor_parallel_size not in (1, 2):
             raise ConfigurationError("tensor_parallel_size must be 1 or 2 (two Tesla T4 target)")
+        if self.pipeline_parallel_size not in (1, 2):
+            raise ConfigurationError("pipeline_parallel_size must be 1 or 2 (two Tesla T4 target)")
+        if self.tensor_parallel_size * self.pipeline_parallel_size > MAX_GPUS:
+            raise UnsupportedParallelismError(
+                f"TP={self.tensor_parallel_size} x PP={self.pipeline_parallel_size} needs "
+                f"{self.tensor_parallel_size * self.pipeline_parallel_size} GPUs; the target has {MAX_GPUS}")
+        strat = self.strategy
+        if strat not in EXECUTION_STRATEGIES:
+            raise UnsupportedParallelismError(f"execution_strategy must be one of {EXECUTION_STRATEGIES}, got {self.execution_strategy!r}")
+        tp, pp = self.tensor_parallel_size, self.pipeline_parallel_size
+        want = {"single_gpu": (1, 1), "tensor_parallel": (2, 1), "pipeline_parallel": (1, 2), "replica_parallel": (1, 1)}
+        if strat in want and (tp, pp) != want[strat]:
+            raise UnsupportedParallelismError(f"execution_strategy={strat!r} requires TP={want[strat][0]}, PP={want[strat][1]}; got TP={tp}, PP={pp}")
+        if strat == "auto" and (tp, pp) != (1, 1):
+            raise UnsupportedParallelismError("execution_strategy='auto' cannot be combined with explicit TP/PP sizes")
+        if self.replica_devices is not None:
+            devs = tuple(self.replica_devices)
+            if strat != "replica_parallel":
+                raise UnsupportedParallelismError("replica_devices is only valid with execution_strategy='replica_parallel'")
+            if not devs or len(set(devs)) != len(devs) or any((not isinstance(d, int)) or d < 0 or d >= MAX_GPUS for d in devs):
+                raise UnsupportedParallelismError(f"replica_devices must be distinct GPU indices in [0, {MAX_GPUS - 1}], got {devs!r}")
+            self.replica_devices = devs
         if not 0.1 <= self.gpu_memory_utilization <= 0.98:
             raise ConfigurationError("gpu_memory_utilization must be within [0.1, 0.98]")
         if self.gpu_memory_utilization * LIMITS.gpu_vram_gib > LIMITS.gpu_vram_gib:   # pragma: no cover - guards future edits of the bounds
@@ -65,7 +110,7 @@ class StokastiskConfig:
                 raise ConfigurationError(f"invalid boolean {x!r}")
             return _BOOL[x.lower()]
         cfg = cls()
-        for name, ftype in (("tensor_parallel_size", int), ("gpu_memory_utilization", float),
+        for name, ftype in (("tensor_parallel_size", int), ("pipeline_parallel_size", int), ("execution_strategy", str), ("gpu_memory_utilization", float),
                             ("max_model_len", int), ("dtype", str), ("attention_backend", str),
                             ("enforce_eager", b), ("disable_custom_all_reduce", b)):
             raw = os.environ.get(prefix + name.upper())
@@ -82,7 +127,7 @@ class StokastiskConfig:
         applied = {}
         for k, v in VLLM_ENV_NO_FLASHINFER.items():
             os.environ.setdefault(k, v)
-        for k, v in cpu_thread_env(self.tensor_parallel_size).items():   # 4 Kaggle cores shared by the TP worker processes
+        for k, v in cpu_thread_env(self.world_size).items():   # 4 Kaggle cores shared by the TP worker processes
             os.environ.setdefault(k, v)
         if self.apply_nccl_env:
             for k, v in self.nccl_env.items():
@@ -99,6 +144,8 @@ class StokastiskConfig:
             gpu_memory_utilization=self.gpu_memory_utilization,
             attention_config={"backend": self.attention_backend},
         )
+        if self.pipeline_parallel_size > 1:   # kwarg is omitted at PP=1 so the 0.3.0 engine call stays byte-for-byte identical
+            kw["pipeline_parallel_size"] = self.pipeline_parallel_size
         if self.max_model_len is not None:
             kw["max_model_len"] = self.max_model_len
         return kw

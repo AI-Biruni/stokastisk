@@ -1,5 +1,8 @@
 # Install on Kaggle (2 × T4, Python 3.13)
 
+> **Verified release: RC6** (below). The **0.4.0 development candidate** (`stokastisk-0.4.0-kaggle-t4-sm75-rc1`) installs the same way — the installer reads the SDK version from the bundle's own wheel —
+> but it is not published to the Hub yet: attach its `…-kaggle-input.zip` as a Kaggle dataset (Option B) and run notebooks 07–12. Do not use it for anything you need verified.
+
 **Option A – Hub CDN, no dataset (recommended):** needs *Internet ON*. `scripts/fetch_release.py` (stdlib only, 4 parallel range requests, SHA256-verified) downloads the ~37 MB release:
 ```python
 import urllib.request, runpy

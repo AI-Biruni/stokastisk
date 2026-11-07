@@ -1,4 +1,4 @@
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 VLLM_BASE_VERSION = "0.25.1"
 CUDA_BUILD_TARGET = "13.0"
 GPU_COMPUTE_CAPABILITY = (7, 5)

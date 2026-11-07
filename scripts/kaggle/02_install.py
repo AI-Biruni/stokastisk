@@ -214,7 +214,8 @@ def main(argv=None):
     import stokastisk
     pr = stokastisk.prohibited_report(); rep["prohibited"] = pr
     check(R, "no FlashAttention/FlashInfer distributions, modules or binaries installed", pr["clean"], pr)
-    check(R, "versions", stokastisk.__version__ == "0.3.0", stokastisk.__version__)
+    want_v = os.path.basename(sw).split("-")[1] if sw else None   # version comes from the bundle's own wheel
+    check(R, "versions", stokastisk.__version__ == want_v, f"{stokastisk.__version__} (bundle wheel: {want_v})")
     rep["seconds"] = time.time() - t0; rep["downloaded_bytes"] = dl_bytes
     finish("02_install", R, rep)
 

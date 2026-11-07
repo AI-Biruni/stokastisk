@@ -8,7 +8,7 @@ from stokastisk import StokastiskConfig, errors
 
 class SDKTests(unittest.TestCase):
     def test_identity(self):
-        self.assertEqual(stokastisk.__version__, "0.3.0")
+        self.assertEqual(stokastisk.__version__, "0.4.0")
         self.assertEqual(stokastisk.VLLM_BASE_VERSION, "0.25.1")
         self.assertEqual(stokastisk.CUDA_BUILD_TARGET, "13.0")
         self.assertEqual(stokastisk.GPU_COMPUTE_CAPABILITY, (7, 5))
@@ -44,7 +44,7 @@ class SDKTests(unittest.TestCase):
 
     def test_report_never_raises(self):
         r = stokastisk.report()
-        self.assertEqual(r["sdk_version"], "0.3.0")
+        self.assertEqual(r["sdk_version"], "0.4.0")
         self.assertIn("native_extensions", r)
 
     def test_error_hierarchy(self):

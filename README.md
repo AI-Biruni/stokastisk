@@ -25,6 +25,35 @@ Release **`stokastisk-0.3.0-kaggle-t4-sm75-rc6`** was run end to end by the proj
 environment audit, installation, single-GPU validation, dual-GPU NCCL, real vLLM inference at TP=1 and TP=2, and a TP benchmark.
 Measured numbers are in [RELEASE.md](RELEASE.md). Two honest caveats are listed under [Known limitations](#known-limitations).
 
+## 0.4.0 development candidate — topology-aware dual-T4 orchestration (branch `feature/stokastisk-040-topology-aware`)
+
+**Not Kaggle-verified.** Everything below is implemented and CPU-tested locally (mocked GPUs; the dev machine has one GeForce 940M, SM50). It becomes "verified" only after
+notebooks 07–12 run on Kaggle. The verified baseline above is untouched: the vLLM wheel and native CUDA binaries are byte-identical to RC6.
+
+| Feature | API | Status |
+|---|---|---|
+| GPU topology (UUIDs, PCIe, P2P per direction, link class, NVLink, NCCL) | `stokastisk.discover_topology()` | CPU-tested |
+| Execution strategies, validated | `StokastiskConfig(execution_strategy=..., pipeline_parallel_size=...)` | CPU-tested |
+| Rule-based parallelism recommendation (never applied automatically) | `stokastisk.recommend_parallelism(model, topology, workload)` | CPU-tested |
+| Independent dual-GPU replicas + token-aware scheduler | `stokastisk.parallel.ReplicaPool(model, devices=[0, 1])` | CPU-tested (fake workers); **experimental** |
+| Pipeline parallelism PP=2 | `StokastiskConfig(pipeline_parallel_size=2, ...)` | source-verified in vLLM 0.25.1; **experimental, unproven on the Flash-free wheel** |
+| Telemetry (GPU, communication, worker metrics, Nsight probe, optional OTel) | `stokastisk.telemetry` | CPU-tested |
+| Host-staged CUDA transport (pinned memory, streams, events; Python + C++) vs NCCL | `stokastisk.communication`, `native/` | **experimental**, never run on two GPUs yet |
+| Reproducible benchmarks (TP/PP/replicas, imbalance %, communication sweep) | `stokastisk.benchmarks`, `scripts/kaggle/v040_*.py` | CPU-tested maths; not yet run on Kaggle |
+
+```python
+import stokastisk
+topology = stokastisk.discover_topology()
+rec = stokastisk.recommend_parallelism("Qwen/Qwen2.5-1.5B-Instruct", topology, workload="throughput")
+print(rec.strategy, rec.reason, rec.warnings)       # e.g. replica_parallel (experimental) on 2x T4 / PHB / no P2P
+
+if __name__ == "__main__":                           # required: vLLM and the replica workers use spawn
+    from stokastisk.parallel import ReplicaPool
+    with ReplicaPool("Qwen/Qwen2.5-0.5B-Instruct", devices=[0, 1]) as pool:
+        print(pool.generate(["Explain CUDA streams.", "Explain Tensor Core architecture."]))
+```
+No software here replaces NVLink: the T4 pair has none, and pinned memory / NCCL SHM / host staging are different techniques with different costs. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the diagrams and the exact verification status of each piece.
+
 ## Why this exists
 
 Kaggle's T4s are SM75 (Turing). Upstream vLLM wheels ship FlashAttention 2/3/4 and FlashInfer kernels that target newer GPUs, and they
@@ -110,7 +139,8 @@ and verifies the after-state equals the before-state plus those eight packages.
 
 | Path | Contents |
 |---|---|
-| `sdk/stokastisk/` | the SDK (pure Python) |
+| `sdk/stokastisk/` | the SDK (pure Python): core, `topology/`, `parallel/`, `telemetry/`, `cuda/`, `communication/`, `benchmarks/` |
+| `native/` | optional C++ (CUDA Runtime API) host-staged transport, built on demand with nvcc |
 | `scripts/kaggle/` | installer and the six acceptance stages (`01_env_audit` … `07_summary`) |
 | `scripts/fetch_release.py` | stdlib CDN downloader |
 | `scripts/release/`, `scripts/build_vllm_sm75.sh`, `scripts/audit/` | build, repack, patch and audit tooling |
@@ -118,7 +148,7 @@ and verifies the after-state equals the before-state plus those eight packages.
 | `requirements/` | exact pins, constraints, prohibited list |
 | `tests/` | CPU-only unit tests (they do not prove GPU behaviour — Kaggle runs do) |
 | `docs/` | [ARCHITECTURE](docs/ARCHITECTURE.md), [DEPENDENCIES](docs/DEPENDENCIES.md) |
-| `notebooks/` | intentionally empty — end-user notebooks are authored separately |
+| `notebooks/` | 0.4.0 acceptance notebooks 07–12 (unexecuted); the verified RC6 notebooks 01–06 are history |
 
 ## Known limitations
 

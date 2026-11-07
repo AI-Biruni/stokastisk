@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 import logging
+import os
 from typing import Any
 
 from .config import StokastiskConfig
-from .errors import AttentionBackendError, EngineError
+from .errors import AttentionBackendError, ConfigurationError, EngineError
 
 log = logging.getLogger("stokastisk")
 
@@ -18,6 +19,14 @@ class LLM:
 
     def __init__(self, model: str, *, config: StokastiskConfig | None = None, **kwargs: Any) -> None:
         self.config = config or StokastiskConfig.from_env()
+        strat = self.config.strategy
+        if strat == "auto":
+            raise ConfigurationError("execution_strategy='auto' is recommendation-only: call stokastisk.recommend_parallelism(...) "
+                                     "and pass its to_config() (or an explicit strategy) to LLM")
+        if strat == "replica_parallel" and not os.environ.get("STOKASTISK_REPLICA_WORKER"):
+            raise ConfigurationError("replica_parallel runs one engine per GPU: use stokastisk.parallel.ReplicaPool(model, devices=[0, 1])")
+        if self.config.is_experimental and strat == "pipeline_parallel":
+            log.warning("pipeline_parallel is EXPERIMENTAL: not Kaggle-verified until notebook 08 passes; TP=2/PP=2 throughput is unproven")
         self.config.apply_environment()
         merged = {**self.config.engine_kwargs(), **kwargs}
         try:
@@ -26,7 +35,7 @@ class LLM:
         except Exception as e:  # noqa: BLE001
             raise EngineError(f"vLLM engine initialisation failed: {e}") from e
         self.verify_attention_backend()
-        log.info("engine ready: model=%s tp=%s", model, merged.get("tensor_parallel_size"))
+        log.info("engine ready: model=%s tp=%s pp=%s", model, merged.get("tensor_parallel_size"), merged.get("pipeline_parallel_size", 1))
 
     def selected_attention_backend(self) -> str | None:
         """Backend recorded in the live engine's VllmConfig (config-level evidence, not kernel-level)."""

@@ -25,5 +25,19 @@ Models other than Qwen2.5-0.5B/1.5B-Instruct were not tested.
 * **Flash-free:** no FlashAttention/FlashInfer/FlashMLA native code or distribution. The vLLM wheel keeps upstream Python adapter modules named `flash*`; they are inert. `patches/0003` guards the two default-path FlashInfer imports (sampler, TP=2 communicator).
 * **Native binaries:** 6 objects, `sm_75` cubins only (no PTX), `libcudart.so.13`, GLIBC ≤ 2.38, no `.so.12`. Built once with CUDA 13.0.48 and carried over unchanged since rc1 (`scripts/audit/native_audit.py`).
 
+## 0.4.0 development candidate: `stokastisk-0.4.0-kaggle-t4-sm75-rc1` — NOT Kaggle-verified
+Branch `feature/stokastisk-040-topology-aware`; nothing is published to GitHub `main` or the Hugging Face repo, and RC6 above remains the only verified release.
+| Item | State |
+|---|---|
+| vLLM wheel + all native CUDA extensions | **byte-identical to RC6** (`cc3bcafb…98f5e`); no native rebuild |
+| SDK wheel | rebuilt as `stokastisk-0.4.0` (pure Python); checked file-by-file against `sdk/` |
+| New code (topology, strategies, replicas, scheduler, recommender, telemetry, CUDA helpers, experimental transport, benchmarks) | CPU-tested with mocks and fake workers; the 142 existing+new tests pass, none skipped |
+| Local GPU runs | none that count: the dev machine has one GeForce 940M (SM50, not a T4; CUDA 13 runtime). It only exercised topology discovery |
+| Kaggle (2 × T4) | **NOT_RUN**: notebooks 07–12 are unexecuted |
+| PP=2 | vLLM 0.25.1 source and wheel contain the PP machinery and `Qwen2` is `SupportsPP`; whether it runs on the Flash-free wheel and how fast is unknown until notebook 08 |
+| Replicas | worker lifecycle/isolation/scheduler tested with real spawned fake workers; real vLLM replicas and any speed-up are unknown until notebook 09 |
+| Host-staged transport (Python and C++) | C++ compiles for `sm_75` (links `libcudart.so.13` only); never run on two GPUs; stays experimental unless it beats NCCL (notebook 10) |
+| Known unknowns | no measured gain from PP, replicas or host staging yet; Nsight/NVML counters on Kaggle unknown |
+
 ## History (details in git)
 rc1–rc3: stale SDK wheel fixed; notebook 04 rewritten. rc4: vLLM `spawn` re-import crash (no `__main__` guard). rc5: default-path FlashInfer imports (sampler, TP=2 communicator). rc6: shutdown measurement, Kaggle hard-limit module, HF CDN installer, single project name `stokastisk`; first release to pass 01–06 on Kaggle.

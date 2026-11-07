@@ -16,7 +16,7 @@ SCRIPTS = ["01_env_audit", "02_install", "03_single_gpu", "04_nccl_launch", "04_
            "05_backend_evidence", "06_tp_benchmark", "07_summary", "_common"]
 NOTEBOOKS = sorted(p.stem for p in (BUNDLE / "notebooks").glob("*.ipynb"))   # optional: end-user notebooks are authored separately
 REQUIRED = ["README.md", "BUILD.md", "INSTALL.md", "RELEASE.md", "manifests/SHA256SUMS", "requirements/kaggle-t4-core.txt",
-            "wheels/stokastisk-0.3.0-py3-none-any.whl", "wheels/vllm-0.25.1-cp38-abi3-linux_x86_64.whl",
+            "wheels/vllm-0.25.1-cp38-abi3-linux_x86_64.whl",
             *[f"scripts/kaggle/{s}.py" for s in SCRIPTS]]
 BAD_PARTS = {".git", "__pycache__", ".pytest_cache", ".ipynb_checkpoints", "notebooks-executed-with-output"}
 BAD_NAMES = {"tokens.env", ".env", "id_rsa", "id_ed25519"}
@@ -26,6 +26,7 @@ sha = lambda p: hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()  # noqa
 
 assert BUNDLE.is_dir(), f"bundle not found: {BUNDLE}"
 missing = [r for r in REQUIRED if not (BUNDLE / r).is_file()]
+missing += [] if list((BUNDLE / "wheels").glob("stokastisk-*-py3-none-any.whl")) else ["wheels/stokastisk-*-py3-none-any.whl"]
 assert not missing, f"missing required files: {missing}"
 bad = []
 for line in (BUNDLE / "manifests/SHA256SUMS").read_text().splitlines():

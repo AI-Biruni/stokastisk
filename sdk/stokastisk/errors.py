@@ -23,3 +23,19 @@ class ConfigurationError(StokastiskError, ValueError):
 
 class AttentionBackendError(EngineError):
     """The engine did not end up with the requested Triton attention backend."""
+
+
+class UnsupportedParallelismError(ConfigurationError):
+    """The requested TP/PP/replica combination is not valid for the two-T4 target."""
+
+
+class InsufficientMemoryError(ConfigurationError):
+    """The model (weights + KV cache) does not fit the requested GPU layout."""
+
+
+class TopologyError(EnvironmentValidationError):
+    """GPU topology could not be determined or does not match the requested layout."""
+
+
+class ReplicaError(StokastiskError):
+    """A replica worker failed to start, died, or returned an error."""
