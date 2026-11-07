@@ -31,7 +31,7 @@ Branch `feature/stokastisk-040-topology-aware`; nothing is published to GitHub `
 |---|---|
 | vLLM wheel + all native CUDA extensions | **byte-identical to RC6** (`cc3bcafb…98f5e`); no native rebuild |
 | SDK wheel | rebuilt as `stokastisk-0.4.0` (pure Python); checked file-by-file against `sdk/` |
-| New code (topology, strategies, replicas, scheduler, recommender, telemetry, CUDA helpers, experimental transport, benchmarks) | CPU-tested with mocks and fake workers; the 142 existing+new tests pass, none skipped |
+| New code (topology, strategies, replicas, scheduler, recommender, telemetry, CUDA helpers, experimental transport, benchmarks) | CPU-tested with mocks and fake workers; all CPU tests (existing + new) pass, none skipped — counts in `evidence/test-results.json` |
 | Local GPU runs | none that count: the dev machine has one GeForce 940M (SM50, not a T4; CUDA 13 runtime). It only exercised topology discovery |
 | Kaggle (2 × T4) | **NOT_RUN**: notebooks 07–12 are unexecuted |
 | PP=2 | vLLM 0.25.1 source and wheel contain the PP machinery and `Qwen2` is `SupportsPP`; whether it runs on the Flash-free wheel and how fast is unknown until notebook 08 |
