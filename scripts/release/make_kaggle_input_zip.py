@@ -1,6 +1,6 @@
 #!/usr/bin/env python3.13
 """Build the Kaggle dataset ZIP for a release bundle. Reproducible (fixed timestamps/permissions, sorted entries) and idempotent.
-usage: make_kaggle_input_zip.py BUNDLE_NAME [OUT_DIR]      e.g. stokastisk-0.3.0-kaggle-t4-sm75-rc4
+usage: make_kaggle_input_zip.py BUNDLE_NAME [OUT_DIR]      e.g. stokastisk-0.1.0-kaggle-t4-sm75
  * verifies manifests/SHA256SUMS before zipping, the required script/wheel/notebook inventory, that notebooks are UNEXECUTED,
    and that no credential / executed-notebook / Flash* file is selected;
  * if the output ZIP already exists: identical bytes -> reports 'unchanged' (exit 0); different bytes -> the old ZIP is renamed

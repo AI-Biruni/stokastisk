@@ -32,8 +32,8 @@ VLLM_ENV_NO_FLASHINFER: dict[str, str] = {
 @dataclass
 class StokastiskConfig:
     tensor_parallel_size: int = 1                # 1 or 2; TP=2 adds NCCL traffic over PCIe/SHM (no P2P)
-    pipeline_parallel_size: int = 1              # 1 or 2 (0.4.0, experimental until Kaggle notebook 08 passes)
-    execution_strategy: str | None = None        # None = inferred from TP (0.3.0 behaviour); "auto" is recommendation-only
+    pipeline_parallel_size: int = 1              # 1 or 2 (experimental until Kaggle notebook 08 passes)
+    execution_strategy: str | None = None        # None = inferred from TP (baseline behaviour); "auto" is recommendation-only
     replica_devices: tuple[int, ...] | None = None   # replica_parallel only: one TP=1 engine per listed GPU index
     dtype: str = "half"                       # T4 has no bf16 tensor cores
     kv_cache_dtype: str = "auto"
@@ -50,7 +50,7 @@ class StokastiskConfig:
 
     @property
     def strategy(self) -> str:
-        """Effective strategy. ``None`` keeps the 0.3.0 meaning: TP=2 -> tensor_parallel, otherwise single_gpu (PP>1 -> pipeline_parallel)."""
+        """Effective strategy. ``None`` keeps the baseline meaning: TP=2 -> tensor_parallel, otherwise single_gpu (PP>1 -> pipeline_parallel)."""
         if self.execution_strategy is not None:
             return self.execution_strategy
         if self.pipeline_parallel_size > 1:
@@ -144,7 +144,7 @@ class StokastiskConfig:
             gpu_memory_utilization=self.gpu_memory_utilization,
             attention_config={"backend": self.attention_backend},
         )
-        if self.pipeline_parallel_size > 1:   # kwarg is omitted at PP=1 so the 0.3.0 engine call stays byte-for-byte identical
+        if self.pipeline_parallel_size > 1:   # kwarg is omitted at PP=1 so the baseline engine call stays byte-for-byte identical
             kw["pipeline_parallel_size"] = self.pipeline_parallel_size
         if self.max_model_len is not None:
             kw["max_model_len"] = self.max_model_len

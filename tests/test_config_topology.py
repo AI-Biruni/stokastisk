@@ -1,5 +1,5 @@
 #!/usr/bin/env python3.13
-"""0.4.0 CPU-only tests: config strategies, backward compatibility, topology parsing/serialisation, graceful degradation."""
+"""CPU-only tests: config strategies, backward compatibility, topology parsing/serialisation, graceful degradation."""
 import json, pathlib, sys, tempfile, unittest
 from unittest import mock
 
@@ -18,7 +18,7 @@ class Config040(unittest.TestCase):
     def test_030_api_unchanged(self):
         c = StokastiskConfig(tensor_parallel_size=1)
         self.assertEqual((c.dtype, c.attention_backend, c.pipeline_parallel_size, c.strategy, c.world_size), ("half", "TRITON_ATTN", 1, "single_gpu", 1))
-        self.assertNotIn("pipeline_parallel_size", c.engine_kwargs())          # engine call identical to 0.3.0 at PP=1
+        self.assertNotIn("pipeline_parallel_size", c.engine_kwargs())          # engine call identical to the baseline at PP=1
         self.assertEqual(StokastiskConfig(tensor_parallel_size=2).strategy, "tensor_parallel")
 
     def test_valid_combinations(self):

@@ -8,7 +8,7 @@ import ast, json, os, pathlib, subprocess, sys, tempfile, textwrap, unittest, zi
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 K = ROOT / "scripts" / "kaggle"
-RC4_WHEEL = ROOT / "dist-rc/stokastisk-0.3.0-kaggle-t4-sm75-rc4/wheels/vllm-0.25.1-cp38-abi3-linux_x86_64.whl"
+RC4_WHEEL = next(iter(sorted((ROOT / "dist-rc").glob("*-rc4/wheels/vllm-0.25.1-cp38-abi3-linux_x86_64.whl"))), ROOT / "dist-rc/_absent_rc4.whl")   # private local baseline (NOT_RUN if absent)
 NEW_WHEEL = pathlib.Path(os.environ["STOKASTISK_VLLM_WHEEL"]) if os.environ.get("STOKASTISK_VLLM_WHEEL") else None
 # imports of dropped modules that exist in the wheel but are NOT on the dense-Qwen2 TP1/TP2 path (MoE, KV connector, MLA, specific models);
 # they fail only if the user selects such a model/backend, which this Flash-free build does not support.
@@ -224,8 +224,8 @@ class ShutdownClassification(unittest.TestCase):
 class ReleaseIdentity(unittest.TestCase):
     def test_documented_release_identity_is_well_formed(self):
         import re
-        rel = re.search(r"Current release: `(stokastisk-[^`]+)`", (ROOT / "RELEASE.md").read_text()).group(1)
-        self.assertRegex(rel, r"^stokastisk-\d+\.\d+\.\d+-kaggle-t4-sm75-rc\d+$")
+        rel = re.search(r"Release: `(stokastisk-[^`]+)`", (ROOT / "RELEASE.md").read_text()).group(1)
+        self.assertEqual(rel, "stokastisk-0.1.0-kaggle-t4-sm75")
         fetch = (ROOT / "scripts/fetch_release.py").read_text()
         self.assertNotIn("hits[0]", fetch)
 

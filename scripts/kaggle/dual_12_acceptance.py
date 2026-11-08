@@ -1,11 +1,11 @@
-"""Stage 12 (0.4.0): consolidated acceptance. Runs the sub-stages as subprocesses (each in its own fresh interpreter, bounded time),
+"""Stage 12 : consolidated acceptance. Runs the sub-stages as subprocesses (each in its own fresh interpreter, bounded time),
 then classifies every feature. MANDATORY features must PASS; EXPERIMENTAL ones are reported with their real status and never
-silently counted as successes. usage: v040_12_acceptance.py"""
+silently counted as successes. usage: dual_12_acceptance.py"""
 import json, pathlib, subprocess, sys, time
 from _common import OUT, check, finish, gpu_used_mib, run_guarded, save, versions
 
 HERE = pathlib.Path(__file__).resolve().parent
-MANDATORY = {"07_topology": "GPU topology discovery", "13_api_compat": "0.3.0 public API still works (TP=1 generation)", "09_replica_validation": "independent dual-GPU replicas",
+MANDATORY = {"07_topology": "GPU topology discovery", "13_api_compat": "baseline public API still works (TP=1 generation)", "09_replica_validation": "independent dual-GPU replicas",
              "14_recommender": "parallelism recommendation (rule-based)"}
 EXPERIMENTAL = {"08_pp_validation": "pipeline parallelism (PP=2)", "10_comm": "host-staged CUDA transport vs NCCL"}
 
@@ -21,8 +21,8 @@ def run_stage(script, args=(), timeout=1500):
 
 def main() -> int:
     R = []
-    plan = [("v040_07_topology.py", "07_topology", ()), ("v040_14_recommender.py", "14_recommender", ()), ("v040_13_api_compat.py", "13_api_compat", ()),
-            ("v040_09_replica_validation.py", "09_replica_validation", ()), ("v040_08_pp_validation.py", "08_pp_validation", ()), ("v040_10_comm.py", "10_comm", ())]
+    plan = [("dual_07_topology.py", "07_topology", ()), ("dual_14_recommender.py", "14_recommender", ()), ("dual_13_api_compat.py", "13_api_compat", ()),
+            ("dual_09_replica_validation.py", "09_replica_validation", ()), ("dual_08_pp_validation.py", "08_pp_validation", ()), ("dual_10_comm.py", "10_comm", ())]
     stages, timing = {}, {}
     for script, stage, args in plan:
         rc, secs = run_stage(script, args); timing[stage] = round(secs, 1)

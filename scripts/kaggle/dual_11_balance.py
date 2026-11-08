@@ -1,4 +1,4 @@
-"""Stage 11 (0.4.0): load-balance + strategy comparison from bench_*.json written earlier in the SAME session by v040_bench.py."""
+"""Stage 11 : load-balance + strategy comparison from bench_*.json written earlier in the SAME session by dual_bench.py."""
 import json
 from _common import OUT, check, finish, run_guarded, save, skipped, versions, warn
 

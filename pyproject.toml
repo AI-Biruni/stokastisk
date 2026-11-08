@@ -4,13 +4,16 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "stokastisk"
-version = "0.4.0"
+dynamic = ["version"]   # single source of truth: the VERSION file (see VERSION_POLICY.md)
 description = "Topology-aware Python SDK around vLLM 0.25.1 for dual Tesla T4 (SM75, CUDA 13.0): TP, PP and independent GPU replicas with the Triton attention backend"
 readme = "README.md"
 requires-python = ">=3.13,<3.14"
 license = "Apache-2.0"
 license-files = ["LICENSE"]
 dependencies = ["vllm==0.25.1"]
+
+[tool.setuptools.dynamic]
+version = {file = "VERSION"}
 
 [tool.setuptools]
 package-dir = {"" = "sdk"}

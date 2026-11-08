@@ -1,4 +1,4 @@
-"""Stage 09 (0.4.0): two independent TP=1 replicas. usage: v040_09_replica_validation.py [MODEL]"""
+"""Stage 09 : two independent TP=1 replicas. usage: dual_09_replica_validation.py [MODEL]"""
 import sys, time
 from _common import check, finish, gpu_used_mib, live_engine_children, run_guarded, versions, wait_children_gone
 

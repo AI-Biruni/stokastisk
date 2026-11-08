@@ -1,4 +1,4 @@
-"""Stage 14 (0.4.0), run by v040_12_acceptance.py."""
+"""Stage 14 , run by dual_12_acceptance.py."""
 from _common import check, finish, run_guarded
 def main():
     import stokastisk

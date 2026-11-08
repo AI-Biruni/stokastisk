@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stage 02: SAFE offline-first installer for Stokastisk 0.3.0 (Kaggle dual T4, Python 3.13, torch 2.11.0+cu130).
+"""Stage 02: SAFE offline-first installer for Stokastisk 0.1.0 (Kaggle dual T4, Python 3.13, torch 2.11.0+cu130).
 
 Design (root causes of the failed first release are called out):
  * NO dependency resolver is ever run against the Kaggle environment. The previous installer ran `pip install <40 reqs>`;
@@ -181,7 +181,7 @@ def main(argv=None):
         rep["seconds"] = time.time() - t0; finish("02_install_dryrun", R, rep)
         return
     if wheel_todo:
-        r = pip("install", "--no-deps", "--no-index", *wheel_todo); check(R, "install wheels --no-deps", r.returncode == 0, r.stderr[-400:])
+        r = pip("install", "--force-reinstall", "--no-deps", "--no-index", *wheel_todo); check(R, "install wheels --force-reinstall --no-deps (replaces any other stokastisk version; never touches torch/triton/CUDA/NCCL)", r.returncode == 0, r.stderr[-400:])
     if plan["install"]:
         r = pip("install", "--no-deps", "--no-index", "--find-links", str(tmp), *[f"{n}=={v}" for n, v in plan["install"].items()])
         check(R, "install core pins --no-deps", r.returncode == 0, r.stderr[-400:])
@@ -215,7 +215,12 @@ def main(argv=None):
     pr = stokastisk.prohibited_report(); rep["prohibited"] = pr
     check(R, "no FlashAttention/FlashInfer distributions, modules or binaries installed", pr["clean"], pr)
     want_v = os.path.basename(sw).split("-")[1] if sw else None   # version comes from the bundle's own wheel
-    check(R, "versions", stokastisk.__version__ == want_v, f"{stokastisk.__version__} (bundle wheel: {want_v})")
+    LOCK = "0.1.0"                                                  # permanent project version (VERSION_POLICY.md)
+    try: dist_v = md.version("stokastisk")
+    except md.PackageNotFoundError: dist_v = None
+    bundle_v = (b / "VERSION").read_text().strip() if (b / "VERSION").is_file() else None
+    check(R, "installed Stokastisk version is exactly the locked project version", stokastisk.__version__ == dist_v == want_v == bundle_v == LOCK,
+          {"module": stokastisk.__version__, "distribution": dist_v, "bundle_wheel": want_v, "bundle_VERSION": bundle_v, "locked": LOCK})
     rep["seconds"] = time.time() - t0; rep["downloaded_bytes"] = dl_bytes
     finish("02_install", R, rep)
 

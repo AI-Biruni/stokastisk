@@ -79,7 +79,7 @@ def recommend_parallelism(model, topology=None, workload: str = "latency", *, ma
         alts: list[dict[str, Any]] = []
         if n >= 2:
             alts.append({"strategy": "tensor_parallel", "tensor_parallel_size": 2, "note": "adds NCCL traffic"
-                         + ("" if fast else f" over a link measured as {link} with no CUDA peer access"), "measured_on_rc6": "0.55x of TP=1 decode on Kaggle 2xT4 (Qwen2.5-1.5B)"})
+                         + ("" if fast else f" over a link measured as {link} with no CUDA peer access"), "measured_on_baseline": "0.55x of TP=1 decode on Kaggle 2xT4 (Qwen2.5-1.5B)"})
             alts.append({"strategy": "pipeline_parallel", "pipeline_parallel_size": 2, "experimental": True, "note": "unmeasured on this hardware until Kaggle notebook 08 runs"})
         if workload == "throughput" and n >= 2:
             ram_ok = topology.system_ram_available_gib is None or topology.system_ram_available_gib > 2 * spec.weight_mib / 1024 + 2
@@ -91,7 +91,7 @@ def recommend_parallelism(model, topology=None, workload: str = "latency", *, ma
         return Recommendation("single_gpu", 1, 1, "the model fits on one GPU: TP=1 has no inter-GPU communication" + ("" if fast else f" (the two GPUs are {link}, no NVLink/CUDA P2P)"), w, alts, False, est)
     ww = w + ["the model does not fit one GPU, so two GPUs are required"]
     if not fast:
-        ww.append("no NVLink / CUDA peer access: expect communication-bound tensor parallelism (RC6 measured TP=2 at 0.55x TP=1 for a model that fits one GPU)")
+        ww.append("no NVLink / CUDA peer access: expect communication-bound tensor parallelism (baseline measured TP=2 at 0.55x TP=1 for a model that fits one GPU)")
     return Recommendation("tensor_parallel", 2, 1, f"needs ~{need1:.0f} MiB on one GPU but ~{need2:.0f} MiB per GPU on two (usable ~{usable:.0f} MiB): TP=2 is the verified two-GPU path",
                           ww, [{"strategy": "pipeline_parallel", "pipeline_parallel_size": 2, "experimental": True,
                                 "note": "moves one activation tensor per stage boundary instead of an all-reduce per layer, but is unmeasured here until notebook 08 runs"}], False, est)

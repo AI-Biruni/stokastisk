@@ -1,7 +1,7 @@
 #!/usr/bin/env python3.13
 """Download a Stokastisk release bundle from Hugging Face (CDN-backed `resolve/` URLs) - standard library only.
 
-    python3.13 fetch_release.py stokastisk-0.3.0-kaggle-t4-sm75-rc6 [DEST]      # prints the bundle directory
+    python3.13 fetch_release.py stokastisk-0.1.0-kaggle-t4-sm75 [DEST]      # prints the bundle directory
 
  * ONE file (the release's `<release>-kaggle-input.zip`, ~37 MB) over up to 4 parallel HTTP range requests (the Kaggle CPU budget); falls back
    to a single stream when the server does not support ranges, and to `file://` for offline tests;

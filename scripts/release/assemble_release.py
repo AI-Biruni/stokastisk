@@ -1,129 +1,173 @@
 #!/usr/bin/env python3.13
-"""Assemble a release candidate bundle from the (untouched) base bundle + current repo scripts/notebooks/tests/docs.
-The vLLM wheel (all native code) is carried over BYTE-IDENTICAL from the base (asserted); the stokastisk wheel is rebuilt from sdk/. Never overwrites an existing release; verifies the final ZIP
-from a fresh extraction. usage: assemble_release.py NEW_NAME BASE_NAME
-  e.g. assemble_release.py stokastisk-0.3.0-kaggle-t4-sm75-rc6 stokastisk-0.3.0-kaggle-t4-sm75-rc5"""
-import ast, hashlib, json, os, pathlib, re, shutil, subprocess, sys, time, zipfile
+"""Assemble THE Stokastisk release `stokastisk-0.1.0-kaggle-t4-sm75` from a private baseline directory (source of the vLLM wheel and native-binary lineage).
+usage: assemble_release.py BASE_NAME        BASE_NAME = directory under dist-rc/ that holds the byte-pinned vLLM wheel (never modified; hashes asserted before and after)
+ * PROJECT VERSION LOCK: refuses to run unless VERSION, sdk/stokastisk/_version.py and the built wheel all say exactly 0.1.0 (VERSION_POLICY.md). Nothing here derives or increments a version.
+ * the vLLM wheel (all native code) is carried over BYTE-IDENTICAL; the SDK wheel is rebuilt from sdk/ and diffed against it
+ * CPU tests must all pass with zero skips; native audit re-run on the (unchanged) vLLM wheel; hygiene scans; manifests; SHA256SUMS
+ * the ZIP is built by make_kaggle_input_zip.py (reproducible) and re-verified from a fresh extraction, then scripts/release/verify_project_version.py runs on the bundle + ZIP
+ * status is ALWAYS "KAGGLE_GPU_VERIFICATION_PENDING" here: only an owner-run Kaggle execution can change that."""
+import hashlib, json, os, pathlib, re, shutil, subprocess, sys, tempfile, time, zipfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-D = ROOT / "dist-rc"; RC2, RC1 = sys.argv[1], sys.argv[2]            # new release, base release (never modified)
-S, B = D / RC1, D / RC2
+D = ROOT / "dist-rc"; BASE = sys.argv[1]
+LOCKED = "0.1.0"; NEW = f"stokastisk-{LOCKED}-kaggle-t4-sm75"
+assert (ROOT / "VERSION").read_text() == LOCKED + "\n", "VERSION is not the locked project version"
+assert re.search(r'__version__ = "([^"]+)"', (ROOT / "sdk/stokastisk/_version.py").read_text()).group(1) == LOCKED, "_version.py is not the locked project version"
+assert not os.environ.get("SETUPTOOLS_SCM_PRETEND_VERSION") and not os.environ.get("PBR_VERSION"), "version override environment variables are forbidden"
+S, B = D / BASE, D / NEW
 sha = lambda p: hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()  # noqa: E731
-assert S.is_dir() and not B.exists(), "base release must exist and the new one must not (never overwrite a release)"
+git = lambda *a: subprocess.run(["git", *a], capture_output=True, text=True, cwd=ROOT).stdout.strip()  # noqa: E731
+assert S.is_dir() and not B.exists(), "base must exist and the new release must not (never overwrite a release)"
+BASE_PIN = {"wheels/vllm-0.25.1-cp38-abi3-linux_x86_64.whl": "cc3bcafb6516791990ca302073ae153a08465d3df1e460d666e3ec09b4e98f5e"}   # the vLLM 0.25.1 SM75/CUDA13 wheel, byte-pinned
+for rel, h in BASE_PIN.items(): assert sha(S / rel) == h, f"base vLLM wheel altered: {rel}"
+base_snapshot = {str(p.relative_to(S)): sha(p) for p in S.rglob("*") if p.is_file()}
+
 shutil.copytree(S, B)
-ign = shutil.ignore_patterns("__pycache__", "*.pyc")
+ign = shutil.ignore_patterns("__pycache__", "*.pyc", ".pytest_cache")
+def overlay(rel, dst=None):
+    src, dst = ROOT / rel, B / (dst or rel)
+    if dst.exists(): shutil.rmtree(dst) if dst.is_dir() else dst.unlink()
+    shutil.copytree(src, dst, ignore=ign) if src.is_dir() else (dst.parent.mkdir(parents=True, exist_ok=True), shutil.copy2(src, dst))
+for rel in ("scripts/kaggle", "scripts/release", "scripts/audit", "tests", "patches", "native", "requirements", "docs"): overlay(rel)
+for rel in ("scripts/fetch_release.py", "scripts/make_notebooks.py", "scripts/build_vllm_sm75.sh", "README.md", "INSTALL.md", "BUILD.md", "RELEASE.md", "VERSION", "VERSION_POLICY.md", "LICENSE"): overlay(rel)
+shutil.rmtree(B / "docs", ignore_errors=True); shutil.copytree(ROOT / "docs", B / "docs", ignore=shutil.ignore_patterns("HUB_README.md"))   # Hub card is not part of the bundle
+for old in (B / "scripts/make_notebooks.py",):
+    if old.exists(): old.unlink()
+shutil.rmtree(B / "notebooks"); shutil.copytree(ROOT / "notebooks", B / "notebooks", ignore=ign)
+nbs = sorted(p.name for p in (B / "notebooks").glob("*.ipynb")); assert [n[:2] for n in nbs] == [f"{i:02d}" for i in range(1, 13)], nbs
+for f in ("evidence/test-results.json", "evidence/sdk-test-results.json", "evidence/notebook-validation.json", "evidence/installer-test.json", "evidence/release-integrity.json",
+          "evidence/source-diff-report.json", "evidence/wheel-vs-source.json"):
+    (B / f).unlink(missing_ok=True)
 
-# overlay the repaired sources (authoritative: repo files)
-shutil.rmtree(B / "scripts/kaggle"); shutil.copytree(ROOT / "scripts/kaggle", B / "scripts/kaggle", ignore=ign)
-shutil.rmtree(B / "scripts/release"); shutil.copytree(ROOT / "scripts/release", B / "scripts/release", ignore=ign)
-shutil.rmtree(B / "scripts/audit", ignore_errors=True); shutil.copytree(ROOT / "scripts/audit", B / "scripts/audit", ignore=ign)
-shutil.copy2(ROOT / "scripts/fetch_release.py", B / "scripts")
-shutil.rmtree(B / "tests"); shutil.copytree(ROOT / "tests", B / "tests", ignore=ign)
-shutil.rmtree(B / "notebooks", ignore_errors=True)
-if any((ROOT / "notebooks").glob("*.ipynb")): shutil.copytree(ROOT / "notebooks", B / "notebooks", ignore=ign)
-shutil.rmtree(B / "patches", ignore_errors=True); shutil.copytree(ROOT / "patches", B / "patches", ignore=ign)
-for f in ("README.md", "INSTALL.md", "BUILD.md", "RELEASE.md"): shutil.copy2(ROOT / f, B / f)
-
-# wheels: vllm byte-identical to the base; stokastisk rebuilt from sdk/ and verified against it
-import tempfile as _tf
+# ---- wheels: vLLM byte-identical, SDK rebuilt and diffed against sdk/
 sys.path.insert(0, str(ROOT / "tests")); from test_wheel_matches_source import wheel_drift  # noqa: E402
-base_w = {w.name: sha(w) for w in sorted((S / "wheels").glob("*.whl"))}
-# drop evidence that only described the retired stage.zip workflow / earlier candidates (history stays in git and in the older release dirs)
-for pat in ("stage-*.json", "source-archive-audit.json", "rc*-test-results.json", "native-binary-audit-rc*.json"):
-    for f in (B / "evidence").glob(pat): f.unlink()
-# vLLM wheel (all native code): byte-identical to the base. stokastisk wheel (pure Python): rebuilt from sdk/ and checked against it.
-import tempfile as _tf
-sys.path.insert(0, str(ROOT / "tests")); from test_wheel_matches_source import wheel_drift  # noqa: E402
-vname = next(n for n in base_w if n.startswith("vllm-")); sname = next(n for n in base_w if n.startswith("stokastisk-"))
-shutil.copy2(S / "wheels" / vname, B / "wheels" / vname)
-with _tf.TemporaryDirectory() as td:
+vname = "vllm-0.25.1-cp38-abi3-linux_x86_64.whl"
+for w in (B / "wheels").glob("stokastisk-*.whl"): w.unlink()
+with tempfile.TemporaryDirectory() as td:
     r = subprocess.run([sys.executable, "-m", "build", "--wheel", "--no-isolation", "-o", td, str(ROOT)], capture_output=True, text=True)
     assert r.returncode == 0, r.stderr[-1500:]
     nw = next(pathlib.Path(td).glob("stokastisk-*.whl")); drift = wheel_drift(nw); assert not drift, drift
-    for old_w in (B / "wheels").glob("stokastisk-*.whl"): old_w.unlink()
     shutil.copy2(nw, B / "wheels" / nw.name)
+sname = nw.name; assert sname.startswith(f"stokastisk-{LOCKED}-"), sname
 wheels = {w.name: sha(w) for w in sorted((B / "wheels").glob("*.whl"))}
-assert wheels[vname] == base_w[vname], "vllm wheel must be byte-identical to the base release"
-patch_info = {"changed": ["(carried over from the base release)"], "native_files_identical": "see native-binary-audit.json"}
-assert (B / "patches/0003-t4-flashinfer-free-default-path.patch").read_text() == (ROOT / "patches/0003-t4-flashinfer-free-default-path.patch").read_text()
-os.environ["STOKASTISK_VLLM_WHEEL"] = str(B / "wheels" / vname)
-# evidence: namespace audit + wheel audit
-(B / "evidence").mkdir(exist_ok=True)
+assert set(wheels) == {vname, sname}, wheels
+assert wheels[vname] == BASE_PIN["wheels/" + vname] == sha(S / "wheels" / vname), "vLLM wheel must be byte-identical to the pinned base"
 ns = {w.name: [n for n in zipfile.ZipFile(w).namelist() if re.search(r"velocit\w*|stoch\w*tisk", n, re.I)] for w in (B / "wheels").glob("*.whl")}
-assert not any(ns.values()), f"obsolete/misspelled namespace inside a wheel: {ns}"
+assert not any(ns.values()), ns
+flash = {w.name: [n for n in zipfile.ZipFile(w).namelist() if re.search(r"flashinfer|vllm_flash_attn/_vllm_fa|flashmla|flash_attn_2_cuda", n, re.I) and not n.endswith(".py")] for w in (B / "wheels").glob("*.whl")}
+assert not any(flash.values()), flash
+sdk_wheel_members = zipfile.ZipFile(B / "wheels" / sname).namelist()
+assert not [n for n in sdk_wheel_members if n.endswith((".so", ".cpp", ".cu"))], "SDK wheel must be pure Python"
+(B / "evidence").mkdir(exist_ok=True)
+(B / "evidence/wheel-vs-source.json").write_text(json.dumps({"stokastisk_wheel": sname, "sha256": wheels[sname], "drift_vs_sdk": drift, "pure_python": True, "members": len(sdk_wheel_members)}, indent=1))
 (B / "evidence/namespace-audit.json").write_text(json.dumps({"canonical_package": "stokastisk", "wheel_members_with_obsolete_or_misspelled_names": ns}, indent=1))
-(B / "evidence/wheel-vs-source.json").write_text(json.dumps({"stokastisk_wheel": sname, "sha256": wheels[sname], "previous_wheel_sha256": base_w[sname], "drift_vs_sdk": drift}, indent=1))
+(B / "evidence/flashattention-flashinfer-audit.json").write_text(json.dumps({"native_flash_members_in_wheels": flash, "note": "inert upstream *.py adapter modules are allowed; native flash code is not"}, indent=1))
 
-# fresh native audit of the NEW wheel (CUDA 13.0 cuobjdump) + wheel lineage
+# ---- native audit of the (unchanged) vLLM wheel
 na = subprocess.run([sys.executable, str(ROOT / "scripts/audit/native_audit.py"), str(B / "wheels" / vname), str(B / "evidence/native-binary-audit.json")], capture_output=True, text=True)
 assert na.returncode == 0, na.stderr[-800:]
-naj = json.loads((B / "evidence/native-binary-audit.json").read_text())["summary"]
-assert naj["all_x86_64"] and not naj["any_needs_cuda12_soname"] and not naj["any_cuda12_toolkit_string"] and not naj["any_older_than_sm75_cubin"] and not naj["any_flash_markers"], naj
-# manifests/WHEEL-LINEAGE.json is inherited unchanged from the base release (same wheels).
+nsum = json.loads((B / "evidence/native-binary-audit.json").read_text())["summary"]
+assert nsum["all_x86_64"] and not nsum["any_needs_cuda12_soname"] and not nsum["any_cuda12_toolkit_string"] and not nsum["any_older_than_sm75_cubin"] and not nsum["any_flash_markers"], nsum
+shutil.copy2(B / "evidence/native-binary-audit.json", B / "manifests/NATIVE-BINARY-AUDIT.json")
 
-# tests (CPU only)
+# ---- the experimental C++ transport must still compile for sm_75 and link only libcudart.so.13
+tmp = pathlib.Path(tempfile.mkdtemp()); so = tmp / "libstokastisk_xfer.so"
+nv = subprocess.run(["nvcc", "-O2", "-std=c++17", "-shared", "-Xcompiler", "-fPIC", "-gencode", "arch=compute_75,code=sm_75", str(ROOT / "native/host_staged_xfer.cpp"), "-o", str(so), "-lcudart"], capture_output=True, text=True)
+native_ev = {"compiled": nv.returncode == 0, "stderr_tail": nv.stderr[-300:], "executed_on_two_gpus": False,
+             "note": "compile + link check only; execution on 2 GPUs is notebook 10 (NOT_RUN)"}
+if nv.returncode == 0:
+    ldd = subprocess.run(["ldd", str(so)], capture_output=True, text=True).stdout
+    native_ev["links"] = sorted(set(re.findall(r"(libcudart\.so\.\d+|libcublas\S*|libnccl\S*|libnvshmem\S*)", ldd)))
+    assert native_ev["links"] == ["libcudart.so.13"], native_ev
+    native_ev["sha256_of_local_build"] = sha(so)
+(B / "evidence/experimental-transport-build.json").write_text(json.dumps(native_ev, indent=1)); shutil.rmtree(tmp, ignore_errors=True)
+assert native_ev["compiled"], native_ev
+
+# ---- CPU tests (zero skips, zero failures)
 env = dict(os.environ, CUDA_VISIBLE_DEVICES="")
 tests = {}
-for t in ("test_sdk_cpu.py", "test_installer.py", "test_nccl.py", "test_wheel_matches_source.py", "test_notebook05_spawn.py", "test_flash_free_default_path.py", "test_kaggle_limits.py", "test_fetch_release.py"):
-    r = subprocess.run([sys.executable, str(ROOT / "tests" / t)], capture_output=True, text=True, env=env)
-    m = re.search(r"Ran (\d+) tests", r.stderr)
-    sk = re.search(r"skipped=(\d+)", r.stderr)
-    tests[t] = {"returncode": r.returncode, "ran": int(m.group(1)) if m else None, "skipped": int(sk.group(1)) if sk else 0, "tail": r.stderr.strip().splitlines()[-2:]}
-assert all(v["skipped"] == 0 for v in tests.values()), f"skipped tests would be reported as NOT_RUN, not PASS: {tests}"
-assert all(v["returncode"] == 0 for v in tests.values()), tests
+for t in sorted(p.name for p in (ROOT / "tests").glob("test_*.py")):
+    r = subprocess.run([sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", str(ROOT / "tests" / t)], capture_output=True, text=True, env=env, cwd=ROOT)
+    m = re.search(r"(\d+) passed", r.stdout); f = re.search(r"(\d+) failed", r.stdout); sk = re.search(r"(\d+) skipped", r.stdout)
+    tests[t] = {"returncode": r.returncode, "passed": int(m.group(1)) if m else 0, "failed": int(f.group(1)) if f else 0, "skipped": int(sk.group(1)) if sk else 0}
+assert all(v["returncode"] == 0 and v["failed"] == 0 for v in tests.values()), tests
+assert all(v["skipped"] == 0 for v in tests.values()), f"skipped tests would be NOT_RUN, not PASS: {tests}"
 
-# notebook structural validation
+# ---- notebook / script static validation
+import ast
 nbv = []
 for f in sorted((B / "notebooks").glob("*.ipynb")):
-    j = json.loads(f.read_text()); ok = True
-    for c in j["cells"]:
-        if c["cell_type"] == "code":
-            try: ast.parse("\n".join(l for l in "".join(c["source"]).splitlines() if not l.startswith("!")))
-            except SyntaxError: ok = False
-    nbv.append({"notebook": f.name, "valid_json": True, "cells": len(j["cells"]), "code_cells_parse": ok, "outputs_present": any(c.get("outputs") for c in j["cells"] if c["cell_type"] == "code")})
-git = lambda *a: subprocess.run(["git", *a], capture_output=True, text=True, cwd=ROOT).stdout.strip()  # noqa: E731
+    j = json.loads(f.read_text()); code = [c for c in j["cells"] if c["cell_type"] == "code"]
+    for c in code: ast.parse("".join(c["source"]))
+    assert all(c["outputs"] == [] and c["execution_count"] is None for c in code), f.name
+    nbv.append({"notebook": f.name, "code_cells": len(code), "parse": True, "executed": False})
 now = time.strftime("%FT%T%z")
-ev = {"timestamp": now, "kind": "local CPU tests + static checks; NOT Kaggle execution", "git_head_at_build": git("rev-parse", "HEAD"), "git_branch": git("branch", "--show-current"),
-      "git_dirty": bool(git("status", "--porcelain")), "tests": tests, "notebook_validation": nbv, "wheels": wheels,
-      "03_script_sha256": sha(B / "scripts/kaggle/03_single_gpu.py"),
-      "kaggle_acceptance": {"01": "PASSED (user-executed, earlier release)", "02": "PASSED (user-executed)", "03": "PASSED (user-executed, earlier release)", "04": "PASSED with WARNING on rc5 (user-executed): collectives+teardown OK; runtime NCCL 2.32.3 (the cu12-built package) comes from Kaggle's own nvidia-nccl-cu12", "05": "rc5: TP1 and TP2 completed real TRITON_ATTN generation; ONLY the (since corrected) shutdown check failed. This release UNTESTED on Kaggle", "06": "PASSED on rc5 (user-executed): TP1 1032.9 tok/s, TP2 545.1 tok/s (0.53x, measured). This release UNTESTED on Kaggle"}}
-(B / "evidence/test-results.json").write_text(json.dumps(ev, indent=1))
-(B / "evidence/notebook-validation.json").write_text(json.dumps({"timestamp": now, "kind": "static (JSON + syntax). NOT executed.", "notebooks": nbv, "execution_status": "PENDING USER on Kaggle"}, indent=1))
+(B / "evidence/notebook-validation.json").write_text(json.dumps({"timestamp": now, "kind": "static (JSON + syntax + unexecuted). NOT executed on Kaggle.", "notebooks": nbv, "execution_status": "NOT_RUN (pending owner on Kaggle)"}, indent=1))
+(B / "evidence/test-results.json").write_text(json.dumps({"timestamp": now, "kind": "CPU-only tests with mocks / fake workers; NOT GPU or Kaggle evidence", "tests": tests,
+        "totals": {k: sum(v[k] for v in tests.values()) for k in ("passed", "failed", "skipped")}, "git_head": git("rev-parse", "HEAD"), "git_branch": git("branch", "--show-current"),
+        "git_dirty": bool(git("status", "--porcelain"))}, indent=1))
 
-rm = json.loads((S / "manifests/RELEASE-MANIFEST.json").read_text())
-rm.update(name=RC2, timestamp=now, supersedes=RC1, status="RELEASE CANDIDATE — LOCALLY TESTED. Kaggle 04 and 06 passed on the previous candidate, 05 completed inference there; this exact bundle has NOT been executed on Kaggle. NOT production-ready until notebooks 01-06 pass on it",
-          changes=["shutdown check made state-aware (zombies / multiprocessing resource_tracker reported separately, never counted as live engine processes)",
-                   "model_revision read from the HF cache refs/main", "stokastisk.limits: Kaggle hard limits (4 CPU, 30 GiB RAM, 20 GiB /kaggle/working, 2xT4 SM75 15 GiB) enforced/reported; CPU thread budget split across TP workers",
-                   "scripts/fetch_release.py: stdlib HF CDN downloader (parallel ranges, SHA256-verified); notebooks fall back to it when the dataset is not attached",
-                   "repository cleanup: stale evidence/manifests/one-off scripts removed; project name unified to 'stokastisk'", "vLLM wheel byte-identical to the base release (no native rebuild); stokastisk wheel rebuilt from sdk/"],
-          wheel_lineage="manifests/WHEEL-LINEAGE.json", native_audit=naj,
-          kaggle_acceptance=ev["kaggle_acceptance"], wheels={n: {"size": (B / "wheels" / n).stat().st_size, "sha256": h} for n, h in wheels.items()})
-for p in (B / "manifests/RELEASE-MANIFEST.json", B / "evidence/RELEASE-MANIFEST.json"): p.write_text(json.dumps(rm, indent=1))
+# ---- manifests
+rm0 = json.loads((S / "manifests/RELEASE-MANIFEST.json").read_text())
+status = ("KAGGLE_GPU_VERIFICATION_PENDING — CPU-tested only (mocks, fake workers); not Kaggle-verified. Notebooks 01-12 are NOT_RUN for this release. "
+          "The vLLM wheel and every native CUDA binary are byte-identical to the earlier baseline build.")
+rm = {"name": NEW, "project": "stokastisk", "version": LOCKED, "timestamp": now, "status": status, "validation_status": "KAGGLE_GPU_VERIFICATION_PENDING", "supersedes": None,
+      "kaggle_acceptance": {n[:2]: "NOT_RUN" for n in nbs},
+      "platform": {"python": "3.13", "cuda_toolkit": "13.0", "vllm": "0.25.1", "torch": "2.11.0+cu130", "triton": "3.6.0", "gpu": "2 x NVIDIA Tesla T4 (SM75)", "attention_backend": "TRITON_ATTN"},
+      "wheels": {n: {"size": (B / "wheels" / n).stat().st_size, "sha256": h} for n, h in wheels.items()},
+      "vllm_wheel_identical_to_base": True, "native_binaries_changed": False, "native_audit": nsum,
+      "new_features": ["topology discovery", "execution strategies (single_gpu, tensor_parallel, pipeline_parallel[experimental], replica_parallel[experimental], auto[recommendation-only])",
+                       "ReplicaPool + token-aware scheduler", "recommend_parallelism", "telemetry", "cuda helpers", "experimental host-staged transport (Python + optional C++)", "benchmarks", "notebooks 07-12"],
+      "git": {"head": git("rev-parse", "HEAD"), "branch": git("branch", "--show-current"), "dirty": bool(git("status", "--porcelain"))}}
+(B / "manifests/RELEASE-MANIFEST.json").write_text(json.dumps(rm, indent=1)); (B / "evidence/RELEASE-MANIFEST.json").write_text(json.dumps(rm, indent=1))
+bm = {"timestamp": now, "kind": "assemble_release.py", "project_version": LOCKED, "tool_versions": {"python": sys.version.split()[0], "nvcc": subprocess.run(["nvcc", "--version"], capture_output=True, text=True).stdout.strip().splitlines()[-1]},
+      "native_rebuilt": False, "sdk_wheel_rebuilt": True, "inputs": dict(BASE_PIN)}
+(B / "manifests/BUILD-MANIFEST.json").write_text(json.dumps(bm, indent=1)); (B / "evidence/BUILD-MANIFEST.json").write_text(json.dumps(bm, indent=1))
+dm = json.loads((S / "manifests/DEPENDENCY-MANIFEST.json").read_text()); dm["note"] = "no new required dependency; pynvml, cuda-python, opentelemetry, Nsight, nvcc are optional and detected at runtime"
+(B / "manifests/DEPENDENCY-MANIFEST.json").write_text(json.dumps(dm, indent=1))
+(B / "manifests/CUDA-ARCH-MANIFEST.json").write_text(json.dumps({"target": "sm_75 only", "ptx": False, "cuda_toolkit": "13.0 only", "native_objects_unchanged_from": "pinned baseline vLLM wheel", "audit": nsum,
+        "experimental_transport": {"device_code": False, "links": native_ev.get("links")}}, indent=1))
+assert (B / "manifests/WHEEL-LINEAGE.json").exists()
+if (B / "cuda/README.md").exists(): pass
 
-# checksums
-(B / "manifests/SHA256SUMS").unlink()
+# ---- hygiene
+bad_names = [p for p in B.rglob("*") if p.is_file() and (p.name in {"tokens.env", ".env", "id_rsa", "id_ed25519", "os.ps"} or p.suffix in {".pyc", ".pyo"})]
+assert not bad_names, bad_names
+SECRET = re.compile(("gh" + "p_[A-Za-z0-9]{20}|github" + "_pat_[A-Za-z0-9_]{20}|hf" + "_[A-Za-z0-9]{30}|AKIA[0-9A-Z]{16}").encode())
+secrets = [str(p.relative_to(B)) for p in B.rglob("*") if p.is_file() and p.suffix in (".py", ".md", ".json", ".txt", ".ipynb", ".sh", ".patch", ".cpp", ".toml") and SECRET.search(p.read_bytes())]
+assert not secrets, secrets
+assert not list(B.rglob("*executed*")) and not any("notebooks-executed" in str(p) for p in B.rglob("*"))
+for p in B.rglob("*.ipynb"): assert not any(c.get("outputs") for c in json.loads(p.read_text())["cells"] if c["cell_type"] == "code"), p
+req_text = "\n".join(p.read_text() for p in (B / "requirements").glob("kaggle-t4-core.txt"))
+assert not re.search(r"flashinfer|flash-attn|nvidia-nccl-cu12|cuda-python|pynvml|nvidia-ml-py", req_text, re.I), "core pins must not include optional/prohibited packages"
+
+# ---- checksums, ZIP
+(B / "manifests/SHA256SUMS").unlink(missing_ok=True)
 files = sorted(p for p in B.rglob("*") if p.is_file() and "__pycache__" not in p.parts)
-(B / "manifests/SHA256SUMS").write_text("".join(f"{sha(p)}  {p.relative_to(B)}\n" for p in files))
-
-zp = D / f"{RC2}.zip"
-assert not zp.exists()
-with zipfile.ZipFile(zp, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as z:
-    for p in sorted(B.rglob("*")):
-        if p.is_file() and "__pycache__" not in p.parts:
-            zi = zipfile.ZipInfo(f"{RC2}/{p.relative_to(B)}", (2026, 11, 7, 0, 0, 0)); zi.compress_type = zipfile.ZIP_DEFLATED
-            zi.external_attr = (0o755 if p.suffix in (".py", ".sh") else 0o644) << 16; z.writestr(zi, p.read_bytes())
-# verify from a fresh extraction
-import tempfile
+(B / "manifests/SHA256SUMS").write_text("".join(f"{sha(p)}  {p.relative_to(B)}\n" for p in files if p.name != "SHA256SUMS"))
+out = ROOT / "stokastisk-kaggle-input"
+r = subprocess.run([sys.executable, str(ROOT / "scripts/release/make_kaggle_input_zip.py"), NEW, str(out)], capture_output=True, text=True); assert r.returncode == 0, r.stdout[-800:] + r.stderr[-800:]
+zp = out / f"{NEW}-kaggle-input.zip"
 with tempfile.TemporaryDirectory() as td:
-    zipfile.ZipFile(zp).extractall(td); root = pathlib.Path(td) / RC2
-    bad = [l for l in (root / "manifests/SHA256SUMS").read_text().splitlines() if sha(root / l.split(None, 1)[1].strip()) != l.split()[0]]
-    names = zipfile.ZipFile(zp).namelist()
-    forbidden = [n for n in names if any(k in n.lower() for k in ("tokens.env", ".env", ".git/", "__pycache__", ".pyc", "id_rsa", "notebooks-executed", "flashinfer-python", "vllm_flash_attn"))]
-    secrets = [n for n in names if n.endswith((".py", ".md", ".json", ".txt", ".ipynb", ".sh", ".patch")) and re.search("gh" + "p_|github" + "_pat_|hf" + "_[A-Za-z0-9]{20}", zipfile.ZipFile(zp).read(n).decode(errors="ignore"))]
-    nbs = sorted(p.name for p in (root / "notebooks").glob("*.ipynb"))
-    sc = sha(root / "scripts/kaggle/03_single_gpu.py") == sha(ROOT / "scripts/kaggle/03_single_gpu.py")
-integ = {"zip": zp.name, "size": zp.stat().st_size, "sha256": sha(zp), "testzip": zipfile.ZipFile(zp).testzip(), "entries": len(names), "hash_mismatches": bad,
-         "forbidden": forbidden, "secret_hits": secrets, "notebooks": nbs, "script03_matches_repo": sc}
-assert not (bad or forbidden or secrets) and sc, integ
-(D / f"{RC2}.zip.sha256").write_text(f"{sha(zp)}  {zp.name}\n")
-print(json.dumps(integ, indent=1))
+    z = zipfile.ZipFile(zp); names = z.namelist(); assert z.testzip() is None
+    assert len(names) == len(set(names)), "duplicate ZIP paths"
+    z.extractall(td); root = pathlib.Path(td) / NEW
+    bad = [l for l in (root / "manifests/SHA256SUMS").read_text().splitlines() if not (root / l.split(None, 1)[1].strip()).is_file() or sha(root / l.split(None, 1)[1].strip()) != l.split()[0]]
+    assert not bad, bad[:5]
+    assert all(n.startswith(NEW + "/") for n in names), "ZIP must have the single top-level release directory"
+    assert not any(re.search(r"tokens\.env|\.env$|/\.git/|__pycache__|os\.ps|notebooks-executed|flashinfer_python|vllm_flash_attn-", n) for n in names)
+    zip_wheels = sorted(n for n in names if n.endswith(".whl")); assert len(zip_wheels) == 2
+    wheel_ok = all(sha(root / "wheels" / pathlib.Path(n).name) == wheels[pathlib.Path(n).name] for n in zip_wheels)
+integ = {"zip": zp.name, "size": zp.stat().st_size, "sha256": sha(zp), "entries": len(names), "testzip": "ok", "duplicate_paths": 0, "hash_mismatches": 0, "wheels_match_manifest": wheel_ok,
+         "secret_hits": 0, "executed_notebooks": 0, "base_unmodified": True}
+assert wheel_ok
+# ---- the base must be untouched
+now_snapshot = {str(p.relative_to(S)): sha(p) for p in S.rglob("*") if p.is_file()}
+assert now_snapshot == base_snapshot, "BASE RELEASE WAS MODIFIED"
+(out / f"{NEW}-kaggle-input.zip.sha256").write_text(f"{sha(zp)}  {zp.name}\n")
+(ROOT / "reports").mkdir(exist_ok=True)
+(ROOT / "reports/stokastisk-010-release-integrity.json").write_text(json.dumps({"integrity": integ, "wheels": wheels, "tests": tests, "native_audit": nsum, "experimental_transport_build": native_ev}, indent=1))
+vr = subprocess.run([sys.executable, str(ROOT / "scripts/release/verify_project_version.py"), "--release-dir", str(B), "--zip", str(zp)], capture_output=True, text=True)
+assert vr.returncode == 0, "PROJECT VERSION LOCK VIOLATION:\n" + vr.stdout[-2500:]
+integ["project_version_verified"] = LOCKED
+print(json.dumps(integ, indent=1)); print("wheels:", json.dumps(wheels, indent=1)); print(vr.stdout.splitlines()[-1])

@@ -1,4 +1,4 @@
-// Stokastisk 0.4.0 EXPERIMENTAL: host-staged GPU->GPU copy using only the CUDA Runtime API.
+// Stokastisk 0.1.0 EXPERIMENTAL: host-staged GPU->GPU copy using only the CUDA Runtime API.
 //   src device --cudaMemcpyAsync--> pinned host buffer[k] --cudaMemcpyAsync--> dst device
 // Chunks rotate through n pinned buffers; cudaEvents hand each buffer from the D2H stage to the H2D stage and back
 // (cudaStreamWaitEvent works across devices). No kernels, so the object carries no device code; it links libcudart.so.13.

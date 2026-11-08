@@ -1,4 +1,4 @@
-"""Stage 10 (0.4.0): host-staged transport (torch + native C++) vs NCCL. Experimental: a slower transport stays experimental."""
+"""Stage 10 : host-staged transport (torch + native C++) vs NCCL. Experimental: a slower transport stays experimental."""
 import json, os, pathlib, subprocess, sys
 from _common import OUT, check, finish, run_guarded, save, skipped, versions, warn
 
@@ -29,7 +29,7 @@ def main() -> int:
         skipped(R, "native C++ transport", "native/host_staged_xfer.cpp not in this bundle")
     # NCCL reference
     env = dict(os.environ, STOKASTISK_OUT=str(OUT))
-    r = subprocess.run([sys.executable, "-m", "torch.distributed.run", "--standalone", "--nnodes=1", "--nproc_per_node=2", str(here / "v040_10_nccl_worker.py")],
+    r = subprocess.run([sys.executable, "-m", "torch.distributed.run", "--standalone", "--nnodes=1", "--nproc_per_node=2", str(here / "dual_10_nccl_worker.py")],
                        capture_output=True, text=True, env=env, timeout=600)
     (OUT / "10_nccl_torchrun.log").write_text(r.stdout + r.stderr)
     check(R, "NCCL reference run exited 0", r.returncode == 0, r.stderr[-300:])

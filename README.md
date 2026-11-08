@@ -1,9 +1,9 @@
-# Stokastisk 0.3.0
+# Stokastisk 0.1.0
 
 **A Python 3.13 SDK and standalone CUDA 13.0 binary build of vLLM 0.25.1 for Kaggle's 2 × Tesla T4 (SM75).**
 
-[![Release](https://img.shields.io/badge/release-0.3.0%20(rc6)-blue)](RELEASE.md)
-[![Kaggle](https://img.shields.io/badge/Kaggle-01--06%20PASS%20on%202%C3%97T4-brightgreen)](RELEASE.md)
+[![Release](https://img.shields.io/badge/release-0.1.0-blue)](RELEASE.md)
+[![Kaggle](https://img.shields.io/badge/Kaggle%20GPU%20verification-PENDING-orange)](RELEASE.md)
 [![CUDA](https://img.shields.io/badge/CUDA-13.0%20only-76b900)](docs/ARCHITECTURE.md)
 [![Python](https://img.shields.io/badge/python-3.13-blue)](pyproject.toml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-lightgrey)](LICENSE)
@@ -17,29 +17,34 @@
 | **GPU code** | `sm_75` cubins only, no PTX |
 | **Attention** | `TRITON_ATTN` only. No FlashAttention, FlashInfer or FlashMLA code is shipped |
 | **Target** | Kaggle, 2 × Tesla T4 |
+| **Project version** | `0.1.0` (permanently locked, see [VERSION_POLICY.md](VERSION_POLICY.md)) |
 | **Download** | Hugging Face CDN: <https://huggingface.co/waqasm86/stokastisk> |
 
-## Status
+## Status — `KAGGLE_GPU_VERIFICATION_PENDING`
 
-Release **`stokastisk-0.3.0-kaggle-t4-sm75-rc6`** was run end to end by the project owner on Kaggle (2 × T4). Notebooks 01–06 all **PASS**:
-environment audit, installation, single-GPU validation, dual-GPU NCCL, real vLLM inference at TP=1 and TP=2, and a TP benchmark.
-Measured numbers are in [RELEASE.md](RELEASE.md). Two honest caveats are listed under [Known limitations](#known-limitations).
+Release **`stokastisk-0.1.0-kaggle-t4-sm75`** is **CPU-tested only** (mocked GPUs and fake workers; the development machine has one GeForce 940M, SM50 — not a T4). Notebooks 01–12 are **NOT_RUN** for this release:
+nothing below is Kaggle-verified until the project owner runs them on 2 × Tesla T4. The vLLM wheel and the native CUDA binaries are byte-identical to an earlier internal baseline build
+whose TP=1 / TP=2 inference was run on Kaggle; those historical measurements (in [RELEASE.md](RELEASE.md)) are engineering context, **not validation of this release**.
 
-## 0.4.0 development candidate — topology-aware dual-T4 orchestration (branch `feature/stokastisk-040-topology-aware`)
-
-**Not Kaggle-verified.** Everything below is implemented and CPU-tested locally (mocked GPUs; the dev machine has one GeForce 940M, SM50). It becomes "verified" only after
-notebooks 07–12 run on Kaggle. The verified baseline above is untouched: the vLLM wheel and native CUDA binaries are byte-identical to RC6.
+| Level | Meaning |
+|---|---|
+| Implemented | code exists in this repository |
+| CPU-tested | covered by `tests/` using mocks / fake workers (no GPU) |
+| CUDA-compiled | native C++ compiles for `sm_75` locally and links only `libcudart.so.13` |
+| Kaggle-tested | executed on 2 × T4 by the owner — **nothing in 0.1.0 yet** |
+| Experimental | no evidence of a benefit; may change or be removed |
 
 | Feature | API | Status |
 |---|---|---|
+| Core SDK: validated config, T4/SM75 checks, TP=1/TP=2 engine wrapper, NCCL helpers, Kaggle limits | `stokastisk.LLM`, `StokastiskConfig` | Implemented, CPU-tested; Kaggle-tested: no |
 | GPU topology (UUIDs, PCIe, P2P per direction, link class, NVLink, NCCL) | `stokastisk.discover_topology()` | CPU-tested |
 | Execution strategies, validated | `StokastiskConfig(execution_strategy=..., pipeline_parallel_size=...)` | CPU-tested |
 | Rule-based parallelism recommendation (never applied automatically) | `stokastisk.recommend_parallelism(model, topology, workload)` | CPU-tested |
-| Independent dual-GPU replicas + token-aware scheduler | `stokastisk.parallel.ReplicaPool(model, devices=[0, 1])` | CPU-tested (fake workers); **experimental** |
+| Independent dual-GPU replicas + token-aware scheduler, worker lifecycle and failure recovery | `stokastisk.parallel.ReplicaPool(model, devices=[0, 1])` | CPU-tested (fake workers); **experimental** |
 | Pipeline parallelism PP=2 | `StokastiskConfig(pipeline_parallel_size=2, ...)` | source-verified in vLLM 0.25.1; **experimental, unproven on the Flash-free wheel** |
 | Telemetry (GPU, communication, worker metrics, Nsight probe, optional OTel) | `stokastisk.telemetry` | CPU-tested |
-| Host-staged CUDA transport (pinned memory, streams, events; Python + C++) vs NCCL | `stokastisk.communication`, `native/` | **experimental**, never run on two GPUs yet |
-| Reproducible benchmarks (TP/PP/replicas, imbalance %, communication sweep) | `stokastisk.benchmarks`, `scripts/kaggle/v040_*.py` | CPU-tested maths; not yet run on Kaggle |
+| Host-staged CUDA transport (pinned memory, streams, events; Python + C++) vs NCCL | `stokastisk.communication`, `native/` | CUDA-compiled; **experimental**, never run on two GPUs |
+| Reproducible benchmarks (TP/PP/replicas, imbalance %, communication sweep) | `stokastisk.benchmarks`, `scripts/kaggle/dual_*.py` | CPU-tested maths; not run on Kaggle |
 
 ```python
 import stokastisk
@@ -76,7 +81,7 @@ this machine, and an installer that cannot break the Kaggle image.
 import urllib.request, runpy, subprocess, sys
 url = "https://huggingface.co/waqasm86/stokastisk/resolve/main/scripts/fetch_release.py"
 open("/tmp/fetch_release.py", "wb").write(urllib.request.urlopen(url).read())
-bundle = runpy.run_path("/tmp/fetch_release.py")["fetch_release"]("stokastisk-0.3.0-kaggle-t4-sm75-rc6")
+bundle = runpy.run_path("/tmp/fetch_release.py")["fetch_release"]("stokastisk-0.1.0-kaggle-t4-sm75")
 
 # 2. Install. Never runs a dependency resolver, never touches torch / triton / NCCL / CUDA / transformers.
 subprocess.run([sys.executable, f"{bundle}/scripts/kaggle/02_install.py", str(bundle)], check=True)
@@ -112,17 +117,11 @@ The validated pattern is `scripts/kaggle/05_inference.py`.
 
 Errors derive from `StokastiskError` (`ConfigurationError`, `EnvironmentValidationError`, `GPUDiscoveryError`, `EngineError`, `AttentionBackendError`).
 
-## Measured on Kaggle (rc6, owner-run, 2 × Tesla T4)
+## Historical measurements (earlier internal baseline build, same vLLM wheel — NOT validation of 0.1.0)
 
-| Test | Result |
-|---|---|
-| 05 inference, Qwen2.5-0.5B-Instruct | TP=1 and TP=2 both complete real generation. `TRITON_ATTN` logged by the engine. Triton attention kernels compiled. The expected answer ("Paris") appears in the output. Clean shutdown: GPU memory back to 3 MiB |
-| 06 benchmark, Qwen2.5-1.5B-Instruct, 4096 new tokens | **TP=1: 949 tok/s** · **TP=2: 521 tok/s** (0.55×) |
-| 06 prefill, 9648 tokens | TP=1: 97.5k tok/s · TP=2: 41.0k tok/s |
-| 04 NCCL | all collectives pass; transport `SHM/direct`; topology `PHB`, no peer-to-peer |
-
-**Use TP=1 when the model fits on one T4.** These two T4s are linked through the host bridge with no P2P, so tensor parallelism costs more in communication than it gains.
-Use TP=2 only for models that do not fit in one 15 GiB card. A second option is two independent TP=1 engines, one per GPU.
+On an earlier internal build with the same vLLM wheel, the owner measured Qwen2.5-1.5B-Instruct (4096 new tokens) on Kaggle 2 × T4: TP=1 949 tok/s, TP=2 521 tok/s (0.55×);
+the two T4s sit behind the host bridge (`PHB`) with no peer-to-peer. **Use TP=1 when the model fits one T4**; use TP=2 only for models that do not fit in 15 GiB.
+Two independent TP=1 engines (replicas) are implemented but unmeasured. Re-measure with notebooks 06–12.
 
 ## Install options
 
@@ -132,7 +131,7 @@ Use TP=2 only for models that do not fit in one 15 GiB card. A second option is 
 | **Kaggle dataset** | offline runs: upload `releases/<name>/<name>-kaggle-input.zip` from the Hub as a dataset |
 | **Manual** | see [INSTALL.md](INSTALL.md) |
 
-The installer plans before it changes anything, and it refuses if a protected package would change. It installs the two wheels with `--no-deps`, then eight exact pins,
+The installer plans before it changes anything, and it refuses if a protected package would change. It installs the two wheels with `--force-reinstall --no-deps` (so any other installed Stokastisk version is replaced by exactly 0.1.0), then eight exact pins,
 and verifies the after-state equals the before-state plus those eight packages.
 
 ## Repository layout
@@ -141,14 +140,15 @@ and verifies the after-state equals the before-state plus those eight packages.
 |---|---|
 | `sdk/stokastisk/` | the SDK (pure Python): core, `topology/`, `parallel/`, `telemetry/`, `cuda/`, `communication/`, `benchmarks/` |
 | `native/` | optional C++ (CUDA Runtime API) host-staged transport, built on demand with nvcc |
-| `scripts/kaggle/` | installer and the six acceptance stages (`01_env_audit` … `07_summary`) |
+| `scripts/kaggle/` | installer, stages `01_env_audit` … `07_summary`, and the `dual_*` stages for notebooks 07–12 |
 | `scripts/fetch_release.py` | stdlib CDN downloader |
 | `scripts/release/`, `scripts/build_vllm_sm75.sh`, `scripts/audit/` | build, repack, patch and audit tooling |
 | `patches/` | wheel patches that keep the Flash-free engine importable (0003 fixes the TP=1/TP=2 FlashInfer default-path imports) |
 | `requirements/` | exact pins, constraints, prohibited list |
 | `tests/` | CPU-only unit tests (they do not prove GPU behaviour — Kaggle runs do) |
 | `docs/` | [ARCHITECTURE](docs/ARCHITECTURE.md), [DEPENDENCIES](docs/DEPENDENCIES.md) |
-| `notebooks/` | 0.4.0 acceptance notebooks 07–12 (unexecuted); the verified RC6 notebooks 01–06 are history |
+| `notebooks/` | Kaggle notebooks 01–12, all unexecuted (`NOT_RUN`) |
+| `VERSION`, `VERSION_POLICY.md`, `scripts/release/verify_project_version.py` | the permanent project-version lock |
 
 ## Known limitations
 
@@ -157,7 +157,7 @@ and verifies the after-state equals the before-state plus those eight packages.
   Forcing the cu13 build would mean changing Kaggle's protected baseline, so this project does not.
 * **Triton attention only.** MLA, hybrid and sparse-attention model families select other backends and are unsupported.
 * **T4 / SM75 only.** There is no PTX, so other GPUs cannot run the native extensions.
-* **The Hub download path was verified locally and by SHA256; the Kaggle runs used the same archive attached as a dataset.**
+* **No Kaggle run of this release yet**: the Hub download path is verified by SHA256 on a workstation, not on Kaggle.
 
 ## License
 

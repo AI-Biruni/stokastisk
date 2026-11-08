@@ -1,4 +1,4 @@
-"""Stage 07 (0.4.0): measured GPU topology. Records facts; differences from the RC6-observed environment are WARNINGs, not failures."""
+"""Stage 07: measured GPU topology. Records facts; differences from the baseline-observed environment are WARNINGs, not failures."""
 import json
 from _common import OUT, check, finish, run_guarded, save, skipped, versions, warn
 
@@ -20,11 +20,11 @@ def main() -> int:
     check(R, "link class determined (not UNKNOWN)", t.pair_link(0, 1) != "UNKNOWN", t.pair_link(0, 1))
     check(R, "recommendation is rule-based and present", bool(t.recommended_parallelism), t.recommended_parallelism)
     if t.pair_link(0, 1) != "PHB":
-        warn(R, "link class differs from the RC6-observed PHB", t.pair_link(0, 1))
+        warn(R, "link class differs from the baseline-observed PHB", t.pair_link(0, 1))
     if t.peer_access.any_pair_available:
-        warn(R, "CUDA peer access is available here (RC6 environment had none)", pm)
+        warn(R, "CUDA peer access is available here (baseline environment had none)", pm)
     if t.nvlink_available:
-        warn(R, "NVLink reported (RC6 environment had none)", "")
+        warn(R, "NVLink reported (baseline environment had none)", "")
     s = sample_once(); check(R, "telemetry sample obtained (nvidia-smi)", s["source"] != "unavailable" and len(s["gpus"]) == t.gpu_count, s["source"])
     ns = nsight_status(); save("07_nsight.json", ns)
     for tool in ("nsys", "ncu"):

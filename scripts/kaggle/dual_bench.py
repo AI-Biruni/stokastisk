@@ -1,4 +1,4 @@
-"""Benchmark one mode over a workload set. usage: v040_bench.py MODE MODEL SET     MODE: tp1|tp2|pp2|replicas2   SET: standard|scaling
+"""Benchmark one mode over a workload set. usage: dual_bench.py MODE MODEL SET     MODE: tp1|tp2|pp2|replicas2   SET: standard|scaling
 Writes bench_<MODE>_<SET>.json (status MEASURED or ERROR+traceback). All repeats are recorded; nothing is best-of."""
 import json, sys, traceback
 from _common import OUT, finish, gpu_used_mib, run_guarded, save, versions

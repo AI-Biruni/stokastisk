@@ -1,5 +1,5 @@
 #!/usr/bin/env python3.13
-"""0.4.0 CPU-only tests: queue, routing, scheduler, recommender, memory estimation, and the REAL ReplicaPool process lifecycle with a fake (GPU-less) worker."""
+"""CPU-only tests: queue, routing, scheduler, recommender, memory estimation, and the REAL ReplicaPool process lifecycle with a fake (GPU-less) worker."""
 import os, pathlib, sys, unittest
 from unittest import mock
 

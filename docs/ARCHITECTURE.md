@@ -1,6 +1,6 @@
-# Stokastisk 0.3.0 — T4/Triton-only architecture
+# Stokastisk 0.1.0 — T4/Triton-only architecture
 
-**Status: rc6 passed notebooks 01–06 on Kaggle (2 × T4) — see `RELEASE.md`.**
+**Status: `KAGGLE_GPU_VERIFICATION_PENDING` — CPU-tested only; the vLLM wheel and native binaries are byte-identical to an earlier baseline build that ran TP=1/TP=2 inference on Kaggle (historical, see `RELEASE.md`).**
 
 ## Target (single supported configuration)
 Kaggle, Python 3.13, PyTorch 2.11.0+cu130, CUDA 13.0, Triton 3.6.0, glibc 2.39, driver 580.x, **4 CPU cores, ~30 GiB RAM, 20 GiB `/kaggle/working`, 2 × Tesla T4 (SM75, ~15 GiB each), no peer access, PHB topology** (`stokastisk.LIMITS`). NCCL: torch is compiled against 2.28.9; the runtime library on Kaggle is whatever `nvidia/nccl/lib/libnccl.so.2` is (observed 2.32.3, see `RELEASE.md`).
@@ -9,7 +9,7 @@ Other GPUs are unsupported on purpose: the native extensions contain `sm_75` cub
 ## Components
 | Piece | What it is |
 |---|---|
-| `stokastisk-0.3.0-py3-none-any.whl` | pure-Python SDK (`import stokastisk`): config validation, T4 checks, NCCL helpers, prohibited-package diagnostics, thin wrapper over `vllm.LLM` |
+| `stokastisk-0.1.0-py3-none-any.whl` | pure-Python SDK (`import stokastisk`): config validation, T4 checks, NCCL helpers, prohibited-package diagnostics, thin wrapper over `vllm.LLM` |
 | `vllm-0.25.1-cp38-abi3-linux_x86_64.whl` | vLLM 0.25.1 **derived** T4-only distribution (see below) |
 | `requirements/` | exact `--no-deps` pins + constraints + prohibited list |
 | `scripts/kaggle` | installer and the six acceptance stages (run by the project owner on Kaggle) |
@@ -43,12 +43,12 @@ No P2P, no NVLink. Defaults set before engine start (never overriding user value
 
 
 ---
-# 0.4.0 — topology-aware orchestration layer (development candidate, NOT Kaggle-verified)
+# Topology-aware orchestration layer (CPU-tested, NOT Kaggle-verified)
 
-0.4.0 adds a **pure-Python** layer above the unchanged RC6 engine. The vLLM wheel and all native CUDA extensions are byte-identical to RC6; the SDK wheel is the only rebuilt artifact.
+Stokastisk 0.1.0 includes a **pure-Python** orchestration layer above the unchanged baseline engine. The vLLM wheel and all native CUDA extensions are byte-identical to the baseline build; the SDK wheel is the only rebuilt artifact.
 Everything below is labelled with what has actually been verified: *CPU-tested* (mocked, runs anywhere), *locally run* (the dev machine has one GeForce 940M, SM50 — it proves nothing about T4/SM75), *Kaggle-verified* (none yet).
 
-## The physical constraint (measured on Kaggle by RC6, never assumed by the code)
+## The physical constraint (measured on Kaggle by the earlier baseline build, never assumed by the code)
 Two Tesla T4 behind a PCIe host bridge: topology `PHB`, no NVLink, `torch.cuda.can_device_access_peer` false in both directions. NCCL works over shared memory (`SHM/direct`).
 Nothing in this SDK can create NVLink bandwidth on a machine without NVLink: pinned memory, NCCL SHM, CUDA streams and host staging are *different* communication techniques with different costs, not substitutes.
 The topology detector reports what the machine has; it does not hardcode PHB.
@@ -69,13 +69,13 @@ The topology detector reports what the machine has; it does not hardcode PHB.
 ## 2. Execution strategies (`StokastiskConfig`, CPU-tested)
 | strategy | TP | PP | processes | status |
 |---|---|---|---|---|
-| `single_gpu` | 1 | 1 | 1 engine | **Kaggle-verified (RC6)** |
-| `tensor_parallel` | 2 | 1 | 1 engine, 2 workers | **Kaggle-verified (RC6)**, 0.55× of TP=1 for a model that fits one GPU |
+| `single_gpu` | 1 | 1 | 1 engine | Kaggle-measured on the earlier baseline build; **not re-run for 0.1.0** |
+| `tensor_parallel` | 2 | 1 | 1 engine, 2 workers | Kaggle-measured on the earlier baseline build (0.55× of TP=1 for a model that fits one GPU); **not re-run for 0.1.0** |
 | `pipeline_parallel` | 1 | 2 | 1 engine, 2 workers | **experimental**: vLLM 0.25.1 source supports it (see below); unverified until notebook 08 runs |
 | `replica_parallel` | 1 | 1 | 1 TP=1 engine per GPU | **experimental**: unverified until notebook 09 runs |
 | `auto` | – | – | – | recommendation only: `LLM()` refuses it; call `recommend_parallelism()` |
 
-TP=2 × PP=2 is rejected (4 GPUs on a 2-GPU target). `execution_strategy=None` keeps the 0.3.0 meaning, and at PP=1 the engine call is byte-for-byte the 0.3.0 call.
+TP=2 × PP=2 is rejected (4 GPUs on a 2-GPU target). `execution_strategy=None` keeps the baseline meaning, and at PP=1 the engine call is byte-for-byte the baseline call.
 
 ### TP=2 — every layer is split, an all-reduce per layer
 ```
@@ -88,9 +88,9 @@ TP=2 × PP=2 is rejected (4 GPUs on a 2-GPU target). `execution_strategy=None` k
  GPU0 [embed, layers 0..N/2-1] ──activations (NCCL send/recv)──► GPU1 [layers N/2..N-1, norm, lm_head] ──► token
  vLLM decides the partition (`make_layers`); stages are idle part of the time unless several micro-batches are in flight.
 ```
-**What was verified about PP in the vLLM 0.25.1 source and RC6 wheel (static, no execution):** `EngineArgs.pipeline_parallel_size` exists; `ParallelConfig` multiplies TP×PP into `world_size`;
+**What was verified about PP in the vLLM 0.25.1 source and bundled wheel (static, no execution):** `EngineArgs.pipeline_parallel_size` exists; `ParallelConfig` multiplies TP×PP into `world_size`;
 the `mp` executor builds PP groups (`get_pp_group`) and names workers `Worker_PP<rank>`; `Qwen2ForCausalLM` is `SupportsPP` (`make_layers`, `PPMissingLayer`, `IntermediateTensors`); inter-stage tensors go through `GroupCoordinator.send_tensor_dict/recv_tensor_dict`.
-**Not verified:** that PP=2 actually runs on the Flash-free RC6 wheel on two T4 (notebook 08), and whether it is faster than TP=2 (unknown; not assumed).
+**Not verified:** that PP=2 actually runs on the Flash-free wheel on two T4 (notebook 08), and whether it is faster than TP=2 (unknown; not assumed).
 
 ### Replicas — no inter-GPU traffic at all
 ```
@@ -129,6 +129,6 @@ nvidia-smi/NVML sampling (utilisation, memory, clocks, temperature, power, PCIe 
 Benchmarks record provenance, model revision, every repeat (min/median/p95/max), TTFT, inter-token latency, throughput and imbalance `|T0−T1|/max(T0,T1)·100`. Per-stage PP compute/communication time is **not exposed** by vLLM's public API and is reported `NOT_MEASURED`; the PP balance number is a labelled utilisation proxy, never stage time.
 
 ## Decisions
-* No native rebuild: nothing in 0.4.0 needs a new vLLM kernel. The only new native source is an optional, separately built CUDA-Runtime-only transport.
+* No native rebuild: nothing in 0.1.0 needs a new vLLM kernel. The only new native source is an optional, separately built CUDA-Runtime-only transport.
 * NCCL is never replaced; protected packages are never touched; `TRITON_ATTN`, fp16 and SM75 stay the only supported combination.
-* New features are opt-in and default off; the 0.3.0 call `StokastiskConfig(tensor_parallel_size=1)` is unchanged.
+* New features are opt-in and default off; the baseline call `StokastiskConfig(tensor_parallel_size=1)` is unchanged.

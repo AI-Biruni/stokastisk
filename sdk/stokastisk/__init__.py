@@ -10,7 +10,7 @@ from .limits import LIMITS, check_resources, cpu_budget, working_dir_status
 from .errors import (AttentionBackendError, ConfigurationError, EngineError, EnvironmentValidationError, GPUDiscoveryError,
                      InsufficientMemoryError, ReplicaError, StokastiskError, TopologyError, UnsupportedParallelismError)
 
-# kept for 0.3.0-stage API compatibility
+# kept for baseline API compatibility
 validate_kaggle_t4 = validate_environment
 
 

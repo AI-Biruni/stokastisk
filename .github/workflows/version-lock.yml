@@ -1,0 +1,22 @@
+name: version-lock
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Verify the locked project version (0.1.0)
+        run: python scripts/release/verify_project_version.py --tags
+      - name: Version-lock and CPU-only tests that need no GPU or large wheels
+        run: |
+          python -m pip install pytest build setuptools
+          CUDA_VISIBLE_DEVICES= python -m pytest -q tests/test_version_policy.py tests/test_sdk_cpu.py tests/test_config_topology.py tests/test_parallel.py tests/test_installer.py tests/test_fetch_release.py
+      - name: Wheel metadata must say 0.1.0
+        run: |
+          python -m build --wheel --no-isolation -o /tmp/w .
+          python scripts/release/verify_project_version.py --wheel /tmp/w/stokastisk-*.whl

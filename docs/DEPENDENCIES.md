@@ -1,5 +1,5 @@
-# 0.4.0 dependency note
-0.4.0 adds **no required dependency**. `pynvml`/`nvidia-ml-py`, `cuda-python`, `opentelemetry`, Nsight and `nvcc` are all optional and detected at runtime; missing ones degrade to explicit `None`/`SKIPPED`.
+# Dependency note
+Stokastisk 0.1.0 adds **no required dependency** beyond the pinned vLLM wheel. `pynvml`/`nvidia-ml-py`, `cuda-python`, `opentelemetry`, Nsight and `nvcc` are all optional and detected at runtime; missing ones degrade to explicit `None`/`SKIPPED`.
 The wheel still requires only `vllm==0.25.1`; the installer's pins, constraints and protected-package rules are unchanged (torch, torchvision, triton, CUDA runtime/toolkit, NCCL, transformers are never touched).
 
 # Dependencies and the failed first installer

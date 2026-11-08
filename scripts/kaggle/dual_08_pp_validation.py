@@ -1,4 +1,4 @@
-"""Stage 08 (0.4.0): PP=2 on the exact RC6 vLLM wheel. usage: v040_08_pp_validation.py [MODEL]
+"""Stage 08 : PP=2 on the bundled vLLM wheel. usage: dual_08_pp_validation.py [MODEL]
 A vLLM limitation or crash is reported as ERROR with the traceback + reason. It is NEVER converted to PASS."""
 import os, pathlib, shutil, sys, time, traceback
 from _common import OUT, check, finish, gpu_used_mib, process_tree, proc_detail, run_guarded, save, tree_loaded_libs, versions, wait_children_gone
