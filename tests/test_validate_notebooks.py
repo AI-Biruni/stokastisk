@@ -51,6 +51,13 @@ class StaticNotebookValidation(unittest.TestCase):
     def test_detects_missing_pending_statement(self):
         self.assertEqual(self.run_dir(self.mutated(lambda nb: nb["cells"][0].update(source=["# Title only"]))), 1)
 
+    def test_all_notebooks_embed_the_shipped_downloader(self):
+        src = (ROOT / "scripts/fetch_release.py").read_text()
+        want = src[src.index("def _download(url"):src.index("def _sha256(")].strip()
+        for p in (ROOT / "notebooks").glob("*.ipynb"):
+            code = "".join("".join(c["source"]) for c in json.loads(p.read_text())["cells"])
+            self.assertIn(want, code, p.name)
+
     def test_report_marks_kaggle_not_run(self):
         out = pathlib.Path(tempfile.mkdtemp()) / "r.json"; vn.main(["--json", str(out)])
         r = json.loads(out.read_text())

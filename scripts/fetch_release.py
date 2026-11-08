@@ -29,6 +29,23 @@ def _range_ok(url):
 
 
 def _download(url, dest, workers=1, retries=3):
+    """Download to `<dest>.part`, check free disk space and the advertised length, then replace `dest` atomically; the partial file is removed on any failure."""
+    dest = pathlib.Path(dest); part = dest.with_name(dest.name + ".part")
+    part.unlink(missing_ok=True)
+    try:
+        total = _range_ok(url)
+        if total and shutil.disk_usage(dest.parent).free < total + (64 << 20):
+            raise RuntimeError(f"not enough free disk space in {dest.parent} for {total / 1e6:.0f} MB")
+        _download_to(url, part, workers, retries)
+        if total and part.stat().st_size != total:
+            raise RuntimeError(f"incomplete download: {part.stat().st_size} of {total} bytes")
+        os.replace(part, dest)
+    except BaseException:
+        part.unlink(missing_ok=True)
+        raise
+
+
+def _download_to(url, dest, workers=1, retries=3):
     dest = pathlib.Path(dest); total = _range_ok(url)
     t0 = time.time()
     if total and total > (4 << 20):
