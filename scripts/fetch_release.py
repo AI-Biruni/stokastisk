@@ -3,7 +3,7 @@
 
     python3.13 fetch_release.py stokastisk-0.1.0-kaggle-t4-sm75 [DEST]      # prints the bundle directory
 
- * ONE file (the release's `<release>-kaggle-input.zip`, ~37 MB) over up to 4 parallel HTTP range requests (the Kaggle CPU budget); falls back
+ * ONE file (the release's `<release>-kaggle-input.zip`, ~37 MB) as a single stream by default (workers=1; `workers=N` opts into N parallel range requests, which stalled against the Hub CDN in testing); falls back
    to a single stream when the server does not support ranges, and to `file://` for offline tests;
  * SHA256 verified against the `.sha256` sidecar BEFORE extraction; path-traversal-safe extraction; the extracted directory must carry
    the release name and `manifests/RELEASE-MANIFEST.json` must say the same name;
@@ -28,7 +28,7 @@ def _range_ok(url):
         return int(cr.rsplit("/", 1)[1]) if r.status == 206 and cr else None
 
 
-def _download(url, dest, workers=4, retries=3):
+def _download(url, dest, workers=1, retries=3):
     dest = pathlib.Path(dest); total = _range_ok(url)
     t0 = time.time()
     if total and total > (4 << 20):
@@ -71,7 +71,7 @@ def _sha256(path):
     return h.hexdigest()
 
 
-def fetch_release(release, dest="/tmp/stokastisk-release", base=None, revision="main", workers=4):
+def fetch_release(release, dest="/tmp/stokastisk-release", base=None, revision="main", workers=1):
     """Return the verified, extracted bundle directory (…/<release>). `base` overrides the Hub URL prefix (tests use file://)."""
     base = (base or HF_BASE).rstrip("/")
     root = f"{base}/{revision}/releases/{release}" if base.startswith("http") else f"{base}/releases/{release}"

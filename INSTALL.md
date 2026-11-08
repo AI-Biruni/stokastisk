@@ -2,7 +2,7 @@
 
 Release `stokastisk-0.1.0-kaggle-t4-sm75` (project version 0.1.0). Status: `KAGGLE_GPU_VERIFICATION_PENDING` — see [RELEASE.md](RELEASE.md).
 
-**Option A – Hub CDN, no dataset (recommended):** needs *Internet ON*. `scripts/fetch_release.py` (stdlib only, 4 parallel range requests, SHA256-verified) downloads the ~37 MB release:
+**Option A – Hub CDN, no dataset (recommended):** needs *Internet ON*. `scripts/fetch_release.py` (stdlib only, a single HTTP stream (parallel ranges are opt-in via `workers`; 4 parallel ranges stalled on the Hub CDN in a workstation test), SHA256-verified) downloads the ~37 MB release:
 ```python
 import urllib.request, runpy
 open('/tmp/fetch_release.py','wb').write(urllib.request.urlopen('https://huggingface.co/waqasm86/stokastisk/resolve/main/scripts/fetch_release.py').read())

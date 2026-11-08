@@ -29,7 +29,7 @@ Kaggle's own image resolves NCCL to the cu12 build 2.32.3 (two NCCL packages sha
 4 CPU cores (thread budget split across TP workers) · ~30 GiB RAM · 20 GiB `/kaggle/working` · 2 × T4 (SM75, ~15 GiB VRAM each).
 
 ## Fast install (Hub CDN)
-Kaggle: Internet ON, Accelerator *GPU T4 × 2*. `fetch_release.py` is stdlib-only: one ~37 MB archive, 4 parallel range requests over the CDN, verified against its `.sha256`.
+Kaggle: Internet ON, Accelerator *GPU T4 × 2*. `fetch_release.py` is stdlib-only: one ~37 MB archive, a single HTTP stream (parallel ranges are opt-in via `workers`; 4 parallel ranges stalled on the Hub CDN in a workstation test) over the CDN, verified against its `.sha256`.
 ```python
 import urllib.request, runpy, subprocess, sys
 open("/tmp/fetch_release.py", "wb").write(urllib.request.urlopen("https://huggingface.co/waqasm86/stokastisk/resolve/main/scripts/fetch_release.py").read())

@@ -77,7 +77,7 @@ this machine, and an installer that cannot break the Kaggle image.
 ## Quick start (Kaggle: Internet ON, Accelerator *GPU T4 × 2*, Python 3.13)
 
 ```python
-# 1. Download the release from the Hugging Face CDN (stdlib only; 4 parallel range requests; SHA256-verified; ~37 MB)
+# 1. Download the release from the Hugging Face CDN (stdlib only; a single HTTP stream (parallel ranges are opt-in via `workers`; 4 parallel ranges stalled on the Hub CDN in a workstation test); SHA256-verified; ~37 MB)
 import urllib.request, runpy, subprocess, sys
 url = "https://huggingface.co/waqasm86/stokastisk/resolve/main/scripts/fetch_release.py"
 open("/tmp/fetch_release.py", "wb").write(urllib.request.urlopen(url).read())
