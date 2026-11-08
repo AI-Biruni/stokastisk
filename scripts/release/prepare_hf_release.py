@@ -19,6 +19,9 @@ shutil.copy2(ZIP, dst / ZIP.name); (dst / (ZIP.name + ".sha256")).write_text(f"{
 for w in sorted((REL / "wheels").glob("*.whl")): shutil.copy2(w, dst / "wheels" / w.name)
 for m in ("RELEASE-MANIFEST.json", "BUILD-MANIFEST.json", "DEPENDENCY-MANIFEST.json", "CUDA-ARCH-MANIFEST.json", "SHA256SUMS"): shutil.copy2(REL / "manifests" / m, dst / "manifests" / m)
 (dst / "VERSION").write_text(LOCKED + "\n")
+shutil.copy2(ROOT / "INSTALL.md", dst / "INSTALL.md")                                              # installation instructions
+(dst / "validation").mkdir(); shutil.copy2(REL / "evidence/test-results.json", dst / "validation/test-results.json")   # validation metadata (CPU tests; no Kaggle evidence exists)
+shutil.copy2(REL / "evidence/notebook-validation.json", dst / "validation/notebook-validation.json")
 shutil.copy2(ROOT / "docs/HUB_README.md", STAGE / "README.md")
 (STAGE / "scripts").mkdir(); shutil.copy2(ROOT / "scripts/fetch_release.py", STAGE / "scripts/fetch_release.py")
 rm = json.loads((REL / "manifests/RELEASE-MANIFEST.json").read_text())
