@@ -35,8 +35,11 @@ class SDKTests(unittest.TestCase):
         del os.environ["STOKASTISK_TENSOR_PARALLEL_SIZE"]
 
     def test_validate_rejects_without_gpu(self):
-        import torch
-        if torch.cuda.is_available() and torch.cuda.device_count() >= 2 and \
+        try:
+            import torch
+        except ImportError:
+            torch = None  # CI runner: validate_environment must raise the SDK error, not ImportError
+        if torch is not None and torch.cuda.is_available() and torch.cuda.device_count() >= 2 and \
                 torch.cuda.get_device_capability(0) == (7, 5):
             self.skipTest("running on target hardware")
         with self.assertRaises(errors.StokastiskError):
@@ -125,10 +128,23 @@ class SDKTests(unittest.TestCase):
 
     def test_validate_environment_rejects_flashinfer(self):
         from stokastisk import diagnostics
+        import types
         import unittest.mock as m
-        with m.patch.object(diagnostics, "prohibited_report", lambda: {"clean": False, "modules": ["flashinfer"]}):
-            with self.assertRaises(errors.EnvironmentValidationError):
+        fake = types.SimpleNamespace(__version__="2.11.0+cu130", version=types.SimpleNamespace(cuda="13.0"))
+        with m.patch.dict(sys.modules, {"torch": fake}), \
+                m.patch.object(diagnostics, "prohibited_report", lambda: {"clean": False, "modules": ["flashinfer"]}), \
+                m.patch.object(diagnostics.sys, "version_info", (3, 13, 0)):
+            with self.assertRaises(errors.EnvironmentValidationError) as cm:
                 diagnostics.validate_environment(require_gpus=0, strict_torch=False)
+        self.assertIn("FlashInfer", str(cm.exception))
+
+    def test_validate_environment_without_torch_raises_sdk_error(self):
+        from stokastisk import diagnostics
+        import unittest.mock as m
+        with m.patch.dict(sys.modules, {"torch": None}), m.patch.object(diagnostics.sys, "version_info", (3, 13, 0)):
+            with self.assertRaises(errors.EnvironmentValidationError) as cm:
+                diagnostics.validate_environment(require_gpus=0)
+        self.assertIn("PyTorch is not installed", str(cm.exception))
 
     def test_triton_only_and_no_flash_in_registry_default(self):
         self.assertEqual(StokastiskConfig().attention_backend, "TRITON_ATTN")

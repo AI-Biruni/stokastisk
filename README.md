@@ -52,10 +52,9 @@ topology = stokastisk.discover_topology()
 rec = stokastisk.recommend_parallelism("Qwen/Qwen2.5-1.5B-Instruct", topology, workload="throughput")
 print(rec.strategy, rec.reason, rec.warnings)       # e.g. replica_parallel (experimental) on 2x T4 / PHB / no P2P
 
-if __name__ == "__main__":                           # required: vLLM and the replica workers use spawn
-    from stokastisk.parallel import ReplicaPool
-    with ReplicaPool("Qwen/Qwen2.5-0.5B-Instruct", devices=[0, 1]) as pool:
-        print(pool.generate(["Explain CUDA streams.", "Explain Tensor Core architecture."]))
+from stokastisk.parallel import ReplicaPool
+with ReplicaPool("Qwen/Qwen2.5-0.5B-Instruct", devices=[0, 1]) as pool:      # experimental; not yet run on Kaggle
+    print(pool.generate(["Explain CUDA streams.", "Explain Tensor Core architecture."]))
 ```
 No software here replaces NVLink: the T4 pair has none, and pinned memory / NCCL SHM / host staging are different techniques with different costs. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the diagrams and the exact verification status of each piece.
 
@@ -88,22 +87,17 @@ subprocess.run([sys.executable, f"{bundle}/scripts/kaggle/02_install.py", str(bu
 ```
 
 ```python
-# 3. Use it. vLLM 0.25.1 starts worker processes with `spawn`, so a script must keep the __main__ guard.
+# 3. Use it (top-level notebook statements; each cell runs in order).
 import stokastisk
 
-def main():
-    cfg = stokastisk.StokastiskConfig(tensor_parallel_size=1)      # 1 = fastest on this machine, 2 = both GPUs
-    llm = stokastisk.LLM("Qwen/Qwen2.5-0.5B-Instruct", config=cfg)
-    print(llm.complete("The capital of France is", max_tokens=32))
-    print(llm.verify_attention_backend())                          # "TRITON_ATTN"
-    llm.close()
-
-if __name__ == "__main__":
-    main()
+config = stokastisk.StokastiskConfig(tensor_parallel_size=1)       # 1 = fastest on this machine, 2 = both GPUs
+llm = stokastisk.LLM("Qwen/Qwen2.5-0.5B-Instruct", config=config)
+print(llm.complete("The capital of France is", max_tokens=32))
+print(llm.verify_attention_backend())                              # "TRITON_ATTN"
+llm.close()
 ```
 
-In a Kaggle notebook cell, put the code in a `.py` file and run it with `python`, or run it as a subprocess: vLLM's `spawn` re-imports the launching script, which a notebook kernel cannot satisfy.
-The validated pattern is `scripts/kaggle/05_inference.py`.
+**Status of this exact snippet: `KAGGLE_GPU_VERIFICATION_PENDING`.** vLLM 0.25.1 starts engine processes with `spawn`. The Kaggle acceptance scripts (`scripts/kaggle/05_inference.py`, used by notebooks 05–06) run the engine in a separate Python process, and that is the only pattern designed for validation; running `stokastisk.LLM` directly in a notebook cell has **not** been tested on Kaggle. If it fails there, use the notebook-05 pattern and report the error.
 
 ### Public API
 

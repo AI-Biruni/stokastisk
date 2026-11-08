@@ -1,12 +1,20 @@
 """Stage 01: environment audit. READ-ONLY: installs nothing, changes nothing. Writes 01_env_audit.json (+ package inventory)."""
-import ctypes, json, os, platform, re, shutil, sys
+import ctypes, datetime, json, os, platform, re, shutil, sys
 from _common import OUT, check, finish, sh, warn
 
 R = []; info = {}
+info["timestamp_utc"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
 info["python"] = platform.python_version()
 check(R, "python 3.13", sys.version_info[:2] == (3, 13), info["python"])
-import torch
+try:
+    import torch
+except ImportError as e:  # not a Kaggle GPU runtime: report clearly instead of a traceback
+    check(R, "PyTorch importable (environment-incompatible if not)", False, f"ENVIRONMENT_INCOMPATIBLE: {e}")
+    print(json.dumps(info, indent=1, default=str))
+    finish("01_env_audit", R, {"environment": info})
+    raise SystemExit(1)
 info["torch"] = torch.__version__; info["torch_cuda"] = torch.version.cuda
+info["cuda_runtime_torch"] = torch.version.cuda          # CUDA runtime that PyTorch was built/linked against
 check(R, "torch 2.11.0+cu130", torch.__version__.startswith("2.11.0") and torch.version.cuda == "13.0", f"{torch.__version__} cuda={torch.version.cuda}")
 try:
     import triton; info["triton"] = triton.__version__
@@ -31,6 +39,14 @@ for i in range(n):
     gpus.append({"index": i, "name": p.name, "cc": (p.major, p.minor), "total_MiB": total >> 20, "free_MiB": free >> 20})
     check(R, f"gpu{i} Tesla T4 / SM75", "T4" in p.name and (p.major, p.minor) == (7, 5), f"{p.name} {p.major}.{p.minor}")
 info["gpus"] = gpus
+smi = sh("nvidia-smi --query-gpu=index,uuid,name,driver_version,memory.total --format=csv,noheader")
+info["gpu_uuids_and_driver"] = smi
+drv = re.findall(r"(\d+\.\d+(?:\.\d+)?)", smi.splitlines()[0].split(",", 3)[-1]) if smi and smi.strip() else []
+info["nvidia_driver"] = drv[0] if drv else None
+check(R, "NVIDIA driver and GPU UUIDs reported by nvidia-smi", bool(info["nvidia_driver"]) and "GPU-" in (smi or ""), smi)
+check(R, "NCCL available to PyTorch", info["nccl"] is not None, info["nccl"])
+info["env_vars"] = {k: os.environ[k] for k in sorted(os.environ) if re.match(r"(CUDA_|NCCL_|VLLM_|TRITON_|STOKASTISK_|PYTORCH_|OMP_|HF_HOME|TOKENIZERS_)", k) and not re.search(r"(TOKEN|KEY|SECRET|PASSWORD)", k, re.I)}
+info["disk"] = {d: {"free_gib": round(shutil.disk_usage(d).free / 1024 ** 3, 1)} for d in ("/kaggle/working", "/kaggle/input", "/tmp") if os.path.isdir(d)}
 info["peer_access"] = {f"{a}->{b}": bool(torch.cuda.can_device_access_peer(a, b)) for a in range(n) for b in range(n) if a != b}
 info["topology"] = sh("nvidia-smi topo -m"); info["nvidia_smi"] = sh("nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv")
 import importlib.metadata as md

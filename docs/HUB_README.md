@@ -36,15 +36,17 @@ open("/tmp/fetch_release.py", "wb").write(urllib.request.urlopen("https://huggin
 bundle = runpy.run_path("/tmp/fetch_release.py")["fetch_release"]("stokastisk-0.1.0-kaggle-t4-sm75")
 subprocess.run([sys.executable, f"{bundle}/scripts/kaggle/02_install.py", str(bundle)], check=True)   # --no-deps, protected packages untouched
 ```
-Then, in a script (vLLM uses `spawn`, so keep the `__main__` guard):
+Then, as top-level notebook statements:
 ```python
 import stokastisk
-def main():
-    llm = stokastisk.LLM("Qwen/Qwen2.5-0.5B-Instruct", config=stokastisk.StokastiskConfig(tensor_parallel_size=1))
-    print(llm.complete("The capital of France is"), llm.verify_attention_backend()); llm.close()
-if __name__ == "__main__":
-    main()
+
+config = stokastisk.StokastiskConfig(tensor_parallel_size=1)
+llm = stokastisk.LLM("Qwen/Qwen2.5-0.5B-Instruct", config=config)
+print(llm.complete("The capital of France is"))
+print(llm.verify_attention_backend())      # "TRITON_ATTN"
+llm.close()
 ```
+Status: `KAGGLE_GPU_VERIFICATION_PENDING`. vLLM 0.25.1 uses `spawn`; the acceptance notebooks (05–06) run the engine in a separate process (`scripts/kaggle/05_inference.py`), which is the only pattern designed for validation. Running `stokastisk.LLM` directly in a notebook cell has not been tested on Kaggle.
 
 ## Files
 | Path | What |

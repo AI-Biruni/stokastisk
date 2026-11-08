@@ -1,5 +1,12 @@
 name: version-lock
-on: [push, pull_request]
+# Runs once per push to main, once per v* tag (tag validation is intentional: the tag must carry the locked version),
+# and for pull requests. No secrets are used; nothing here writes or derives a version.
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
@@ -7,16 +14,25 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
-      - name: Verify the locked project version (0.1.0)
-        run: python scripts/release/verify_project_version.py --tags
-      - name: Version-lock and CPU-only tests that need no GPU or large wheels
+      - name: Show context
         run: |
-          python -m pip install pytest build setuptools
-          CUDA_VISIBLE_DEVICES= python -m pytest -q tests/test_version_policy.py tests/test_sdk_cpu.py tests/test_config_topology.py tests/test_parallel.py tests/test_installer.py tests/test_fetch_release.py
-      - name: Wheel metadata must say 0.1.0
+          echo "ref=$GITHUB_REF type=$GITHUB_REF_TYPE sha=$GITHUB_SHA"; python -VV; cat VERSION
+      - name: Local project checks (no network; locked version read from the verifier and VERSION)
+        run: python scripts/release/verify_project_version.py --tags
+      - name: Install test tooling only (no torch, no GPU)
+        run: python -m pip install pytest build setuptools
+      - name: CPU tests that need no torch, GPU or large wheel
+        run: |
+          CUDA_VISIBLE_DEVICES= python -m pytest -q tests/test_version_policy.py tests/test_verifier_scopes.py tests/test_validate_notebooks.py tests/test_readme_examples.py tests/test_sdk_cpu.py tests/test_config_topology.py tests/test_parallel.py tests/test_installer.py tests/test_fetch_release.py
+      - name: Static notebook validation (structure only; this is NOT Kaggle validation)
+        run: python scripts/validation/validate_notebooks.py
+      - name: Wheel metadata must say the locked version
         run: |
           python -m build --wheel --no-isolation -o /tmp/w .
           python scripts/release/verify_project_version.py --wheel /tmp/w/stokastisk-*.whl

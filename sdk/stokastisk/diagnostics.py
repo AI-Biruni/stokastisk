@@ -89,9 +89,12 @@ def prohibited_report() -> dict[str, Any]:
 
 def validate_environment(*, require_gpus: int = 2, strict_torch: bool = True) -> dict[str, Any]:
     """Validate the runtime against the SDK build target (CUDA 13.0 / SM75 / torch 2.11 cu130)."""
-    import torch
     if sys.version_info[:2] != (3, 13):
         raise EnvironmentValidationError(f"CPython 3.13 required, found {platform.python_version()}")
+    try:
+        import torch
+    except ImportError as e:
+        raise EnvironmentValidationError(f"PyTorch is not installed ({e}); the Kaggle runtime provides torch 2.11.0+cu130") from e
     if strict_torch and not str(torch.__version__).startswith("2.11.0"):
         raise EnvironmentValidationError(f"torch 2.11.0 required, found {torch.__version__}")
     if torch.version.cuda is None or not torch.version.cuda.startswith(CUDA_BUILD_TARGET):
