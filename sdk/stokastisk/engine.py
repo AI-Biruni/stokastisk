@@ -6,6 +6,7 @@ import os
 from typing import Any
 
 from .config import StokastiskConfig
+from .compat import check_dtype
 from .errors import AttentionBackendError, ConfigurationError, EngineError
 
 log = logging.getLogger("stokastisk")
@@ -26,9 +27,10 @@ class LLM:
         if strat == "replica_parallel" and not os.environ.get("STOKASTISK_REPLICA_WORKER"):
             raise ConfigurationError("replica_parallel runs one engine per GPU: use stokastisk.parallel.ReplicaPool(model, devices=[0, 1])")
         if self.config.is_experimental and strat == "pipeline_parallel":
-            log.warning("pipeline_parallel is EXPERIMENTAL: not Kaggle-verified until notebook 08 passes; TP=2/PP=2 throughput is unproven")
+            log.warning("pipeline_parallel is EXPERIMENTAL: Kaggle-verified on 2xT4 (notebooks 08, 13) but slower than TP=1 for a model that fits one T4; use it only for models that need two GPUs")
         self.config.apply_environment()
         merged = {**self.config.engine_kwargs(), **kwargs}
+        check_dtype(str(merged.get("dtype", "half")))      # clear StokastiskCompatibilityError for an explicit bfloat16 instead of vLLM's late ValueError
         try:
             from vllm import LLM as VllmLLM
             self._engine = VllmLLM(model=model, **merged)
@@ -61,6 +63,13 @@ class LLM:
             return self._engine.generate(prompts, sampling_params, **kwargs)
         except Exception as e:  # noqa: BLE001
             raise EngineError(f"generation failed: {e}") from e
+
+    def chat(self, messages, sampling_params=None, **kwargs):
+        """Pass-through to ``vllm.LLM.chat`` (chat template applied by vLLM). Implemented, NOT executed on Kaggle (see stokastisk.compat.FEATURES['chat_generation'])."""
+        try:
+            return self._engine.chat(messages, sampling_params, **kwargs)
+        except Exception as e:  # noqa: BLE001
+            raise EngineError(f"chat generation failed: {e}") from e
 
     def complete(self, prompt: str, *, max_tokens: int = 64, temperature: float = 0.0) -> str:
         from vllm import SamplingParams

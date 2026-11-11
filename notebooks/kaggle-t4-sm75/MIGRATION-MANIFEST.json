@@ -74,5 +74,13 @@
  ],
  "not_moved": {
   "notebooks-executed-with-output/": "stays at the project root (local evidence, git-ignored, never published)"
+ },
+ "removed_2026_11_12": {
+  "note": "The 14 unexecuted source notebooks were removed from notebooks/kaggle-t4-sm75/notebooks/ at the owner's request. Executed copies with outputs remain in notebooks-executed-with-output/. Each removed file was verified byte-identical (SHA256, listed in 'moves') in the working tree, the released bundle, the executed bundle and git HEAD 9b7cb49/af81fc1 before deletion.",
+  "restore": [
+   "git checkout af81fc1 -- notebooks/kaggle-t4-sm75/notebooks",
+   "unzip stokastisk-kaggle-input/stokastisk-0.1.0-kaggle-t4-sm75-kaggle-input.zip 'stokastisk-0.1.0-kaggle-t4-sm75/notebooks/*'",
+   "python scripts/make_notebooks.py   # regenerates 07-14 only"
+  ]
  }
 }

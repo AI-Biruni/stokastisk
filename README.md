@@ -117,6 +117,11 @@ Errors derive from `StokastiskError` (`ConfigurationError`, `EnvironmentValidati
 Measured on Kaggle 2 × T4 with Qwen2.5-1.5B-Instruct (4096 new tokens, notebook 06): TP=1 ≈ 1003 tok/s best of 3 (median ≈ 984), TP=2 ≈ 545 tok/s (0.55×). The two T4s sit behind the host bridge (`PHB`); peer access differs from one Kaggle VM to the next.
 **Use TP=1 when the model fits one T4**; use TP=2 or PP=2 only for models that do not fit in 15 GiB. Two independent TP=1 replicas split work evenly (notebook 14) but did not exceed one engine up to batch 64. Full tables: [docs/KAGGLE_T4_VERIFICATION.md](docs/KAGGLE_T4_VERIFICATION.md).
 
+## vLLM 0.25.1 coverage on the T4
+
+Not every vLLM feature works on a Tesla T4. [docs/VLLM_T4_COVERAGE.md](docs/VLLM_T4_COVERAGE.md) lists, per feature, whether it was **executed on Kaggle**, only compiled, CPU-tested, statically inspected or not run — and what cannot work on SM75 (bfloat16, Flash*, native FP8/FP4, Qwen Omni).
+`stokastisk.check_model(...)`, `check_dtype`, `check_quantization` and `check_feature` raise a clear `StokastiskCompatibilityError` before an engine starts; `stokastisk.serving` launches the bundled OpenAI-compatible server (implemented, not yet run on Kaggle).
+
 ## Install options
 
 | Option | When |

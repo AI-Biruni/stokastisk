@@ -8,7 +8,8 @@ from .topology import discover_topology, Topology
 from .parallel.recommender import recommend_parallelism, Recommendation
 from .limits import LIMITS, check_resources, cpu_budget, working_dir_status
 from .errors import (AttentionBackendError, ConfigurationError, EngineError, EnvironmentValidationError, GPUDiscoveryError,
-                     InsufficientMemoryError, ReplicaError, StokastiskError, TopologyError, UnsupportedParallelismError)
+                     InsufficientMemoryError, ReplicaError, StokastiskCompatibilityError, StokastiskError, TopologyError, UnsupportedParallelismError)
+from .compat import check_dtype, check_feature, check_model, check_quantization, feature_matrix
 
 # kept for baseline API compatibility
 validate_kaggle_t4 = validate_environment
@@ -21,6 +22,9 @@ def __getattr__(name):  # lazy: SamplingParams comes from the bundled vLLM
     if name == "ReplicaPool":
         from .parallel.replica import ReplicaPool
         return ReplicaPool
+    if name in ("ServerProcess", "build_serve_command"):      # serving imports only the standard library, but stays lazy to keep `import stokastisk` light
+        from . import serving
+        return getattr(serving, name)
     raise AttributeError(name)
 
 
@@ -29,4 +33,5 @@ __all__ = ["LLM", "SamplingParams", "StokastiskConfig", "validate_environment", 
            "EnvironmentValidationError", "GPUDiscoveryError", "EngineError", "ConfigurationError",
            "AttentionBackendError", "__version__", "LIMITS", "check_resources", "cpu_budget", "working_dir_status",
            "discover_topology", "Topology", "recommend_parallelism", "Recommendation", "ReplicaPool", "InsufficientMemoryError",
-           "ReplicaError", "TopologyError", "UnsupportedParallelismError", "VLLM_BASE_VERSION", "CUDA_BUILD_TARGET", "GPU_COMPUTE_CAPABILITY"]
+           "ReplicaError", "TopologyError", "UnsupportedParallelismError", "VLLM_BASE_VERSION", "CUDA_BUILD_TARGET", "GPU_COMPUTE_CAPABILITY",
+           "StokastiskCompatibilityError", "check_model", "check_feature", "check_dtype", "check_quantization", "feature_matrix", "ServerProcess", "build_serve_command"]

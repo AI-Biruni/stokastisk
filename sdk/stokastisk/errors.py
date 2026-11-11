@@ -39,3 +39,9 @@ class TopologyError(EnvironmentValidationError):
 
 class ReplicaError(StokastiskError):
     """A replica worker failed to start, died, or returned an error."""
+
+
+class StokastiskCompatibilityError(ConfigurationError):
+    """A model, dtype, quantization method or vLLM feature cannot work on the Tesla T4 / SM75 / TRITON_ATTN build.
+
+    Raised before any engine start so the user sees the reason instead of an obscure ImportError or CUDA failure."""
