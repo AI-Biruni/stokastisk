@@ -57,7 +57,7 @@ vLLM 0.25.1 uses `spawn`; the acceptance notebooks run each engine in a separate
 | `releases/stokastisk-0.1.0-kaggle-t4-sm75/wheels/` | `stokastisk-0.1.0-py3-none-any.whl` and `vllm-0.25.1-cp38-abi3-linux_x86_64.whl` for direct access |
 | `releases/stokastisk-0.1.0-kaggle-t4-sm75/manifests/` | `SHA256SUMS` and `RELEASE-MANIFEST.json` |
 
-`latest.json` carries the per-notebook results (`kaggle_acceptance`). The documentation inside the archive was frozen before the Kaggle runs and still describes the release as pending; this card, `latest.json` and the GitHub docs are authoritative.
+`latest.json` carries the per-notebook results (`kaggle_acceptance`). The documentation inside the archive carries the same `KAGGLE_T4_VERIFIED` status and results as this card.
 
 ## License
 Apache-2.0. vLLM is Apache-2.0 © the vLLM project.
