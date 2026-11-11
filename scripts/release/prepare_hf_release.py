@@ -26,7 +26,7 @@ shutil.copy2(ROOT / "docs/HUB_README.md", STAGE / "README.md")
 (STAGE / "scripts").mkdir(); shutil.copy2(ROOT / "scripts/fetch_release.py", STAGE / "scripts/fetch_release.py")
 rm = json.loads((REL / "manifests/RELEASE-MANIFEST.json").read_text())
 kv = json.loads((ROOT / "docs/kaggle-t4-verification.json").read_text())
-assert kv["released_manifest_sha256"] == sha(REL / "manifests/SHA256SUMS"), "executed bytes differ from the released bundle"
+assert kv["sdk_wheel_sha256_released"] == sha(next((REL / "wheels").glob("stokastisk-*.whl"))), "verification record names a different SDK wheel than the release"
 base = f"releases/{NAME}"
 latest = {"project": "stokastisk", "version": LOCKED, "release": NAME, "release_dir": base, "updated": time.strftime("%Y-%m-%d"),
           "validation_status": kv["validation_status"], "status": kv["performance_conclusion"], "verification": kv,

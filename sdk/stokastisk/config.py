@@ -11,13 +11,14 @@ from .limits import LIMITS, cpu_thread_env
 ALLOWED_ATTENTION_BACKENDS = ("TRITON_ATTN",)
 FORBIDDEN_ATTENTION_MARKERS = ("FLASH", "FA2", "FA3", "FA4")
 EXECUTION_STRATEGIES = ("single_gpu", "tensor_parallel", "pipeline_parallel", "replica_parallel", "auto")
-EXPERIMENTAL_STRATEGIES = ("pipeline_parallel", "replica_parallel")   # not Kaggle-verified until notebooks 08/09 pass
+EXPERIMENTAL_STRATEGIES = ("pipeline_parallel", "replica_parallel")   # Kaggle-verified on 2xT4 (notebooks 08, 09, 13, 14) but still experimental: slower than TP=1 for models that fit one GPU
 MAX_GPUS = LIMITS.gpu_count
 _BOOL = {"1": True, "true": True, "yes": True, "on": True, "0": False, "false": False, "no": False, "off": False}
 
-# NCCL settings for 2x T4 without CUDA peer access (Kaggle: PHB topology, no P2P).
+# Conservative NCCL settings for 2x T4 behind a PCIe host bridge (PHB). CUDA peer access is a per-VM property on Kaggle (measured true in one
+# session, false in another), so P2P is not relied on; shared memory / host paths work in both cases.
 NCCL_ENV_NO_P2P: dict[str, str] = {
-    "NCCL_P2P_DISABLE": "1",   # peer access unavailable -> go through shared memory / host
+    "NCCL_P2P_DISABLE": "1",   # do not depend on peer access (it varies between Kaggle VMs) -> shared memory / host
     "NCCL_IB_DISABLE": "1",    # no InfiniBand on Kaggle
     "NCCL_CUMEM_ENABLE": "0",  # vLLM cumem sleep-mode allocator is not used here
 }
@@ -31,7 +32,7 @@ VLLM_ENV_NO_FLASHINFER: dict[str, str] = {
 
 @dataclass
 class StokastiskConfig:
-    tensor_parallel_size: int = 1                # 1 or 2; TP=2 adds NCCL traffic over PCIe/SHM (no P2P)
+    tensor_parallel_size: int = 1                # 1 or 2; TP=2 adds NCCL traffic over PCIe (T4 has no NVLink)
     pipeline_parallel_size: int = 1              # 1 or 2 (experimental until Kaggle notebook 08 passes)
     execution_strategy: str | None = None        # None = inferred from TP (baseline behaviour); "auto" is recommendation-only
     replica_devices: tuple[int, ...] | None = None   # replica_parallel only: one TP=1 engine per listed GPU index

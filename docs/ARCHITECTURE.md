@@ -1,9 +1,9 @@
 # Stokastisk 0.1.0 — T4/Triton-only architecture
 
-**Status: `KAGGLE_GPU_VERIFICATION_PENDING` — CPU-tested only; the vLLM wheel and native binaries are byte-identical to an earlier baseline build that ran TP=1/TP=2 inference on Kaggle (historical, see `RELEASE.md`).**
+**Status: `KAGGLE_T4_VERIFIED` — all 14 notebooks ran on Kaggle 2 × T4 (see `RELEASE.md` and `docs/KAGGLE_T4_VERIFICATION.md`). Features with CPU coverage only are called out below. The vLLM wheel and native binaries are byte-identical to the earlier baseline build.**
 
 ## Target (single supported configuration)
-Kaggle, Python 3.13, PyTorch 2.11.0+cu130, CUDA 13.0, Triton 3.6.0, glibc 2.39, driver 580.x, **4 CPU cores, ~30 GiB RAM, 20 GiB `/kaggle/working`, 2 × Tesla T4 (SM75, ~15 GiB each), no peer access, PHB topology** (`stokastisk.LIMITS`). NCCL: torch is compiled against 2.28.9; the runtime library on Kaggle is whatever `nvidia/nccl/lib/libnccl.so.2` is (observed 2.32.3, see `RELEASE.md`).
+Kaggle, Python 3.13, PyTorch 2.11.0+cu130, CUDA 13.0, Triton 3.6.0, glibc 2.39, driver 580.x, **4 CPU cores, ~30 GiB RAM, 20 GiB `/kaggle/working`, 2 × Tesla T4 (SM75, ~15 GiB each), PHB topology; CUDA peer access varies between Kaggle VMs** (`stokastisk.LIMITS`). NCCL: torch is compiled against 2.28.9; the runtime library on Kaggle is whatever `nvidia/nccl/lib/libnccl.so.2` is (observed 2.32.3, see `RELEASE.md`).
 Other GPUs are unsupported on purpose: the native extensions contain `sm_75` cubins only (no PTX).
 
 ## Components
@@ -39,17 +39,17 @@ Other GPUs are unsupported on purpose: the native extensions contain `sm_75` cub
 No CUDA library is bundled. Static-vs-dynamic of individual CUDA symbols was not analysed beyond `DT_NEEDED`. glibc requirement of the native files: max GLIBC 2.38 (Kaggle has 2.39).
 
 ## NCCL / tensor parallel
-No P2P, no NVLink. Defaults set before engine start (never overriding user values): `NCCL_P2P_DISABLE=1`, `NCCL_IB_DISABLE=1`, `NCCL_CUMEM_ENABLE=0`; vLLM `disable_custom_all_reduce=True`; `enforce_eager=True`. Notebook 04 runs real all-reduce/all-gather/reduce-scatter and saves `NCCL_DEBUG` logs; TP=2 speed is measured, not assumed.
+No NVLink (T4); CUDA peer access is a per-VM property (measured true in one Kaggle session, false in another), so the defaults do not depend on it. Defaults set before engine start (never overriding user values): `NCCL_P2P_DISABLE=1`, `NCCL_IB_DISABLE=1`, `NCCL_CUMEM_ENABLE=0`; vLLM `disable_custom_all_reduce=True`; `enforce_eager=True`. Notebook 04 runs real all-reduce/all-gather/reduce-scatter and saves `NCCL_DEBUG` logs; TP=2 speed is measured, not assumed.
 
 
 ---
-# Topology-aware orchestration layer (CPU-tested, NOT Kaggle-verified)
+# Topology-aware orchestration layer (CPU-tested and Kaggle-verified; exceptions listed below)
 
 Stokastisk 0.1.0 includes a **pure-Python** orchestration layer above the unchanged baseline engine. The vLLM wheel and all native CUDA extensions are byte-identical to the baseline build; the SDK wheel is the only rebuilt artifact.
-Everything below is labelled with what has actually been verified: *CPU-tested* (mocked, runs anywhere), *locally run* (the dev machine has one GeForce 940M, SM50 — it proves nothing about T4/SM75), *Kaggle-verified* (none yet).
+Everything below is labelled with what has actually been verified: *CPU-tested* (mocked, runs anywhere), *locally run* (the dev machine has one GeForce 940M, SM50 — it proves nothing about T4/SM75), *Kaggle-verified* (executed by the owner on 2 × T4). Worker-failure recovery and the C++ transport's speed are **not** Kaggle-verified in the sense of a benefit: recovery has CPU tests only, and the transport is experimental.
 
-## The physical constraint (measured on Kaggle by the earlier baseline build, never assumed by the code)
-Two Tesla T4 behind a PCIe host bridge: topology `PHB`, no NVLink, `torch.cuda.can_device_access_peer` false in both directions. NCCL works over shared memory (`SHM/direct`).
+## The physical constraint (measured on Kaggle, never assumed by the code)
+Two Tesla T4 behind a PCIe host bridge: topology `PHB`, no NVLink. `torch.cuda.can_device_access_peer` was true in both directions in notebook 01 and false in both in notebook 07 (different Kaggle VMs), so it is measured each time and never assumed. NCCL works in both cases.
 Nothing in this SDK can create NVLink bandwidth on a machine without NVLink: pinned memory, NCCL SHM, CUDA streams and host staging are *different* communication techniques with different costs, not substitutes.
 The topology detector reports what the machine has; it does not hardcode PHB.
 
@@ -69,10 +69,10 @@ The topology detector reports what the machine has; it does not hardcode PHB.
 ## 2. Execution strategies (`StokastiskConfig`, CPU-tested)
 | strategy | TP | PP | processes | status |
 |---|---|---|---|---|
-| `single_gpu` | 1 | 1 | 1 engine | Kaggle-measured on the earlier baseline build; **not re-run for 0.1.0** |
-| `tensor_parallel` | 2 | 1 | 1 engine, 2 workers | Kaggle-measured on the earlier baseline build (0.55× of TP=1 for a model that fits one GPU); **not re-run for 0.1.0** |
-| `pipeline_parallel` | 1 | 2 | 1 engine, 2 workers | **experimental**: vLLM 0.25.1 source supports it (see below); unverified until notebook 08 runs |
-| `replica_parallel` | 1 | 1 | 1 TP=1 engine per GPU | **experimental**: unverified until notebook 09 runs |
+| `single_gpu` | 1 | 1 | 1 engine | **Kaggle-verified** (notebooks 03, 05, 06, 08, 11, 13, 14) |
+| `tensor_parallel` | 2 | 1 | 1 engine, 2 workers | **Kaggle-verified** (notebooks 05, 06, 11, 13): both GPUs hold a shard; ≈0.55× of TP=1 decode for a model that fits one GPU |
+| `pipeline_parallel` | 1 | 2 | 1 engine, 2 workers | **experimental, Kaggle-verified** (notebooks 08, 13): both GPUs hold a shard, deterministic output equal to TP=1; ≈0.6× of TP=1 decode |
+| `replica_parallel` | 1 | 1 | 1 TP=1 engine per GPU | **experimental, Kaggle-verified** (notebooks 09, 14): both GPUs receive work at every batch size; 0.91–0.96× of one TP=1 engine up to batch 64 |
 | `auto` | – | – | – | recommendation only: `LLM()` refuses it; call `recommend_parallelism()` |
 
 TP=2 × PP=2 is rejected (4 GPUs on a 2-GPU target). `execution_strategy=None` keeps the baseline meaning, and at PP=1 the engine call is byte-for-byte the baseline call.
@@ -90,7 +90,7 @@ TP=2 × PP=2 is rejected (4 GPUs on a 2-GPU target). `execution_strategy=None` k
 ```
 **What was verified about PP in the vLLM 0.25.1 source and bundled wheel (static, no execution):** `EngineArgs.pipeline_parallel_size` exists; `ParallelConfig` multiplies TP×PP into `world_size`;
 the `mp` executor builds PP groups (`get_pp_group`) and names workers `Worker_PP<rank>`; `Qwen2ForCausalLM` is `SupportsPP` (`make_layers`, `PPMissingLayer`, `IntermediateTensors`); inter-stage tensors go through `GroupCoordinator.send_tensor_dict/recv_tensor_dict`.
-**Not verified:** that PP=2 actually runs on the Flash-free wheel on two T4 (notebook 08), and whether it is faster than TP=2 (unknown; not assumed).
+**Verified on Kaggle (notebooks 08, 13):** PP=2 runs on the Flash-free wheel on two T4, with both GPUs holding stages. Measured decode (Qwen2.5-1.5B, batch 8): PP=2 ≈146–150 tok/s vs TP=2 ≈133 tok/s vs TP=1 ≈241 tok/s, so PP=2 is slightly faster than TP=2 here and both are slower than TP=1. A model too large for one T4 was not run.
 
 ### Replicas — no inter-GPU traffic at all
 ```
@@ -100,7 +100,7 @@ the `mp` executor builds PP groups (`get_pp_group`) and names workers `Worker_PP
    worker 0 (CUDA_VISIBLE_DEVICES=0)   worker 1 (CUDA_VISIBLE_DEVICES=1)     separate processes, weights, KV cache, lifecycle
    vLLM TP=1, full model                vLLM TP=1, full model                parent never initialises CUDA; distinct UUIDs required
 ```
-The scheduler is pure Python (`stokastisk.parallel.{queue,routing,scheduler}`): cost = estimated prompt tokens + `max_tokens`; speed weights are learned from observed latency; a dead worker's in-flight requests are retried on a survivor within a budget; `restart_dead()` is explicit. No Redis/Ray. CPU-tested with real spawned (fake-GPU) workers.
+The scheduler is pure Python (`stokastisk.parallel.{queue,routing,scheduler}`): cost = estimated prompt tokens + `max_tokens`; speed weights are learned from observed latency (a worker that has not completed a request yet is weighted at the mean observed speed, so it still receives work; fixed after notebook 09 and verified by notebook 14); a dead worker's in-flight requests are retried on a survivor within a budget; `restart_dead()` is explicit. No Redis/Ray. CPU-tested with real spawned (fake-GPU) workers.
 
 ## 3. NCCL vs host-staged transfer (`stokastisk.communication`, EXPERIMENTAL)
 ```

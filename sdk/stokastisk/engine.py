@@ -12,7 +12,7 @@ log = logging.getLogger("stokastisk")
 
 
 class LLM:
-    """Thin wrapper: applies T4/no-P2P defaults, then delegates to ``vllm.LLM``.
+    """Thin wrapper: applies T4 defaults (NCCL configured not to depend on peer access), then delegates to ``vllm.LLM``.
 
     Explicit keyword arguments always override the config defaults.
     """

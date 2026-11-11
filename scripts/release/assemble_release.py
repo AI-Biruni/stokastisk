@@ -5,7 +5,7 @@ usage: assemble_release.py BASE_NAME        BASE_NAME = directory under dist-rc/
  * the vLLM wheel (all native code) is carried over BYTE-IDENTICAL; the SDK wheel is rebuilt from sdk/ and diffed against it
  * CPU tests must all pass with zero skips; native audit re-run on the (unchanged) vLLM wheel; hygiene scans; manifests; SHA256SUMS
  * the ZIP is built by make_kaggle_input_zip.py (reproducible) and re-verified from a fresh extraction, then scripts/release/verify_project_version.py runs on the bundle + ZIP
- * status is ALWAYS "KAGGLE_GPU_VERIFICATION_PENDING" here: only an owner-run Kaggle execution can change that."""
+ * the validation status and per-notebook results come ONLY from docs/kaggle-t4-verification.json (owner-run Kaggle evidence); this script never invents a Kaggle result."""
 import hashlib, json, os, pathlib, re, shutil, subprocess, sys, tempfile, time, zipfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
@@ -75,7 +75,7 @@ shutil.copy2(B / "evidence/native-binary-audit.json", B / "manifests/NATIVE-BINA
 tmp = pathlib.Path(tempfile.mkdtemp()); so = tmp / "libstokastisk_xfer.so"
 nv = subprocess.run(["nvcc", "-O2", "-std=c++17", "-shared", "-Xcompiler", "-fPIC", "-gencode", "arch=compute_75,code=sm_75", str(ROOT / "native/host_staged_xfer.cpp"), "-o", str(so), "-lcudart"], capture_output=True, text=True)
 native_ev = {"compiled": nv.returncode == 0, "stderr_tail": nv.stderr[-300:], "executed_on_two_gpus": False,
-             "note": "compile + link check only; execution on 2 GPUs is notebook 10 (NOT_RUN)"}
+             "note": "compile + link check only; execution on 2 GPUs: notebook 10, run by the owner on Kaggle (WARNING; experimental)"}
 if nv.returncode == 0:
     ldd = subprocess.run(["ldd", str(so)], capture_output=True, text=True).stdout
     native_ev["links"] = sorted(set(re.findall(r"(libcudart\.so\.\d+|libcublas\S*|libnccl\S*|libnvshmem\S*)", ldd)))
@@ -103,18 +103,17 @@ for f in sorted((B / "notebooks").glob("*.ipynb")):
     assert all(c["outputs"] == [] and c["execution_count"] is None for c in code), f.name
     nbv.append({"notebook": f.name, "code_cells": len(code), "parse": True, "executed": False})
 now = time.strftime("%FT%T%z")
-(B / "evidence/notebook-validation.json").write_text(json.dumps({"timestamp": now, "kind": "static (JSON + syntax + unexecuted). NOT executed on Kaggle.", "notebooks": nbv, "execution_status": "NOT_RUN (pending owner on Kaggle)"}, indent=1))
+kv = json.loads((ROOT / "docs/kaggle-t4-verification.json").read_text())   # owner-run Kaggle evidence is the only source of the status
+(B / "evidence/notebook-validation.json").write_text(json.dumps({"timestamp": now, "kind": "static validation of the unexecuted sources (JSON + syntax); Kaggle results: docs/KAGGLE_T4_VERIFICATION.md", "notebooks": nbv, "execution_status": "sources are unexecuted; executed on Kaggle 2xT4 by the owner"}, indent=1))
 (B / "evidence/test-results.json").write_text(json.dumps({"timestamp": now, "kind": "CPU-only tests with mocks / fake workers; NOT GPU or Kaggle evidence", "tests": tests,
         "totals": {k: sum(v[k] for v in tests.values()) for k in ("passed", "failed", "skipped")}, "git_head": git("rev-parse", "HEAD"), "git_branch": git("branch", "--show-current"),
         "git_dirty": bool(git("status", "--porcelain"))}, indent=1))
 
 # ---- manifests
 rm0 = json.loads((S / "manifests/RELEASE-MANIFEST.json").read_text())
-status = ("KAGGLE_GPU_VERIFICATION_PENDING — CPU-tested only (mocks, fake workers); this SDK wheel has not been executed on Kaggle. Notebooks 01-12 were executed with the earlier SDK wheel "
-          "a6b8596b (see manifests/PRIOR-KAGGLE-EVIDENCE.json); they say nothing about this wheel. Notebooks 13-14 are new and NOT_RUN. "
-          "The vLLM wheel and every native CUDA binary are byte-identical to the earlier baseline build.")
-rm = {"name": NEW, "project": "stokastisk", "version": LOCKED, "timestamp": now, "status": status, "validation_status": "KAGGLE_GPU_VERIFICATION_PENDING", "supersedes": None, "prior_wheel_executed_on_kaggle": {"stokastisk-0.1.0-py3-none-any.whl": "a6b8596bb70e31d82a3f00ae15bbffa271876c718da9200943d7f42bfe5b8585"},
-      "kaggle_acceptance": {n[:2]: "NOT_RUN" for n in nbs},
+status = (kv["validation_status"] + " - " + kv["scope_note"] + " " + kv["performance_conclusion"])
+rm = {"name": NEW, "project": "stokastisk", "version": LOCKED, "timestamp": now, "status": status, "validation_status": kv["validation_status"], "supersedes": None, "prior_wheel_executed_on_kaggle": {"stokastisk-0.1.0-py3-none-any.whl": "a6b8596bb70e31d82a3f00ae15bbffa271876c718da9200943d7f42bfe5b8585"},
+      "kaggle_acceptance": kv["kaggle_acceptance"],
       "platform": {"python": "3.13", "cuda_toolkit": "13.0", "vllm": "0.25.1", "torch": "2.11.0+cu130", "triton": "3.6.0", "gpu": "2 x NVIDIA Tesla T4 (SM75)", "attention_backend": "TRITON_ATTN"},
       "wheels": {n: {"size": (B / "wheels" / n).stat().st_size, "sha256": h} for n, h in wheels.items()},
       "vllm_wheel_identical_to_base": True, "native_binaries_changed": False, "native_audit": nsum,

@@ -9,14 +9,14 @@ Git tag / GitHub release: `v0.1.0`. Hub: <https://huggingface.co/waqasm86/stokas
 | Item | State |
 |---|---|
 | CPU tests (existing + topology, scheduler, telemetry, transport, benchmarks, version lock) | pass; counts in `evidence/test-results.json` inside the release |
-| Wheels | vLLM 0.25.1 wheel **byte-identical** to the earlier baseline build (`cc3bcafb…98f5e`, no native rebuild); `stokastisk-0.1.0` SDK wheel is pure Python, checked file-by-file against `sdk/` |
+| Wheels | vLLM 0.25.1 wheel **byte-identical** to the earlier baseline build (`cc3bcafb…98f5e`, no native rebuild); `stokastisk-0.1.0` SDK wheel is pure Python, checked file-by-file against `sdk/` (`29edaa55…ee49`) |
 | Native binaries | 6 objects, `sm_75` cubins only (no PTX), `libcudart.so.13`, no `.so.12` (`scripts/audit/native_audit.py`) |
 | Experimental C++ transport | CUDA-compiled for `sm_75` (links `libcudart.so.13` only); executed on Kaggle in notebook 10 (WARNING; experimental, not integrated into vLLM) |
 | Local GPU | one GeForce 940M (SM50, not a T4); never used for GPU claims |
 | Kaggle notebooks 01–14 | executed by the owner on 2 × T4: all PASS or WARNING, none FAIL — [docs/KAGGLE_T4_VERIFICATION.md](docs/KAGGLE_T4_VERIFICATION.md) |
 | TP=2, PP=2, replicas | **Kaggle-verified** (notebooks 13, 14); slower than TP=1 for a model that fits one T4 |
 
-Notebooks 13 and 14 ran the released bytes (manifest `efe492a6…`, SDK wheel `e17b99b4…`); notebooks 01–12 ran the earlier SDK wheel `a6b8596b…` with the identical vLLM wheel (the difference is the replica-routing fix that notebook 14 verifies).
+Notebooks 13 and 14 ran the SDK wheel `e17b99b4…` (bundle manifest `efe492a6…`); notebooks 01–12 ran the earlier SDK wheel `a6b8596b…`, with the identical vLLM wheel in all cases (the SDK difference is the replica-routing fix that notebook 14 verifies). The released SDK wheel (`29edaa55…ee49`) differs from the wheel those two notebooks executed (`e17b99b4…6cae`) only in comments and descriptive note strings (identical Python AST ignoring string literals) and in the packaged README; the rebuilt wheel itself was not re-executed on Kaggle.
 
 ## Historical engineering measurements (earlier internal baseline build)
 

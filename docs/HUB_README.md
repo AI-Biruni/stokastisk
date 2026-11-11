@@ -21,7 +21,7 @@ Source, docs and tooling: <https://github.com/AI-Biruni/stokastisk>
 ## Status: `KAGGLE_T4_VERIFIED`
 All 14 notebooks were executed by the owner on Kaggle 2 × Tesla T4 (PASS, or WARNING for 05 and 10; none failed). TP=2, PP=2 and 2-replica inference run on the Flash-free wheel with both GPUs in use.
 For Qwen2.5-1.5B-Instruct (decode, batch 8): TP=1 241 tok/s, TP=2 133, PP=2 146, 2 replicas 226. **Use TP=1 whenever the model fits one T4**; TP/PP are for models that do not fit 15 GiB (not measured here). Peer access differs between Kaggle VMs.
-Notebooks 13–14 ran exactly the released bundle; 01–12 ran the earlier SDK wheel with the identical vLLM wheel. Details: `docs/KAGGLE_T4_VERIFICATION.md` on GitHub. The host-staged CUDA transport remains experimental. L4/SM89 is **not** supported.
+Notebooks 13–14 ran SDK wheel `e17b99b4…`; 01–12 ran the earlier wheel `a6b8596b…`; the vLLM wheel is identical in all runs. The released SDK wheel (`29edaa55…`) differs from the executed one only in comments, note strings and the packaged README (no code change), and was not re-executed itself. Details: `docs/KAGGLE_T4_VERIFICATION.md` on GitHub. The host-staged CUDA transport remains experimental. L4/SM89 is **not** supported.
 Implemented in the SDK: GPU topology and peer-access detection, PCIe reporting, TP/PP strategies, independent dual-GPU replicas with a token-aware scheduler and failure recovery, a parallelism recommender, GPU telemetry, CUDA streams/events, pinned-memory transport vs NCCL, and a benchmark framework.
 Kaggle's own image resolves NCCL to the cu12 build 2.32.3 (two NCCL packages share one file); our binaries do not link it. Details in the GitHub `RELEASE.md`.
 

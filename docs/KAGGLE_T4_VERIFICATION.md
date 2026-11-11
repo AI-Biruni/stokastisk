@@ -7,10 +7,11 @@ Nothing here comes from the development machine's GeForce 940M (SM50), which is 
 ## Which bytes were executed
 | Notebooks | SDK wheel | vLLM wheel |
 |---|---|---|
-| 13, 14 (the released bundle, manifest `efe492a6…56ca`) | `e17b99b4…6cae` | `cc3bcafb…8f5e` |
+| 13, 14 (bundle manifest `efe492a6…56ca`) | `e17b99b4…6cae` | `cc3bcafb…8f5e` |
+| **released** SDK wheel | `29edaa55…ee49` | `cc3bcafb…8f5e` |
 | 01–12 | `a6b8596b…8585` (earlier build) | `cc3bcafb…8f5e` (identical) |
 
-The vLLM wheel and the native CUDA binaries are byte-identical in both. The SDK differs only in the replica-routing fix (`sdk/stokastisk/parallel/routing.py`), which notebook 14 verifies. Results from 01–12 are therefore evidence about the engine, installer and benchmarks, not a re-run on the final SDK wheel.
+The vLLM wheel and the native CUDA binaries are byte-identical in all runs and in the release. The released SDK wheel (`29edaa55…ee49`) differs from the wheel those two notebooks executed (`e17b99b4…6cae`) only in comments and descriptive note strings (identical Python AST ignoring string literals) and in the packaged README; the rebuilt wheel itself was not re-executed on Kaggle. The executed bundle is preserved locally as historical evidence. The SDK differs only in the replica-routing fix (`sdk/stokastisk/parallel/routing.py`), which notebook 14 verifies. Results from 01–12 are therefore evidence about the engine, installer and benchmarks, not a re-run on the final SDK wheel.
 
 ## Results
 | # | Notebook | Result | Note |

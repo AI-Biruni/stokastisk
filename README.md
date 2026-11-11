@@ -3,7 +3,7 @@
 **A Python 3.13 SDK and standalone CUDA 13.0 binary build of vLLM 0.25.1 for Kaggle's 2 × Tesla T4 (SM75).**
 
 [![Release](https://img.shields.io/badge/release-0.1.0-blue)](RELEASE.md)
-[![Kaggle](https://img.shields.io/badge/Kaggle%20GPU%20verification-PENDING-orange)](RELEASE.md)
+[![Kaggle](https://img.shields.io/badge/Kaggle%202xT4%20verification-VERIFIED-brightgreen)](RELEASE.md)
 [![CUDA](https://img.shields.io/badge/CUDA-13.0%20only-76b900)](docs/ARCHITECTURE.md)
 [![Python](https://img.shields.io/badge/python-3.13-blue)](pyproject.toml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-lightgrey)](LICENSE)
@@ -98,7 +98,7 @@ print(llm.verify_attention_backend())                              # "TRITON_ATT
 llm.close()
 ```
 
-**Status of this exact snippet: `KAGGLE_GPU_VERIFICATION_PENDING`.** vLLM 0.25.1 starts engine processes with `spawn`. The Kaggle acceptance scripts (`scripts/kaggle/05_inference.py`, used by notebooks 05–06) run the engine in a separate Python process, and that is the only pattern designed for validation; running `stokastisk.LLM` directly in a notebook cell has **not** been tested on Kaggle. If it fails there, use the notebook-05 pattern and report the error.
+**About this snippet:** vLLM 0.25.1 starts engine processes with `spawn`. The Kaggle acceptance scripts (`scripts/kaggle/05_inference.py`, `dual_15_tp_pp_fulfilment.py`, used by notebooks 05, 06, 13) run each engine in a separate Python process, and that is the pattern that was validated on Kaggle 2 × T4; running `stokastisk.LLM` directly in a notebook cell was **not** part of the acceptance runs. If it fails there, use the notebook-05 pattern and report the error.
 
 ### Public API
 
@@ -152,7 +152,7 @@ and verifies the after-state equals the before-state plus those eight packages.
   Forcing the cu13 build would mean changing Kaggle's protected baseline, so this project does not.
 * **Triton attention only.** MLA, hybrid and sparse-attention model families select other backends and are unsupported.
 * **T4 / SM75 only.** There is no PTX, so other GPUs cannot run the native extensions.
-* **No Kaggle run of this release yet**: the Hub download path is verified by SHA256 on a workstation, not on Kaggle.
+* **Not covered by the Kaggle runs:** worker-failure recovery (CPU unit tests only), models too large for one T4 (so the memory-capacity benefit of TP/PP is not demonstrated), and the Hub CDN downloader under Kaggle's network (the notebooks fetch the release from the Hub or use the uploaded dataset).
 
 ## License
 
