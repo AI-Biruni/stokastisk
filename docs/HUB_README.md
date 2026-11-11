@@ -18,10 +18,10 @@ Source, docs and tooling: <https://github.com/AI-Biruni/stokastisk>
 | Attention | `TRITON_ATTN` only — no FlashAttention / FlashInfer / FlashMLA code |
 | Hardware | Kaggle, 2 × Tesla T4 (SM75, ~15 GiB each) |
 
-## Status: `KAGGLE_GPU_VERIFICATION_PENDING`
-This release is **CPU-tested only** (mocked GPUs, fake workers). Kaggle notebooks 01–12 are **NOT_RUN** for it; PP=2, replica inference and the host-staged CUDA transport are **experimental and not Kaggle-verified**.
-The vLLM wheel and native binaries are byte-identical to an earlier internal baseline build that ran TP=1/TP=2 inference on Kaggle (Qwen2.5-1.5B-Instruct: TP=1 949 tok/s, TP=2 521 tok/s, 0.55× — historical, **not validation of 0.1.0**).
-**Use TP=1 whenever the model fits one T4**: the two GPUs connect through the host bridge with no peer-to-peer.
+## Status: `KAGGLE_T4_VERIFIED`
+All 14 notebooks were executed by the owner on Kaggle 2 × Tesla T4 (PASS, or WARNING for 05 and 10; none failed). TP=2, PP=2 and 2-replica inference run on the Flash-free wheel with both GPUs in use.
+For Qwen2.5-1.5B-Instruct (decode, batch 8): TP=1 241 tok/s, TP=2 133, PP=2 146, 2 replicas 226. **Use TP=1 whenever the model fits one T4**; TP/PP are for models that do not fit 15 GiB (not measured here). Peer access differs between Kaggle VMs.
+Notebooks 13–14 ran exactly the released bundle; 01–12 ran the earlier SDK wheel with the identical vLLM wheel. Details: `docs/KAGGLE_T4_VERIFICATION.md` on GitHub. The host-staged CUDA transport remains experimental. L4/SM89 is **not** supported.
 Implemented in the SDK: GPU topology and peer-access detection, PCIe reporting, TP/PP strategies, independent dual-GPU replicas with a token-aware scheduler and failure recovery, a parallelism recommender, GPU telemetry, CUDA streams/events, pinned-memory transport vs NCCL, and a benchmark framework.
 Kaggle's own image resolves NCCL to the cu12 build 2.32.3 (two NCCL packages share one file); our binaries do not link it. Details in the GitHub `RELEASE.md`.
 
@@ -46,18 +46,18 @@ print(llm.complete("The capital of France is"))
 print(llm.verify_attention_backend())      # "TRITON_ATTN"
 llm.close()
 ```
-Status: `KAGGLE_GPU_VERIFICATION_PENDING`. vLLM 0.25.1 uses `spawn`; the acceptance notebooks (05–06) run the engine in a separate process (`scripts/kaggle/05_inference.py`), which is the only pattern designed for validation. Running `stokastisk.LLM` directly in a notebook cell has not been tested on Kaggle.
+vLLM 0.25.1 uses `spawn`; the acceptance notebooks run each engine in a separate process (`scripts/kaggle/05_inference.py`, `dual_15_tp_pp_fulfilment.py`), which is the pattern that was validated. Running `stokastisk.LLM` directly in a notebook cell was not part of the acceptance runs.
 
 ## Files
 | Path | What |
 |---|---|
 | `latest.json` | machine-readable pointer: release name, status, sizes, SHA256 |
 | `scripts/fetch_release.py` | CDN downloader (stdlib) |
-| `releases/<name>/<name>-kaggle-input.zip` (+ `.sha256`) | the complete release (installer, scripts, wheels, requirements, docs) — also usable as a Kaggle dataset |
-| `releases/<name>/wheels/` | `stokastisk-0.1.0-py3-none-any.whl` and `vllm-0.25.1-cp38-abi3-linux_x86_64.whl` for direct access |
-| `releases/<name>/manifests/` | `SHA256SUMS` and `RELEASE-MANIFEST.json` |
+| `releases/stokastisk-0.1.0-kaggle-t4-sm75/stokastisk-0.1.0-kaggle-t4-sm75-kaggle-input.zip` (+ `.sha256`) | the complete release (installer, scripts, wheels, requirements, docs) — also usable as a Kaggle dataset |
+| `releases/stokastisk-0.1.0-kaggle-t4-sm75/wheels/` | `stokastisk-0.1.0-py3-none-any.whl` and `vllm-0.25.1-cp38-abi3-linux_x86_64.whl` for direct access |
+| `releases/stokastisk-0.1.0-kaggle-t4-sm75/manifests/` | `SHA256SUMS` and `RELEASE-MANIFEST.json` |
 
-The archive's documentation, this card and `latest.json` all state the same status: `KAGGLE_GPU_VERIFICATION_PENDING`.
+`latest.json` carries the per-notebook results (`kaggle_acceptance`). The documentation inside the archive was frozen before the Kaggle runs and still describes the release as pending; this card, `latest.json` and the GitHub docs are authoritative.
 
 ## License
 Apache-2.0. vLLM is Apache-2.0 © the vLLM project.

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3.13
-"""Static validation of the twelve Kaggle notebooks. No GPU, no network, no notebook execution.
+"""Static validation of the fourteen Kaggle notebooks. No GPU, no network, no notebook execution.
 
 usage: validate_notebooks.py [--notebooks DIR] [--json OUT]
 Checks (each notebook): valid nbformat 4 JSON; cell structure; no stored outputs/execution counts (the author has NOT run them);
 every code cell parses (IPython '!'/'%' lines are handled); names are defined by an earlier cell/import/builtin before use;
 RELEASE constant equals the locked release; no older Stokastisk release, no credential-looking strings, no unpinned
-'pip install' of torch/triton/vllm/nccl; accelerator/prerequisite/status wording present; the set is exactly 01..12.
+'pip install' of torch/triton/vllm/nccl; accelerator/prerequisite/status wording present; the set is exactly 01..14.
 Exit 0 only when every check passes. This validates STRUCTURE ONLY; it is not Kaggle validation."""
 import argparse, ast, builtins, json, pathlib, re, sys
 
@@ -16,7 +16,8 @@ EXPECTED = ["01_stokastisk_environment_audit", "02_stokastisk_installation", "03
             "04_stokastisk_dual_gpu_nccl_validation", "05_stokastisk_vllm_inference", "06_stokastisk_tensor_parallel_benchmark",
             "07_stokastisk_gpu_topology_validation", "08_stokastisk_pipeline_parallel_validation",
             "09_stokastisk_dual_gpu_replica_inference", "10_stokastisk_cuda_communication_benchmark",
-            "11_stokastisk_gpu_load_balancing_benchmark", "12_stokastisk_consolidated_acceptance"]
+            "11_stokastisk_gpu_load_balancing_benchmark", "12_stokastisk_consolidated_acceptance",
+            "13_stokastisk_tp_pp_fulfilment", "14_stokastisk_replica_balance"]
 SECRET_RE = re.compile(r"hf_[A-Za-z0-9]{20,}|ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|KAGGLE_KEY\s*=\s*['\"][0-9a-f]{20,}|-----BEGIN [A-Z ]*PRIVATE KEY")
 OLD_REL_RE = re.compile(r"stokastisk-(\d+\.\d+\.\d+)(-rc\d+)?-kaggle-t4")
 PIP_BAD_RE = re.compile(r"pip\s+install[^\n]*\b(torch|triton|vllm|nvidia-nccl|flash[-_]?attn|flashinfer)\b", re.I)
@@ -86,7 +87,7 @@ def check_notebook(path):
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(); ap.add_argument("--notebooks", default=str(ROOT / "notebooks")); ap.add_argument("--json")
+    ap = argparse.ArgumentParser(); ap.add_argument("--notebooks", default=str(ROOT / "notebooks" / "kaggle-t4-sm75" / "notebooks")); ap.add_argument("--json")
     a = ap.parse_args(argv); d = pathlib.Path(a.notebooks)
     found = sorted(p.stem for p in d.glob("*.ipynb")); result = {"locked_version": LOCKED, "release": RELEASE, "kaggle_execution": "NOT_RUN", "notebooks": {}}
     set_errs = []

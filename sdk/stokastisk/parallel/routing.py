@@ -24,13 +24,24 @@ class WorkerLoad:
         return self.free_vram_mib is None or self.free_vram_mib >= self.min_free_vram_mib
 
 
-def projected_load(w: WorkerLoad, extra_tokens: int) -> float:
+def effective_speed(w: WorkerLoad, reference_speed: float | None = None) -> float:
+    """Speed used for routing. An observed speed is tokens/s; the default 1.0 is unit-less, so an unobserved worker is
+    given the reference speed (mean of the observed workers) instead. Otherwise one worker that has learned its speed
+    would look orders of magnitude faster than its unobserved peer and monopolise all work."""
+    if w.speed_observed or reference_speed is None:
+        return max(w.speed, 1e-6)
+    return max(reference_speed, 1e-6)
+
+
+def projected_load(w: WorkerLoad, extra_tokens: int, reference_speed: float | None = None) -> float:
     """Estimated time-to-drain (arbitrary units): queued tokens + the new work, divided by the worker's speed."""
-    return (w.pending_tokens + extra_tokens) / max(w.speed, 1e-6)
+    return (w.pending_tokens + extra_tokens) / effective_speed(w, reference_speed)
 
 
 def choose_worker(workers: list[WorkerLoad], cost_tokens: int) -> int | None:
     cand = [w for w in workers if w.available]
     if not cand:
         return None
-    return min(cand, key=lambda w: (projected_load(w, cost_tokens), w.pending_requests, w.id)).id
+    observed = [w.speed for w in workers if w.speed_observed and w.alive]
+    ref = sum(observed) / len(observed) if observed else None
+    return min(cand, key=lambda w: (projected_load(w, cost_tokens, ref), w.pending_requests, w.id)).id

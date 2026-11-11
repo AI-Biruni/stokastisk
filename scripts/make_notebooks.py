@@ -1,10 +1,10 @@
 #!/usr/bin/env python3.13
-"""Generate the six UNEXECUTED Kaggle notebooks (07-12) into notebooks/. Cells only call the bundled scripts; nothing runs here.
+"""Generate the eight UNEXECUTED Kaggle notebooks (07-14) into notebooks/kaggle-t4-sm75/notebooks/. Cells only call the bundled scripts; nothing runs here.
 Notebooks 01-06 (the baseline acceptance) are historical and are not regenerated."""
 import json, pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-OUT = ROOT / "notebooks"
+OUT = ROOT / "notebooks" / "kaggle-t4-sm75" / "notebooks"
 RELEASE = "stokastisk-0.1.0-kaggle-t4-sm75"
 _FETCH = (ROOT / "scripts/fetch_release.py").read_text().split('if __name__ == "__main__":')[0].split('"""', 2)[2].strip()
 
@@ -110,10 +110,22 @@ NB = {
    "One session: topology, recommender, unchanged baseline API (TP=1), replicas (all MANDATORY) plus PP=2 and host-staged transport (EXPERIMENTAL: reported with their real status, never counted as successes).",
    lambda: setup() + [code('RC = {"12_acceptance": run_stage("dual_12_acceptance.py", timeout=5400, log="12_acceptance.log")}'), code('print(open("/kaggle/working/stokastisk-acceptance/12_acceptance.log").read()[-3000:])')]
      + pack("12") + verdict(["12_acceptance"])),
+ "13_stokastisk_tp_pp_fulfilment": ("13 — Tensor- and pipeline-parallel fulfilment (TP=1, TP=2, PP=2)",
+   "Re-verifies the parallel layouts on the current wheel, one engine per process: TP=1 (one GPU busy), TP=2 and PP=2 (BOTH GPUs hold a shard), parallel_config as reported by vLLM, deterministic non-empty output, TRITON_ATTN only, no Flash libraries, clean shutdown and memory release. Then benchmarks all three on the same workload. Unlike notebook 08, a PP=2 or TP=2 failure FAILS this notebook.",
+   lambda: setup() + [code('RC = {}\nM = "Qwen/Qwen2.5-1.5B-Instruct"\nfor mode in ("tp1", "tp2", "pp2"):\n    RC["15_fulfil_" + mode] = run_stage("dual_15_tp_pp_fulfilment.py", mode, M, timeout=1500, log=f"15_fulfil_{mode}.log")\nRC["15_fulfil_summary"] = run_stage("dual_15_tp_pp_fulfilment.py", "summary", timeout=120, log="15_fulfil_summary.log")'),
+     md("### Same workload on all three layouts (every repeat recorded)"),
+     code('for mode in ("tp1", "tp2", "pp2"):\n    RC["bench_" + mode] = run_stage("dual_bench.py", mode, M, "standard", timeout=1800, log=f"bench_{mode}.log")')]
+     + pack("13") + verdict(["15_fulfil_tp1", "15_fulfil_tp2", "15_fulfil_pp2", "15_fulfil_summary", "bench_tp1", "bench_tp2", "bench_pp2"],
+                            "All seven stages are required. A slower TP=2 / PP=2 is a measurement, not a failure; a crash, an idle second GPU or an empty output is.")),
+ "14_stokastisk_replica_balance": ("14 — Replica routing balance (regression for the notebook-09 scaling defect)",
+   "Notebook 09 recorded every request on GPU 0 in its scaling runs. This notebook runs repeated rounds of 2/8/16/32/64 requests on a warmed pool and requires both replicas to receive work every time, then re-runs the TP=1 and 2-replica scaling benchmarks. Whether two replicas out-run TP=1 is decided from the measured numbers only.",
+   lambda: setup() + [code('RC = {}\nM = "Qwen/Qwen2.5-1.5B-Instruct"\nRC["16_replica_balance"] = run_stage("dual_16_replica_balance.py", M, timeout=2400, log="16_replica_balance.log")'),
+     code('for mode in ("tp1", "replicas2"):\n    RC["bench_" + mode] = run_stage("dual_bench.py", mode, M, "scaling", timeout=2400, log=f"bench_{mode}_scaling.log")')]
+     + pack("14") + verdict(["16_replica_balance", "bench_tp1", "bench_replicas2"])),
 }
 
 if __name__ == "__main__":
-    OUT.mkdir(exist_ok=True)
+    OUT.mkdir(parents=True, exist_ok=True)
     for name, (title, body, cells) in NB.items():
         nb = {"nbformat": 4, "nbformat_minor": 5, "metadata": {"kernelspec": {"name": "python3", "display_name": "Python 3", "language": "python"}, "language_info": {"name": "python"}},
               "cells": [md(f"# {title}\n\n{HEAD}\n\n{body}")] + cells()}

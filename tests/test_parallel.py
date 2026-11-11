@@ -71,6 +71,24 @@ class SchedulerTests(unittest.TestCase):
         self.assertEqual(s.workers[0].pending_tokens, 15); s.complete(1, seconds=1.5)
         self.assertEqual(s.workers[0].pending_tokens, 0); self.assertAlmostEqual(s.workers[0].speed, 10.0)
 
+    def test_unobserved_worker_still_receives_work_after_peer_learns_speed(self):
+        # Regression for Kaggle notebook 09 scaling runs: assignment was {0: N, 1: 0} at every batch size because the
+        # observed worker (tokens/s) was compared with an unobserved worker's unit-less default speed of 1.0.
+        s = Scheduler([WorkerLoad(0, 0), WorkerLoad(1, 1)])
+        warm = Request(0, "p", 64, input_tokens=16); self.assertEqual(s.assign(warm), 0); s.complete(0, seconds=0.5)
+        self.assertTrue(s.workers[0].speed_observed); self.assertFalse(s.workers[1].speed_observed)
+        plan = s.assign_batch(self.reqs([64] * 16))
+        self.assertEqual(sorted(plan), [0, 1]); self.assertEqual({len(v) for v in plan.values()}, {8})
+
+    def test_batches_stay_balanced_over_repeated_rounds(self):
+        s = Scheduler([WorkerLoad(0, 0), WorkerLoad(1, 1)]); counts = {0: 0, 1: 0}
+        for rnd in range(5):
+            reqs = [Request(rnd * 100 + i, "p", 64, input_tokens=16) for i in range(8)]
+            for wid, rs in s.assign_batch(reqs).items():
+                counts[wid] += len(rs)
+                for r in rs: s.complete(r.id, seconds=0.2 if wid == 0 else 0.25)
+        self.assertEqual(sum(counts.values()), 40); self.assertGreater(min(counts.values()), 12)   # slower worker still gets a fair share
+
     def test_dead_worker_requeues_within_retry_budget(self):
         s = Scheduler([WorkerLoad(0, 0), WorkerLoad(1, 1)], max_attempts=2); r = Request(1, "p", 10); s.assign(r)
         lost = s.mark_dead(0); self.assertEqual([x.id for x in lost], [1]); self.assertEqual(s.assign(lost[0]), 1)

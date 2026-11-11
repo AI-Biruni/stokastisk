@@ -121,9 +121,9 @@ class Hygiene(unittest.TestCase):
         self.assertIn('dynamic = ["version"]', toml); self.assertIn('dependencies = ["vllm==0.25.1"]', toml)
 
     def test_new_notebooks_are_valid_unexecuted_and_name_one_release(self):
-        files = sorted((ROOT / "notebooks").glob("*.ipynb"))
-        if not files: self.fail("notebooks 01-12 missing; run scripts/make_notebooks.py")
-        self.assertEqual([f.name[:2] for f in files], [f"{i:02d}" for i in range(1, 13)])
+        files = sorted((ROOT / "notebooks" / "kaggle-t4-sm75" / "notebooks").glob("*.ipynb"))
+        if not files: self.fail("notebooks 01-14 missing; run scripts/make_notebooks.py")
+        self.assertEqual([f.name[:2] for f in files], [f"{i:02d}" for i in range(1, 15)])
         rel = re.search(r'^RELEASE = "([^"]+)"', (ROOT / "scripts/make_notebooks.py").read_text(), re.M).group(1)
         self.assertEqual(rel, "stokastisk-0.1.0-kaggle-t4-sm75")
         for f in files:
@@ -136,7 +136,7 @@ class Hygiene(unittest.TestCase):
             others = set(re.findall(r"stokastisk-\d+\.\d+\.\d+-kaggle-t4-sm75(?:-rc\d+)?", text)) - {rel}; self.assertEqual(others, set(), f.name)
 
     def test_every_notebook_script_exists(self):
-        for f in (ROOT / "notebooks").glob("*.ipynb"):
+        for f in (ROOT / "notebooks" / "kaggle-t4-sm75" / "notebooks").glob("*.ipynb"):
             for s in set(re.findall(r'"(dual_[a-z0-9_]+\.py)"', f.read_text())): self.assertTrue((ROOT / "scripts/kaggle" / s).is_file(), s)
 
     def test_stage_scripts_parse_and_use_guards(self):

@@ -9,7 +9,7 @@ import validate_notebooks as vn  # noqa: E402
 class StaticNotebookValidation(unittest.TestCase):
     def mutated(self, fn, name="03_stokastisk_single_gpu_validation"):
         td = tempfile.TemporaryDirectory(); self.addCleanup(td.cleanup)
-        for p in (ROOT / "notebooks").glob("*.ipynb"): shutil.copy(p, td.name)
+        for p in (ROOT / "notebooks" / "kaggle-t4-sm75" / "notebooks").glob("*.ipynb"): shutil.copy(p, td.name)
         f = pathlib.Path(td.name) / f"{name}.ipynb"; nb = json.loads(f.read_text()); fn(nb)
         f.write_text(json.dumps(nb)); return pathlib.Path(td.name)
 
@@ -18,13 +18,13 @@ class StaticNotebookValidation(unittest.TestCase):
 
     def test_repository_notebooks_pass_and_none_is_marked_executed(self):
         self.assertEqual(vn.main([]), 0)
-        for p in (ROOT / "notebooks").glob("*.ipynb"):
+        for p in (ROOT / "notebooks" / "kaggle-t4-sm75" / "notebooks").glob("*.ipynb"):
             nb = json.loads(p.read_text())
             self.assertTrue(all(not c.get("outputs") and c.get("execution_count") is None for c in nb["cells"] if c["cell_type"] == "code"), p.name)
 
-    def test_exactly_twelve_expected_names(self):
-        self.assertEqual(len(vn.EXPECTED), 12)
-        self.assertEqual(sorted(p.stem for p in (ROOT / "notebooks").glob("*.ipynb")), vn.EXPECTED)
+    def test_exactly_fourteen_expected_names(self):
+        self.assertEqual(len(vn.EXPECTED), 14)
+        self.assertEqual(sorted(p.stem for p in (ROOT / "notebooks" / "kaggle-t4-sm75" / "notebooks").glob("*.ipynb")), vn.EXPECTED)
 
     def test_detects_wrong_release(self):
         def m(nb):
@@ -42,7 +42,7 @@ class StaticNotebookValidation(unittest.TestCase):
 
     def test_detects_malformed_json_and_missing_notebook(self):
         td = tempfile.TemporaryDirectory(); self.addCleanup(td.cleanup)
-        for p in (ROOT / "notebooks").glob("*.ipynb"): shutil.copy(p, td.name)
+        for p in (ROOT / "notebooks" / "kaggle-t4-sm75" / "notebooks").glob("*.ipynb"): shutil.copy(p, td.name)
         (pathlib.Path(td.name) / "05_stokastisk_vllm_inference.ipynb").write_text("{broken")
         self.assertEqual(self.run_dir(td.name), 1)
         (pathlib.Path(td.name) / "05_stokastisk_vllm_inference.ipynb").unlink()
@@ -54,7 +54,7 @@ class StaticNotebookValidation(unittest.TestCase):
     def test_all_notebooks_embed_the_shipped_downloader(self):
         src = (ROOT / "scripts/fetch_release.py").read_text()
         want = src[src.index("def _download(url"):src.index("def _sha256(")].strip()
-        for p in (ROOT / "notebooks").glob("*.ipynb"):
+        for p in (ROOT / "notebooks" / "kaggle-t4-sm75" / "notebooks").glob("*.ipynb"):
             code = "".join("".join(c["source"]) for c in json.loads(p.read_text())["cells"])
             self.assertIn(want, code, p.name)
 
@@ -67,3 +67,25 @@ class StaticNotebookValidation(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class NewStageScripts(unittest.TestCase):
+    """Notebooks 13/14 must call stage scripts that exist, compile, and are judged by the verdict cell (CPU only; says nothing about Kaggle)."""
+    def nb(self, stem): return json.loads((ROOT / "notebooks" / "kaggle-t4-sm75" / "notebooks" / f"{stem}.ipynb").read_text())
+
+    def code(self, stem): return "\n".join("".join(c["source"]) for c in self.nb(stem)["cells"] if c["cell_type"] == "code")
+
+    def test_scripts_exist_and_compile(self):
+        for name in ("dual_15_tp_pp_fulfilment.py", "dual_16_replica_balance.py"):
+            p = ROOT / "scripts/kaggle" / name; self.assertTrue(p.is_file(), name); compile(p.read_text(), str(p), "exec")
+
+    def test_notebook13_requires_tp2_and_pp2(self):
+        src = self.code("13_stokastisk_tp_pp_fulfilment")
+        req = [l for l in src.splitlines() if l.startswith("required =")][0]
+        for stage in ("15_fulfil_tp1", "15_fulfil_tp2", "15_fulfil_pp2", "15_fulfil_summary", "bench_tp2", "bench_pp2"): self.assertIn(stage, req)
+
+    def test_notebook14_requires_balance_stage(self):
+        src = self.code("14_stokastisk_replica_balance")
+        req = [l for l in src.splitlines() if l.startswith("required =")][0]
+        self.assertIn("16_replica_balance", req); self.assertIn("bench_replicas2", req)
+        self.assertIn("dual_16_replica_balance.py", src)

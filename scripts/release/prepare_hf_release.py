@@ -20,20 +20,22 @@ for w in sorted((REL / "wheels").glob("*.whl")): shutil.copy2(w, dst / "wheels" 
 for m in ("RELEASE-MANIFEST.json", "BUILD-MANIFEST.json", "DEPENDENCY-MANIFEST.json", "CUDA-ARCH-MANIFEST.json", "SHA256SUMS"): shutil.copy2(REL / "manifests" / m, dst / "manifests" / m)
 (dst / "VERSION").write_text(LOCKED + "\n")
 shutil.copy2(ROOT / "INSTALL.md", dst / "INSTALL.md")                                              # installation instructions
-(dst / "validation").mkdir(); shutil.copy2(REL / "evidence/test-results.json", dst / "validation/test-results.json")   # validation metadata (CPU tests; no Kaggle evidence exists)
+(dst / "validation").mkdir(); shutil.copy2(REL / "evidence/test-results.json", dst / "validation/test-results.json")   # validation metadata (CPU tests)
 shutil.copy2(REL / "evidence/notebook-validation.json", dst / "validation/notebook-validation.json")
 shutil.copy2(ROOT / "docs/HUB_README.md", STAGE / "README.md")
 (STAGE / "scripts").mkdir(); shutil.copy2(ROOT / "scripts/fetch_release.py", STAGE / "scripts/fetch_release.py")
 rm = json.loads((REL / "manifests/RELEASE-MANIFEST.json").read_text())
+kv = json.loads((ROOT / "docs/kaggle-t4-verification.json").read_text())
+assert kv["released_manifest_sha256"] == sha(REL / "manifests/SHA256SUMS"), "executed bytes differ from the released bundle"
 base = f"releases/{NAME}"
 latest = {"project": "stokastisk", "version": LOCKED, "release": NAME, "release_dir": base, "updated": time.strftime("%Y-%m-%d"),
-          "validation_status": "KAGGLE_GPU_VERIFICATION_PENDING", "status": rm["status"],
+          "validation_status": kv["validation_status"], "status": kv["performance_conclusion"], "verification": kv,
           "zip": {"path": f"{base}/{ZIP.name}", "sha256": sha(ZIP), "size": ZIP.stat().st_size},
           "wheels": {w.name: {"path": f"{base}/wheels/{w.name}", "sha256": sha(w), "size": w.stat().st_size} for w in sorted((dst / "wheels").glob("*.whl"))},
           "manifests": {m.name: f"{base}/manifests/{m.name}" for m in sorted((dst / "manifests").iterdir())},
           "installer": "scripts/fetch_release.py",
           "target": {"python": "3.13", "torch": "2.11.0+cu130", "cuda": "13.0", "triton": "3.6.0", "vllm": "0.25.1", "gpus": "2x Tesla T4 SM75", "attention": "TRITON_ATTN"},
-          "kaggle_acceptance": {n: "NOT_RUN" for n in sorted(rm["kaggle_acceptance"])}}
+          "kaggle_acceptance": kv["kaggle_acceptance"]}
 (STAGE / "latest.json").write_text(json.dumps(latest, indent=1) + "\n")
 r = subprocess.run([sys.executable, str(ROOT / "scripts/release/verify_project_version.py"), "--zip", str(ZIP), "--latest-json", str(STAGE / "latest.json"),
                     "--model-card", str(STAGE / "README.md"), "--wheel", str(next((dst / "wheels").glob("stokastisk-*.whl")))], capture_output=True, text=True)

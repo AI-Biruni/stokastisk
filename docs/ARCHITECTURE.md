@@ -81,7 +81,7 @@ TP=2 × PP=2 is rejected (4 GPUs on a 2-GPU target). `execution_strategy=None` k
 ```
  GPU0 ┌─ layer i (half of every weight matrix) ─┐   NCCL all-reduce   ┌─ layer i+1 (half) ─┐
       └──────────────────────────────────────────┘◄══════ SHM ═══════►└────────────────────┘
- GPU1 ┌─ layer i (other half) ──────────────────┐   (twice per layer, over the host bridge when there is no P2P)
+ GPU1 ┌─ layer i (other half) ──────────────────┐   (twice per layer; over the host bridge when peer access is unavailable, which differs between Kaggle VMs)
 ```
 ### PP=2 — layers are split, one activation tensor crosses per stage boundary
 ```
@@ -110,7 +110,7 @@ The scheduler is pure Python (`stokastisk.parallel.{queue,routing,scheduler}`): 
                  chunk i+1 D2H overlaps chunk i H2D via buf[1]; cudaEvent hands each buffer from stage to stage (cudaStreamWaitEvent)
 ```
 Implemented twice: PyTorch pinned tensors + streams/events (`cuda_transport.py`) and C++ on the CUDA Runtime API (`native/host_staged_xfer.cpp`, built on demand with nvcc, `sm_75`, links `libcudart.so.13`; it is *not* in the wheel). The local machine has one GPU, so neither has moved a byte between two devices yet — notebook 10 does that.
-Decision rule: if NCCL is not slower at every measured size the custom transport stays experimental and is never integrated. NVSHMEM is not integrated (no P2P, no verified IB path).
+Decision rule: if NCCL is not slower at every measured size the custom transport stays experimental and is never integrated. NVSHMEM is not integrated (peer access is not guaranteed on Kaggle, no verified IB path).
 
 ## 4. Intelligent parallelism selection (`recommend_parallelism`, CPU-tested)
 ```

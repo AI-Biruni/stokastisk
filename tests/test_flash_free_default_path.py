@@ -8,7 +8,7 @@ import ast, json, os, pathlib, subprocess, sys, tempfile, textwrap, unittest, zi
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 K = ROOT / "scripts" / "kaggle"
-RC4_WHEEL = next(iter(sorted((ROOT / "dist-rc").glob("*-rc4/wheels/vllm-0.25.1-cp38-abi3-linux_x86_64.whl"))), ROOT / "dist-rc/_absent_rc4.whl")   # private local baseline (NOT_RUN if absent)
+RC4_WHEEL = next(iter(sorted((ROOT / "work" / "baselines").glob("rc4/wheels/vllm-0.25.1-cp38-abi3-linux_x86_64.whl"))), ROOT / "work/baselines/_absent_rc4.whl")   # private local baseline (NOT_RUN if absent)
 NEW_WHEEL = pathlib.Path(os.environ["STOKASTISK_VLLM_WHEEL"]) if os.environ.get("STOKASTISK_VLLM_WHEEL") else None
 # imports of dropped modules that exist in the wheel but are NOT on the dense-Qwen2 TP1/TP2 path (MoE, KV connector, MLA, specific models);
 # they fail only if the user selects such a model/backend, which this Flash-free build does not support.

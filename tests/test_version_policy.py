@@ -33,7 +33,7 @@ class VersionLock(unittest.TestCase):
         self.assertIsNone(re.search(r'^version\s*=\s*"(?!0\.1\.0")', t, re.M))
 
     def test_notebooks_name_only_the_locked_release(self):
-        for p in sorted((ROOT / "notebooks").glob("*.ipynb")):
+        for p in sorted((ROOT / "notebooks").rglob("*.ipynb")):
             self.assertIn(f"stokastisk-{LOCKED}-kaggle-t4-sm75", p.read_text(), p.name)
             for m in vpv.RELEASE_DIR_RE.finditer(p.read_text()):
                 self.assertEqual((m.group(1), m.group(2)), (LOCKED, None), p.name)

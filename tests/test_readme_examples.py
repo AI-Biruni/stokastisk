@@ -26,7 +26,7 @@ class ReadmeExamples(unittest.TestCase):
     def test_both_state_version_and_pending_status_and_release(self):
         for d in DOCS:
             t = d.read_text()
-            self.assertIn(V, t); self.assertIn("KAGGLE_GPU_VERIFICATION_PENDING", t)
+            self.assertIn(V, t); self.assertIn("KAGGLE_T4_VERIFIED", t)
             self.assertIn(f"stokastisk-{V}-kaggle-t4-sm75", t)
             self.assertIn("https://huggingface.co/waqasm86/stokastisk/resolve/main/scripts/fetch_release.py", t)
 

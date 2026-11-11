@@ -1,0 +1,35 @@
+{
+ "project": "stokastisk",
+ "version": "0.1.0",
+ "release": "stokastisk-0.1.0-kaggle-t4-sm75",
+ "validation_status": "KAGGLE_T4_VERIFIED",
+ "hardware": "Kaggle, 2 x Tesla T4 (SM75), Python 3.13.16, torch 2.11.0+cu130, Triton 3.6.0, vLLM 0.25.1, attention TRITON_ATTN",
+ "executed_by": "project owner, manually, on Kaggle (2026-11-11)",
+ "sdk_wheel_sha256_released": "e17b99b42ef10e09ad9b9ee8c81d2aacaa1a7ca33944eb8e2fc043d702e36cae",
+ "vllm_wheel_sha256_released": "cc3bcafb6516791990ca302073ae153a08465d3df1e460d666e3ec09b4e98f5e",
+ "released_manifest_sha256": "efe492a679002d4740effde4aaaa461e616d05d7bd2223fc8b77bdcdc55a56ca",
+ "scope_note": "Notebooks 13 and 14 ran the released bundle (SDK wheel e17b99b4..., manifest efe492a6...). Notebooks 01-12 ran the earlier SDK wheel a6b8596b... with the same vLLM wheel and native binaries; the only SDK difference is the replica-routing fix in sdk/stokastisk/parallel/routing.py, which notebook 14 verifies.",
+ "kaggle_acceptance": {
+  "01": "PASS", "02": "PASS", "03": "PASS", "04": "PASS", "05": "WARNING", "06": "PASS", "07": "PASS",
+  "08": "PASS", "09": "PASS_VALIDATION_FAIL_SCALING_FIXED_IN_14", "10": "WARNING", "11": "PASS", "12": "PASS_SHALLOW",
+  "13": "PASS", "14": "PASS"
+ },
+ "notebooks_01_12_wheel": "a6b8596b...8585",
+ "notebooks_13_14_wheel": "e17b99b4...6cae",
+ "fulfilment": {
+  "tensor_parallel_tp2": "VERIFIED: vLLM parallel_config TP=2, both GPUs hold a shard (13751/13751 MiB), deterministic output, memory released",
+  "pipeline_parallel_pp2": "VERIFIED (experimental): vLLM parallel_config PP=2, both GPUs hold a shard (12895/13353 MiB), deterministic, output equal to TP=1, memory released",
+  "replica_parallel": "VERIFIED functionally: 50/50 balance checks, both GPUs receive work at batch 2..64 over 3 rounds"
+ },
+ "decode_tok_per_s_median_Qwen2.5-1.5B-Instruct_batch8_64out": {"tp1": 241.3, "tp2": 132.8, "pp2": 145.7, "replicas2": 225.8, "tp1_scaling_run": 246.6},
+ "replica_vs_tp1_scaling_ratio_b1_b8_b16_b32_b64": [0.96, 0.92, 0.91, 0.94, 0.96],
+ "performance_conclusion": "For Qwen2.5-1.5B (fits one T4) TP=1 is the fastest configuration measured; TP=2 is ~0.55x and PP=2 ~0.6x; two replicas reach 0.91-0.96x of one TP=1 engine up to batch 64. No speed-up from TP, PP or replicas is claimed. TP/PP exist for models that do not fit one 15 GiB T4 (not measured here).",
+ "known_limitations": [
+  "peer access (torch.cuda.can_device_access_peer) differs between Kaggle VMs (true/true in notebook 01, false/false in notebook 07); topology is PHB",
+  "notebook 05: vLLM force-killed one TP=2 process at shutdown (memory later released)",
+  "notebook 10: host-staged transport and NCCL reference ran with a warning; the custom transport is experimental and is not integrated into vLLM",
+  "worker-failure recovery is covered by CPU unit tests only; it was not exercised on Kaggle",
+  "no model larger than one T4 was run, so the TP/PP memory-capacity benefit is not demonstrated",
+  "L4 / SM89 is not implemented and is not claimed"
+ ]
+}

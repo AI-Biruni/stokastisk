@@ -20,40 +20,41 @@
 | **Project version** | `0.1.0` (permanently locked, see [VERSION_POLICY.md](VERSION_POLICY.md)) |
 | **Download** | Hugging Face CDN: <https://huggingface.co/waqasm86/stokastisk> |
 
-## Status — `KAGGLE_GPU_VERIFICATION_PENDING`
+## Status — `KAGGLE_T4_VERIFIED`
 
-Release **`stokastisk-0.1.0-kaggle-t4-sm75`** is **CPU-tested only** (mocked GPUs and fake workers; the development machine has one GeForce 940M, SM50 — not a T4). Notebooks 01–12 are **NOT_RUN** for this release:
-nothing below is Kaggle-verified until the project owner runs them on 2 × Tesla T4. The vLLM wheel and the native CUDA binaries are byte-identical to an earlier internal baseline build
-whose TP=1 / TP=2 inference was run on Kaggle; those historical measurements (in [RELEASE.md](RELEASE.md)) are engineering context, **not validation of this release**.
+All fourteen Kaggle notebooks were executed by the project owner on **2 × Tesla T4** (results, hashes and limits: [docs/KAGGLE_T4_VERIFICATION.md](docs/KAGGLE_T4_VERIFICATION.md)).
+Tensor parallelism (TP=2), pipeline parallelism (PP=2) and independent dual-GPU replicas all run on the Flash-free vLLM 0.25.1 wheel with `TRITON_ATTN`, with both GPUs holding model memory and memory released afterwards.
+**Measured fact: for a model that fits one T4, TP=1 is the fastest configuration.** TP=2 ran at about 0.55× and PP=2 about 0.6× of TP=1 (Qwen2.5-1.5B), and two replicas at 0.91–0.96× up to batch 64. TP/PP are for models that do not fit one 15 GiB GPU; that case was not measured.
+The development machine has one GeForce 940M (SM50) and is never used for GPU claims; the CPU tests use mocked GPUs and fake workers.
 
 | Level | Meaning |
 |---|---|
 | Implemented | code exists in this repository |
 | CPU-tested | covered by `tests/` using mocks / fake workers (no GPU) |
 | CUDA-compiled | native C++ compiles for `sm_75` locally and links only `libcudart.so.13` |
-| Kaggle-tested | executed on 2 × T4 by the owner — **nothing in 0.1.0 yet** |
+| Kaggle-tested | executed on 2 × T4 by the owner (see [docs/KAGGLE_T4_VERIFICATION.md](docs/KAGGLE_T4_VERIFICATION.md)) |
 | Experimental | no evidence of a benefit; may change or be removed |
 
 | Feature | API | Status |
 |---|---|---|
-| Core SDK: validated config, T4/SM75 checks, TP=1/TP=2 engine wrapper, NCCL helpers, Kaggle limits | `stokastisk.LLM`, `StokastiskConfig` | Implemented, CPU-tested; Kaggle-tested: no |
-| GPU topology (UUIDs, PCIe, P2P per direction, link class, NVLink, NCCL) | `stokastisk.discover_topology()` | CPU-tested |
-| Execution strategies, validated | `StokastiskConfig(execution_strategy=..., pipeline_parallel_size=...)` | CPU-tested |
-| Rule-based parallelism recommendation (never applied automatically) | `stokastisk.recommend_parallelism(model, topology, workload)` | CPU-tested |
-| Independent dual-GPU replicas + token-aware scheduler, worker lifecycle and failure recovery | `stokastisk.parallel.ReplicaPool(model, devices=[0, 1])` | CPU-tested (fake workers); **experimental** |
-| Pipeline parallelism PP=2 | `StokastiskConfig(pipeline_parallel_size=2, ...)` | source-verified in vLLM 0.25.1; **experimental, unproven on the Flash-free wheel** |
-| Telemetry (GPU, communication, worker metrics, Nsight probe, optional OTel) | `stokastisk.telemetry` | CPU-tested |
-| Host-staged CUDA transport (pinned memory, streams, events; Python + C++) vs NCCL | `stokastisk.communication`, `native/` | CUDA-compiled; **experimental**, never run on two GPUs |
-| Reproducible benchmarks (TP/PP/replicas, imbalance %, communication sweep) | `stokastisk.benchmarks`, `scripts/kaggle/dual_*.py` | CPU-tested maths; not run on Kaggle |
+| Core SDK: validated config, T4/SM75 checks, TP=1/TP=2 engine wrapper, NCCL helpers, Kaggle limits | `stokastisk.LLM`, `StokastiskConfig` | Implemented, CPU-tested, **Kaggle-tested** (notebooks 03, 05, 06, 13) |
+| GPU topology (UUIDs, PCIe, P2P per direction, link class, NVLink, NCCL) | `stokastisk.discover_topology()` | CPU-tested, **Kaggle-tested** (notebook 07; peer access varies per VM) |
+| Execution strategies, validated | `StokastiskConfig(execution_strategy=..., pipeline_parallel_size=...)` | CPU-tested, **Kaggle-tested** (13) |
+| Rule-based parallelism recommendation (never applied automatically) | `stokastisk.recommend_parallelism(model, topology, workload)` | CPU-tested; Kaggle: run in notebooks 12 and 14 |
+| Independent dual-GPU replicas + token-aware scheduler, worker lifecycle and failure recovery | `stokastisk.parallel.ReplicaPool(model, devices=[0, 1])` | CPU-tested (fake workers), **Kaggle-tested** (notebooks 09, 14: both GPUs receive work); failure recovery CPU-only; no speed-up measured |
+| Pipeline parallelism PP=2 | `StokastiskConfig(pipeline_parallel_size=2, ...)` | **Kaggle-tested** (notebooks 08, 13): both GPUs hold a shard; slower than TP=1 for models that fit one T4; **experimental** |
+| Telemetry (GPU, communication, worker metrics, Nsight probe, optional OTel) | `stokastisk.telemetry` | CPU-tested, nvidia-smi sampling **Kaggle-tested** (09, 11, 14) |
+| Host-staged CUDA transport (pinned memory, streams, events; Python + C++) vs NCCL | `stokastisk.communication`, `native/` | CUDA-compiled; run on Kaggle (notebook 10, with a warning); **experimental**, not integrated into vLLM |
+| Reproducible benchmarks (TP/PP/replicas, imbalance %, communication sweep) | `stokastisk.benchmarks`, `scripts/kaggle/dual_*.py` | CPU-tested maths; **Kaggle-tested** (06, 08, 09, 11, 13, 14) |
 
 ```python
 import stokastisk
 topology = stokastisk.discover_topology()
 rec = stokastisk.recommend_parallelism("Qwen/Qwen2.5-1.5B-Instruct", topology, workload="throughput")
-print(rec.strategy, rec.reason, rec.warnings)       # e.g. replica_parallel (experimental) on 2x T4 / PHB / no P2P
+print(rec.strategy, rec.reason, rec.warnings)       # e.g. a TP=1 recommendation for a model that fits one T4 (PHB; peer access varies per VM)
 
 from stokastisk.parallel import ReplicaPool
-with ReplicaPool("Qwen/Qwen2.5-0.5B-Instruct", devices=[0, 1]) as pool:      # experimental; not yet run on Kaggle
+with ReplicaPool("Qwen/Qwen2.5-0.5B-Instruct", devices=[0, 1]) as pool:      # Kaggle-tested in notebooks 09 and 14
     print(pool.generate(["Explain CUDA streams.", "Explain Tensor Core architecture."]))
 ```
 No software here replaces NVLink: the T4 pair has none, and pinned memory / NCCL SHM / host staging are different techniques with different costs. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the diagrams and the exact verification status of each piece.
@@ -113,16 +114,15 @@ Errors derive from `StokastiskError` (`ConfigurationError`, `EnvironmentValidati
 
 ## Historical measurements (earlier internal baseline build, same vLLM wheel — NOT validation of 0.1.0)
 
-On an earlier internal build with the same vLLM wheel, the owner measured Qwen2.5-1.5B-Instruct (4096 new tokens) on Kaggle 2 × T4: TP=1 949 tok/s, TP=2 521 tok/s (0.55×);
-the two T4s sit behind the host bridge (`PHB`) with no peer-to-peer. **Use TP=1 when the model fits one T4**; use TP=2 only for models that do not fit in 15 GiB.
-Two independent TP=1 engines (replicas) are implemented but unmeasured. Re-measure with notebooks 06–12.
+Measured on Kaggle 2 × T4 with Qwen2.5-1.5B-Instruct (4096 new tokens, notebook 06): TP=1 ≈ 1003 tok/s best of 3 (median ≈ 984), TP=2 ≈ 545 tok/s (0.55×). The two T4s sit behind the host bridge (`PHB`); peer access differs from one Kaggle VM to the next.
+**Use TP=1 when the model fits one T4**; use TP=2 or PP=2 only for models that do not fit in 15 GiB. Two independent TP=1 replicas split work evenly (notebook 14) but did not exceed one engine up to batch 64. Full tables: [docs/KAGGLE_T4_VERIFICATION.md](docs/KAGGLE_T4_VERIFICATION.md).
 
 ## Install options
 
 | Option | When |
 |---|---|
 | **Hub CDN** (above) | default; no dataset needed; needs Internet ON |
-| **Kaggle dataset** | offline runs: upload `releases/<name>/<name>-kaggle-input.zip` from the Hub as a dataset |
+| **Kaggle dataset** | offline runs: upload `releases/stokastisk-0.1.0-kaggle-t4-sm75/stokastisk-0.1.0-kaggle-t4-sm75-kaggle-input.zip` from the Hub as a dataset |
 | **Manual** | see [INSTALL.md](INSTALL.md) |
 
 The installer plans before it changes anything, and it refuses if a protected package would change. It installs the two wheels with `--force-reinstall --no-deps` (so any other installed Stokastisk version is replaced by exactly 0.1.0), then eight exact pins,
@@ -134,14 +134,15 @@ and verifies the after-state equals the before-state plus those eight packages.
 |---|---|
 | `sdk/stokastisk/` | the SDK (pure Python): core, `topology/`, `parallel/`, `telemetry/`, `cuda/`, `communication/`, `benchmarks/` |
 | `native/` | optional C++ (CUDA Runtime API) host-staged transport, built on demand with nvcc |
-| `scripts/kaggle/` | installer, stages `01_env_audit` … `07_summary`, and the `dual_*` stages for notebooks 07–12 |
+| `scripts/kaggle/` | installer, stages `01_env_audit` … `07_summary`, and the `dual_*` stages for notebooks 07–14 |
 | `scripts/fetch_release.py` | stdlib CDN downloader |
 | `scripts/release/`, `scripts/build_vllm_sm75.sh`, `scripts/audit/` | build, repack, patch and audit tooling |
 | `patches/` | wheel patches that keep the Flash-free engine importable (0003 fixes the TP=1/TP=2 FlashInfer default-path imports) |
 | `requirements/` | exact pins, constraints, prohibited list |
 | `tests/` | CPU-only unit tests (they do not prove GPU behaviour — Kaggle runs do) |
-| `docs/` | [ARCHITECTURE](docs/ARCHITECTURE.md), [DEPENDENCIES](docs/DEPENDENCIES.md) |
-| `notebooks/` | Kaggle notebooks 01–12, all unexecuted (`NOT_RUN`) |
+| `docs/` | [ARCHITECTURE](docs/ARCHITECTURE.md), [DEPENDENCIES](docs/DEPENDENCIES.md), [KAGGLE_T4_VERIFICATION](docs/KAGGLE_T4_VERIFICATION.md) |
+| `notebooks/kaggle-t4-sm75/notebooks/` | the 14 Kaggle T4 notebooks (unexecuted sources); executed copies stay local and are not published |
+| `notebooks/kaggle-l4-sm89/` | `PLANNED_NOT_IMPLEMENTED` — no L4 binaries, no L4 support claimed |
 | `VERSION`, `VERSION_POLICY.md`, `scripts/release/verify_project_version.py` | the permanent project-version lock |
 
 ## Known limitations

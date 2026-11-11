@@ -23,6 +23,7 @@ for rel, h in BASE_PIN.items(): assert sha(S / rel) == h, f"base vLLM wheel alte
 base_snapshot = {str(p.relative_to(S)): sha(p) for p in S.rglob("*") if p.is_file()}
 
 shutil.copytree(S, B)
+subprocess.run(["chmod", "-R", "u+w", str(B)], check=True)   # the base may be a read-only history copy; the new release must be writable
 ign = shutil.ignore_patterns("__pycache__", "*.pyc", ".pytest_cache")
 def overlay(rel, dst=None):
     src, dst = ROOT / rel, B / (dst or rel)
@@ -33,8 +34,8 @@ for rel in ("scripts/fetch_release.py", "scripts/make_notebooks.py", "scripts/bu
 shutil.rmtree(B / "docs", ignore_errors=True); shutil.copytree(ROOT / "docs", B / "docs", ignore=shutil.ignore_patterns("HUB_README.md"))   # Hub card is not part of the bundle
 for old in (B / "scripts/make_notebooks.py",):
     if old.exists(): old.unlink()
-shutil.rmtree(B / "notebooks"); shutil.copytree(ROOT / "notebooks", B / "notebooks", ignore=ign)
-nbs = sorted(p.name for p in (B / "notebooks").glob("*.ipynb")); assert [n[:2] for n in nbs] == [f"{i:02d}" for i in range(1, 13)], nbs
+shutil.rmtree(B / "notebooks"); shutil.copytree(ROOT / "notebooks" / "kaggle-t4-sm75" / "notebooks", B / "notebooks", ignore=ign)
+nbs = sorted(p.name for p in (B / "notebooks").glob("*.ipynb")); assert [n[:2] for n in nbs] == [f"{i:02d}" for i in range(1, 15)], nbs
 for f in ("evidence/test-results.json", "evidence/sdk-test-results.json", "evidence/notebook-validation.json", "evidence/installer-test.json", "evidence/release-integrity.json",
           "evidence/source-diff-report.json", "evidence/wheel-vs-source.json"):
     (B / f).unlink(missing_ok=True)
@@ -109,15 +110,17 @@ now = time.strftime("%FT%T%z")
 
 # ---- manifests
 rm0 = json.loads((S / "manifests/RELEASE-MANIFEST.json").read_text())
-status = ("KAGGLE_GPU_VERIFICATION_PENDING — CPU-tested only (mocks, fake workers); not Kaggle-verified. Notebooks 01-12 are NOT_RUN for this release. "
+status = ("KAGGLE_GPU_VERIFICATION_PENDING — CPU-tested only (mocks, fake workers); this SDK wheel has not been executed on Kaggle. Notebooks 01-12 were executed with the earlier SDK wheel "
+          "a6b8596b (see manifests/PRIOR-KAGGLE-EVIDENCE.json); they say nothing about this wheel. Notebooks 13-14 are new and NOT_RUN. "
           "The vLLM wheel and every native CUDA binary are byte-identical to the earlier baseline build.")
-rm = {"name": NEW, "project": "stokastisk", "version": LOCKED, "timestamp": now, "status": status, "validation_status": "KAGGLE_GPU_VERIFICATION_PENDING", "supersedes": None,
+rm = {"name": NEW, "project": "stokastisk", "version": LOCKED, "timestamp": now, "status": status, "validation_status": "KAGGLE_GPU_VERIFICATION_PENDING", "supersedes": None, "prior_wheel_executed_on_kaggle": {"stokastisk-0.1.0-py3-none-any.whl": "a6b8596bb70e31d82a3f00ae15bbffa271876c718da9200943d7f42bfe5b8585"},
       "kaggle_acceptance": {n[:2]: "NOT_RUN" for n in nbs},
       "platform": {"python": "3.13", "cuda_toolkit": "13.0", "vllm": "0.25.1", "torch": "2.11.0+cu130", "triton": "3.6.0", "gpu": "2 x NVIDIA Tesla T4 (SM75)", "attention_backend": "TRITON_ATTN"},
       "wheels": {n: {"size": (B / "wheels" / n).stat().st_size, "sha256": h} for n, h in wheels.items()},
       "vllm_wheel_identical_to_base": True, "native_binaries_changed": False, "native_audit": nsum,
+      "sdk_fix": "replica routing: an unobserved worker is weighted at the mean observed speed (previously 1.0 tokens/s), which sent every request to the first-warmed GPU in notebook-09 scaling runs",
       "new_features": ["topology discovery", "execution strategies (single_gpu, tensor_parallel, pipeline_parallel[experimental], replica_parallel[experimental], auto[recommendation-only])",
-                       "ReplicaPool + token-aware scheduler", "recommend_parallelism", "telemetry", "cuda helpers", "experimental host-staged transport (Python + optional C++)", "benchmarks", "notebooks 07-12"],
+                       "ReplicaPool + token-aware scheduler (routing fix)", "recommend_parallelism", "telemetry", "cuda helpers", "experimental host-staged transport (Python + optional C++)", "benchmarks", "notebooks 07-14 (13: TP/PP fulfilment, 14: replica balance)"],
       "git": {"head": git("rev-parse", "HEAD"), "branch": git("branch", "--show-current"), "dirty": bool(git("status", "--porcelain"))}}
 (B / "manifests/RELEASE-MANIFEST.json").write_text(json.dumps(rm, indent=1)); (B / "evidence/RELEASE-MANIFEST.json").write_text(json.dumps(rm, indent=1))
 bm = {"timestamp": now, "kind": "assemble_release.py", "project_version": LOCKED, "tool_versions": {"python": sys.version.split()[0], "nvcc": subprocess.run(["nvcc", "--version"], capture_output=True, text=True).stdout.strip().splitlines()[-1]},
@@ -127,6 +130,7 @@ dm = json.loads((S / "manifests/DEPENDENCY-MANIFEST.json").read_text()); dm["not
 (B / "manifests/DEPENDENCY-MANIFEST.json").write_text(json.dumps(dm, indent=1))
 (B / "manifests/CUDA-ARCH-MANIFEST.json").write_text(json.dumps({"target": "sm_75 only", "ptx": False, "cuda_toolkit": "13.0 only", "native_objects_unchanged_from": "pinned baseline vLLM wheel", "audit": nsum,
         "experimental_transport": {"device_code": False, "links": native_ev.get("links")}}, indent=1))
+(B / "manifests/PRIOR-KAGGLE-EVIDENCE.json").write_text(json.dumps({"note": "Kaggle T4 x2 execution of notebooks 01-12 on 2026-11-08..10 used the SDK wheel below, NOT the wheel in this release", "sdk_wheel_sha256_executed": "a6b8596bb70e31d82a3f00ae15bbffa271876c718da9200943d7f42bfe5b8585", "vllm_wheel_sha256_executed": wheels[vname], "vllm_wheel_unchanged": True, "results": {"01": "PASS", "02": "PASS", "03": "PASS", "04": "PASS", "05": "WARNING", "06": "PASS", "07": "PASS", "08": "PASS", "09": "PASS (validation); scaling defect", "10": "WARNING", "11": "PASS", "12": "PASS (shallow)"}, "details": "reports/STOKASTISK_010_KAGGLE_T4_EXECUTION_AUDIT.md"}, indent=1))
 assert (B / "manifests/WHEEL-LINEAGE.json").exists()
 if (B / "cuda/README.md").exists(): pass
 

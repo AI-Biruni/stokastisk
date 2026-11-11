@@ -82,7 +82,7 @@ class InstallerTests(unittest.TestCase):
         self.assertTrue(inst.inspect_wheel(t)["prohibited_binaries_or_dirs"])
 
     def test_real_candidate_wheel_is_clean_and_plans_without_conflict(self):
-        w = HERE.parent / "dist-rc/wheels/vllm-0.25.1-cp38-abi3-linux_x86_64.whl"
+        w = HERE.parent / "dist-rc/stokastisk-0.1.0-kaggle-t4-sm75/wheels/vllm-0.25.1-cp38-abi3-linux_x86_64.whl"
         if not w.exists(): self.skipTest("candidate wheel not built")
         i = inst.inspect_wheel(w); self.assertEqual(i["prohibited_binaries_or_dirs"], [])
         reqs = inst.vllm_core_requirements(i["metadata"])

@@ -1,9 +1,9 @@
 # Build / reproduce
 Toolchain (verified before any build): CPython 3.13, PyTorch 2.11.0+cu130, **CUDA Toolkit 13.0 only** (local 13.0.48; Kaggle runs 13.0.88), GCC 13.3, `TORCH_CUDA_ARCH_LIST=7.5`. CUDA 12.x toolkits must not be on `PATH`/`CUDA_HOME`.
 * `scripts/build_vllm_sm75.sh` — the original native vLLM build (SM75). `scripts/release/build_t4_tree.py`, `build_t4_wheel.py`, `repack_vllm_wheel.py`, `patch_vllm_wheel_t4.py` — derive the T4-only Python tree/wheel from that build and `patches/0001–0003`.
-* `scripts/make_notebooks.py` — generates the unexecuted notebooks 07–12 into `notebooks/` (`dual_*.py` stage scripts live in `scripts/kaggle`; notebooks 01–06 are maintained directly).
+* `scripts/make_notebooks.py` — generates the unexecuted notebooks 07–14 into `notebooks/kaggle-t4-sm75/notebooks/` (`dual_*.py` stage scripts live in `scripts/kaggle`; notebooks 01–06 are maintained directly).
 * `native/host_staged_xfer.cpp` — optional experimental transport; `nvcc -O2 -std=c++17 -shared -Xcompiler -fPIC -gencode arch=compute_75,code=sm_75 host_staged_xfer.cpp -o libstokastisk_xfer.so -lcudart` (no device code; links `libcudart.so.13`). It is not packaged in the wheel.
-* `scripts/fetch_release.py` — stdlib CDN downloader (also uploaded to the Hub). `notebooks/` holds notebooks 01–12 (unexecuted); the assembler requires all twelve.
+* `scripts/fetch_release.py` — stdlib CDN downloader (also uploaded to the Hub). `notebooks/kaggle-t4-sm75/notebooks/` holds notebooks 01–14 (unexecuted); the assembler requires all fourteen.
 * `scripts/release/assemble_release.py BASE` — assembles `dist-rc/stokastisk-0.1.0-kaggle-t4-sm75` (the name is fixed by the version lock) from the private baseline directory `dist-rc/BASE` (byte-pinned vLLM wheel carried over, SDK wheel rebuilt and checked against `sdk/`), runs the CPU tests, writes manifests/SHA256SUMS, builds and re-verifies the ZIP, then runs `verify_project_version.py`. It refuses any project version other than 0.1.0.
 * `scripts/release/verify_project_version.py` and `scripts/release/prepare_hf_release.py` — version-lock verifier and Hugging Face staging (see [VERSION_POLICY.md](VERSION_POLICY.md)). The wheel version comes from the `VERSION` file; nothing derives or bumps versions.
 * `scripts/release/make_kaggle_input_zip.py NAME` — reproducible, idempotent Kaggle/Hub ZIP + `.sha256`.

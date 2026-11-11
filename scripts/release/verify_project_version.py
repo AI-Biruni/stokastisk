@@ -99,7 +99,7 @@ def source_checks():
                 if m.group(1) != LOCKED_VERSION or (rx is RELEASE_DIR_RE and m.group(2)):
                     bad.append(f"{p}: {m.group(0)}")
     check("no tracked active file declares a different Stokastisk release/headline/pin", not bad, bad[:10])
-    nbbad, nbs = [], sorted((ROOT / "notebooks").glob("*.ipynb"))
+    nbbad, nbs = [], sorted((ROOT / "notebooks").rglob("*.ipynb"))
     for p in nbs:
         try:
             nb = json.loads(p.read_text())

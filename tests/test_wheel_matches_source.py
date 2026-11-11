@@ -29,7 +29,7 @@ class WheelMatchesSource(unittest.TestCase):
             self.assertEqual(wheel_drift(next(pathlib.Path(td).glob("stokastisk-*.whl"))), {})
 
     def test_detector_flags_known_stale_rc2_wheel(self):
-        w = next(iter(sorted((ROOT / "dist-rc").glob("*-rc2/wheels/stokastisk-*-py3-none-any.whl"))), ROOT / "dist-rc/_absent_rc2.whl")   # private local stale wheel, if kept
+        w = next(iter(sorted((ROOT / "work" / "baselines").glob("rc2/wheels/stokastisk-*-py3-none-any.whl"))), ROOT / "work/baselines/_absent_rc2.whl")   # private local stale wheel, if kept
         if not w.exists(): self.skipTest("rc2 wheel not present locally")
         self.assertIn("nccl.py", wheel_drift(w))
 

@@ -1,0 +1,78 @@
+{
+ "note": "Move of the unexecuted Kaggle T4 notebooks into notebooks/kaggle-t4-sm75/notebooks/ (git mv; content unchanged).",
+ "moves": [
+  {
+   "from": "notebooks/01_stokastisk_environment_audit.ipynb",
+   "to": "notebooks/kaggle-t4-sm75/notebooks/01_stokastisk_environment_audit.ipynb",
+   "sha256": "a1936870ef77319a94466163e0416d3896514a1a28b1004b8e45dce117462c84"
+  },
+  {
+   "from": "notebooks/02_stokastisk_installation.ipynb",
+   "to": "notebooks/kaggle-t4-sm75/notebooks/02_stokastisk_installation.ipynb",
+   "sha256": "a86fca7c0d846aa64fa2ff0026dd0e387f1861fce2061e7b6b2f6951a0acdc0c"
+  },
+  {
+   "from": "notebooks/03_stokastisk_single_gpu_validation.ipynb",
+   "to": "notebooks/kaggle-t4-sm75/notebooks/03_stokastisk_single_gpu_validation.ipynb",
+   "sha256": "597eb94187d458c6890c694ab2636593bc638bec11ca24ecbd5c1373cc7f4f39"
+  },
+  {
+   "from": "notebooks/04_stokastisk_dual_gpu_nccl_validation.ipynb",
+   "to": "notebooks/kaggle-t4-sm75/notebooks/04_stokastisk_dual_gpu_nccl_validation.ipynb",
+   "sha256": "21292145c8596be85f086a11c00f2a01bd42352761cde80f6e0c9ee555703193"
+  },
+  {
+   "from": "notebooks/05_stokastisk_vllm_inference.ipynb",
+   "to": "notebooks/kaggle-t4-sm75/notebooks/05_stokastisk_vllm_inference.ipynb",
+   "sha256": "cd6894acc8f5b055d63d8b3142d97400a5b3340073b3d042e8c9616e21113054"
+  },
+  {
+   "from": "notebooks/06_stokastisk_tensor_parallel_benchmark.ipynb",
+   "to": "notebooks/kaggle-t4-sm75/notebooks/06_stokastisk_tensor_parallel_benchmark.ipynb",
+   "sha256": "77922be567fe0f2257e6a70b3158161f48414214ac2061fa641444ac28d89633"
+  },
+  {
+   "from": "notebooks/07_stokastisk_gpu_topology_validation.ipynb",
+   "to": "notebooks/kaggle-t4-sm75/notebooks/07_stokastisk_gpu_topology_validation.ipynb",
+   "sha256": "6049c7cc876aded93ab4d3eba3ddb1c0357ac13990ee02d877d795b9c630c85c"
+  },
+  {
+   "from": "notebooks/08_stokastisk_pipeline_parallel_validation.ipynb",
+   "to": "notebooks/kaggle-t4-sm75/notebooks/08_stokastisk_pipeline_parallel_validation.ipynb",
+   "sha256": "b180acb3ecd68728acd5d0f946120d8b1abdc4ebb21c84da18a847d02feb8fc2"
+  },
+  {
+   "from": "notebooks/09_stokastisk_dual_gpu_replica_inference.ipynb",
+   "to": "notebooks/kaggle-t4-sm75/notebooks/09_stokastisk_dual_gpu_replica_inference.ipynb",
+   "sha256": "c96afedc8181c6256a808cb0797ab55f3fa37925aefa97d884a66bb8d4ed68d9"
+  },
+  {
+   "from": "notebooks/10_stokastisk_cuda_communication_benchmark.ipynb",
+   "to": "notebooks/kaggle-t4-sm75/notebooks/10_stokastisk_cuda_communication_benchmark.ipynb",
+   "sha256": "91ea2f55a3db833613a7e05e77f1f3c4abb20adfd94736e6e2f4d1f1984f1b26"
+  },
+  {
+   "from": "notebooks/11_stokastisk_gpu_load_balancing_benchmark.ipynb",
+   "to": "notebooks/kaggle-t4-sm75/notebooks/11_stokastisk_gpu_load_balancing_benchmark.ipynb",
+   "sha256": "2d0893af3beddd6d707de12612e977c290df4931ddcbab8b0ad3d84113c259ff"
+  },
+  {
+   "from": "notebooks/12_stokastisk_consolidated_acceptance.ipynb",
+   "to": "notebooks/kaggle-t4-sm75/notebooks/12_stokastisk_consolidated_acceptance.ipynb",
+   "sha256": "8f2b84ff8ababba35ed6f3c68308992e719ebf6096a484f14570cf567fb6dec8"
+  },
+  {
+   "from": "notebooks/13_stokastisk_tp_pp_fulfilment.ipynb",
+   "to": "notebooks/kaggle-t4-sm75/notebooks/13_stokastisk_tp_pp_fulfilment.ipynb",
+   "sha256": "ae0cfb48d971b19042693f453bd2678054d46c5cc2c80f17dffdcf63973102fa"
+  },
+  {
+   "from": "notebooks/14_stokastisk_replica_balance.ipynb",
+   "to": "notebooks/kaggle-t4-sm75/notebooks/14_stokastisk_replica_balance.ipynb",
+   "sha256": "1cd8a2355cec714eec2e7534333b6bec1d7bf540ec972ad79c654750fb96eeb4"
+  }
+ ],
+ "not_moved": {
+  "notebooks-executed-with-output/": "stays at the project root (local evidence, git-ignored, never published)"
+ }
+}
