@@ -25,6 +25,9 @@ Notebooks 13–14 ran SDK wheel `e17b99b4…`; 01–12 ran the earlier wheel `a6
 Implemented in the SDK: GPU topology and peer-access detection, PCIe reporting, TP/PP strategies, independent dual-GPU replicas with a token-aware scheduler and failure recovery, a parallelism recommender, GPU telemetry, CUDA streams/events, pinned-memory transport vs NCCL, and a benchmark framework.
 Kaggle's own image resolves NCCL to the cu12 build 2.32.3 (two NCCL packages share one file); our binaries do not link it. Details in the GitHub `RELEASE.md`.
 
+## Source ahead of this release (not yet executed)
+The GitHub `main` branch contains additional SDK code that is **not** in the verified wheel on this page: `stokastisk.compat` (static T4/SM75 compatibility checks), `stokastisk.serving` (launcher for the bundled OpenAI-compatible server) and `LLM.chat`. It is **implemented but not yet executed** — no tests and no Kaggle runs. The wheel, ZIP and manifests here are unchanged and remain the Kaggle-verified release. A copy of that source and the vLLM coverage reports are under `source/` and `docs/` in this repository; the per-feature evidence table is `docs/VLLM_T4_COVERAGE.md`.
+
 ## Kaggle hard limits the SDK is built for (`stokastisk.LIMITS`)
 4 CPU cores (thread budget split across TP workers) · ~30 GiB RAM · 20 GiB `/kaggle/working` · 2 × T4 (SM75, ~15 GiB VRAM each).
 

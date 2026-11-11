@@ -119,8 +119,10 @@ Measured on Kaggle 2 × T4 with Qwen2.5-1.5B-Instruct (4096 new tokens, notebook
 
 ## vLLM 0.25.1 coverage on the T4
 
+> **Repository source is ahead of the verified release.** The `main` branch additionally contains `stokastisk.compat`, `stokastisk.serving`, `LLM.chat` and the explicit-bfloat16 pre-check. This code is **implemented but not yet executed** (no tests, no Kaggle run) and is **not** in the published SDK wheel (`29edaa55…`), which — with the vLLM wheel and the ZIP — remains the Kaggle-verified release. Installing the release does not give you these functions; use the repository source.
+
 Not every vLLM feature works on a Tesla T4. [docs/VLLM_T4_COVERAGE.md](docs/VLLM_T4_COVERAGE.md) lists, per feature, whether it was **executed on Kaggle**, only compiled, CPU-tested, statically inspected or not run — and what cannot work on SM75 (bfloat16, Flash*, native FP8/FP4, Qwen Omni).
-`stokastisk.check_model(...)`, `check_dtype`, `check_quantization` and `check_feature` raise a clear `StokastiskCompatibilityError` before an engine starts; `stokastisk.serving` launches the bundled OpenAI-compatible server (implemented, not yet run on Kaggle).
+In the repository source, `stokastisk.check_model(...)`, `check_dtype`, `check_quantization` and `check_feature` raise a clear `StokastiskCompatibilityError` before an engine starts; `stokastisk.serving` launches the bundled OpenAI-compatible server (implemented, not yet run on Kaggle).
 
 ## Install options
 
