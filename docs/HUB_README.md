@@ -11,7 +11,7 @@ Source, docs and tooling: <https://github.com/AI-Biruni/stokastisk>
 | | |
 |---|---|
 | Project / version | Stokastisk **0.1.0** (permanently locked — `VERSION_POLICY.md` on GitHub) |
-| **Canonical distribution** | **integrated wheel** `stokastisk-0.1.0-2-cp313-cp313-linux_x86_64.whl` · release `stokastisk-0.1.0-integrated-kaggle-t4-sm75` · sha256 `@@WHEEL_SHA256@@` · **GPU verification pending (notebook 15)** |
+| **Canonical distribution** | **integrated wheel** `stokastisk-0.1.0-2-cp313-cp313-linux_x86_64.whl` · release `stokastisk-0.1.0-integrated-kaggle-t4-sm75` · sha256 `7e4b700929ec7f3489570e93252ef5a49da2d1682c111c5feefb55efead84369` · **GPU verification pending (notebook 15)** |
 | Legacy distribution | two wheels, release `stokastisk-0.1.0-kaggle-t4-sm75` — `KAGGLE_T4_VERIFIED` |
 | Python / PyTorch / Triton | 3.13 / 2.11.0+cu130 (Kaggle's) / 3.6.0 (Kaggle's) |
 | CUDA | Toolkit 13.0 only — binaries link `libcudart.so.13`; `sm_75` cubins, no PTX |
@@ -30,7 +30,7 @@ Implemented in the SDK: GPU topology and peer-access detection, PCIe reporting, 
 Kaggle's own image resolves NCCL to the cu12 build 2.32.3 (two NCCL packages share one file); our binaries do not link it. Details in the GitHub `RELEASE.md`.
 
 ## Integrated wheel (canonical) — `BUILT, STATICALLY INSPECTED, CPU-TESTED — KAGGLE VERIFICATION PENDING`
-One file — `releases/stokastisk-0.1.0-integrated-kaggle-t4-sm75/wheels/stokastisk-0.1.0-2-cp313-cp313-linux_x86_64.whl` (@@WHEEL_SIZE@@ bytes, sha256 `@@WHEEL_SHA256@@`) — contains the complete SDK (`stokastisk.compat`, `stokastisk.serving`, `LLM.chat`, the explicit-bfloat16 pre-check, topology, parallel, telemetry, CUDA, communication, benchmarks) **and** the bundled vLLM 0.25.1 tree (every file byte-identical to the Kaggle-verified vLLM wheel `cc3bcafb…`) with its six native objects (`sm_75` cubins only, no PTX, `libcudart.so.13`, no Flash code). Project version is exactly 0.1.0; build tag `2` is the only thing that distinguishes it from the earlier build-tag-1 candidate (`sdk-candidate/`, superseded, kept) and from the legacy wheels. Requires Python `>=3.13,<3.14`; pins `torch==2.11.0+cu130`, `triton==3.6.0`, `transformers>=5.5.3,<6`.
+One file — `releases/stokastisk-0.1.0-integrated-kaggle-t4-sm75/wheels/stokastisk-0.1.0-2-cp313-cp313-linux_x86_64.whl` (38,151,399 bytes, sha256 `7e4b700929ec7f3489570e93252ef5a49da2d1682c111c5feefb55efead84369`) — contains the complete SDK (`stokastisk.compat`, `stokastisk.serving`, `LLM.chat`, the explicit-bfloat16 pre-check, topology, parallel, telemetry, CUDA, communication, benchmarks) **and** the bundled vLLM 0.25.1 tree (every file byte-identical to the Kaggle-verified vLLM wheel `cc3bcafb…`) with its six native objects (`sm_75` cubins only, no PTX, `libcudart.so.13`, no Flash code). Project version is exactly 0.1.0; build tag `2` is the only thing that distinguishes it from the earlier build-tag-1 candidate (`sdk-candidate/`, superseded, kept) and from the legacy wheels. Requires Python `>=3.13,<3.14`; pins `torch==2.11.0+cu130`, `triton==3.6.0`, `transformers>=5.5.3,<6`.
 
 **Install (Kaggle, Internet ON, GPU T4 × 2):** the installer verifies the SDK/torch/triton/CUDA/GPU preconditions and the wheel hash, installs the wheel `--no-deps --no-index`, hash-verifies and installs the eight missing pins, proves no preinstalled package changed, and prints every check as PASS / FAIL / WARNING / SKIPPED.
 ```python
