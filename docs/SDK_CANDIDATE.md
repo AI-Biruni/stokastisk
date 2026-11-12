@@ -1,4 +1,6 @@
-# Stokastisk 0.1.0 — integrated SDK candidate (build tag 1)
+# Stokastisk 0.1.0 — integrated SDK candidate (build tag 1) — SUPERSEDED
+
+> **Superseded 2026-11-12** by the canonical integrated wheel with build tag 2 (`docs/INTEGRATED_RELEASE.md`), which additionally contains the SDK hardening, a hash-verified installer and notebook 15. This page documents the first candidate and is kept as history; its wheel (`sdk-candidate/stokastisk-0.1.0-build1/`) is unchanged and was never executed on Kaggle.
 
 **Status: `BUILT AND PACKAGED — STATICALLY INSPECTED — NOT EXECUTED ON KAGGLE DUAL T4 GPUs`**
 
