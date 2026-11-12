@@ -7,7 +7,7 @@ z, v, h = zipfile.ZipFile(cand), zipfile.ZipFile(vl), zipfile.ZipFile(hs)
 sha = lambda b: hashlib.sha256(b).hexdigest()  # noqa: E731
 names = z.namelist(); R = {}
 R["wheel"] = cand.split("/")[-1]; R["sha256"] = sha(open(cand, "rb").read())
-R["filename_ok"] = bool(re.fullmatch(r"stokastisk-0\.1\.0-1-cp313-cp313-linux_x86_64\.whl", R["wheel"]))
+R["filename_ok"] = bool(re.fullmatch(r"stokastisk-0\.1\.0-\d+-cp313-cp313-linux_x86_64\.whl", R["wheel"]))
 R["testzip"] = z.testzip()
 md = z.read("stokastisk-0.1.0.dist-info/METADATA").decode(); wh = z.read("stokastisk-0.1.0.dist-info/WHEEL").decode()
 R["metadata"] = {"Name": re.search(r"^Name: (.*)$", md, re.M).group(1), "Version": re.search(r"^Version: (.*)$", md, re.M).group(1),
@@ -33,6 +33,12 @@ R["sdk_features"] = {"LLM.chat": "def chat(" in eng, "bfloat16_precheck": "check
                      "serving_ServerProcess": "class ServerProcess" in z.read("stokastisk/serving.py").decode(),
                      "serving_forces_TRITON_ATTN": "--attention-backend" in z.read("stokastisk/serving.py").decode() and "TRITON_ATTN" in z.read("stokastisk/serving.py").decode(),
                      "config_only_TRITON_ATTN": 'ALLOWED_ATTENTION_BACKENDS = ("TRITON_ATTN",)' in z.read("stokastisk/config.py").decode()}
+# stokastisk/** must equal sdk/ exactly (no stray/temporary files, no stale module)
+import pathlib
+SDK = pathlib.Path(__file__).resolve().parents[2] / "sdk" / "stokastisk"
+src = {p.relative_to(SDK).as_posix(): p.read_bytes() for p in SDK.rglob("*.py") if "__pycache__" not in p.parts}
+pk = {n[len("stokastisk/"):]: z.read(n) for n in names if n.startswith("stokastisk/") and not n.endswith("/")}
+R["sdk_matches_source"] = {"differs": sorted(n for n in src if pk.get(n) != src[n]), "extra_in_wheel": sorted(n for n in pk if n not in src and n != "_version.py")}
 # historical SDK wheel = subset of candidate stokastisk/ (old files may differ only where sdk/ changed)
 hsdk = {n for n in h.namelist() if n.startswith("stokastisk/") and n.endswith(".py")}
 R["historical_sdk_files_all_present"] = sorted(hsdk - sdk) == []
@@ -53,6 +59,6 @@ R["python_executed"] = False; R["gpu_executed"] = False; R["kaggle_executed"] = 
 R["status"] = "BUILT AND PACKAGED — STATICALLY INSPECTED — NOT EXECUTED ON KAGGLE DUAL T4 GPUs"
 ok = (R["filename_ok"] and R["testzip"] is None and R["metadata"]["Version"] == "0.1.0" and not R["metadata"]["requires_vllm_dist"] and not bad and not R["record"]["unlisted_members"]
       and all(R["sdk_modules"].values()) and all(R["sdk_features"].values()) and not diff and not extra and R["vllm_dist_info_bundled"] and R["vllm_version_file"] == "0.25.1"
-      and not R["flash_markers_nonpy"] and not R["forbidden_dependencies_in_metadata"] and R["wheel_file"]["Tag"] == "cp313-cp313-linux_x86_64")
+      and not R["flash_markers_nonpy"] and not R["sdk_matches_source"]["differs"] and not R["sdk_matches_source"]["extra_in_wheel"] and not R["forbidden_dependencies_in_metadata"] and R["wheel_file"]["Tag"] == "cp313-cp313-linux_x86_64")
 R["all_static_checks_pass"] = bool(ok)
 json.dump(R, open(out, "w"), indent=1); print(json.dumps({k: R[k] for k in ("all_static_checks_pass", "sha256", "wheel")}, indent=1)); sys.exit(0 if ok else 1)

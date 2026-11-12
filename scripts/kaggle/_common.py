@@ -26,7 +26,10 @@ def check(results, name, ok, detail=""):
 
 def finish(stage, results, extra=None):
     # WARNING/SKIPPED = a documented limitation (e.g. cuobjdump absent); it never hides a FAIL and never counts as a verified PASS.
-    status = "PASS" if results and all(r["status"] in OK_STATUSES for r in results) else "FAIL"
+    # A stage whose checks are ALL warnings/skips proved nothing: it needs at least one real PASS, and its counts are always recorded.
+    counts = {k: sum(1 for r in results if r["status"] == k) for k in sorted({r["status"] for r in results})}
+    status = "PASS" if results and all(r["status"] in OK_STATUSES for r in results) and counts.get("PASS", 0) > 0 else "FAIL"
+    extra = {**(extra or {}), "check_counts": counts}
     try:   # Kaggle's /kaggle/working is limited to 20 GiB: the evidence directory itself must fit
         from stokastisk.limits import dir_size_bytes, LIMITS
         used = dir_size_bytes(OUT) / 1024 ** 3

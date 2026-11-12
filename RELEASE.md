@@ -1,5 +1,7 @@
 # Release status
 
+> **Two distributions, one project version (0.1.0).** The **integrated wheel** (`stokastisk-0.1.0-2-cp313-cp313-linux_x86_64.whl`, release `stokastisk-0.1.0-integrated-kaggle-t4-sm75`) is the canonical distribution: built, statically inspected and CPU-tested; **Kaggle verification pending (notebook 15)**. The **legacy two-wheel bundle** below is `KAGGLE_T4_VERIFIED`. Hashes, contents and limits of the integrated wheel: [docs/INTEGRATED_RELEASE.md](docs/INTEGRATED_RELEASE.md). The earlier build-tag-1 candidate (`sdk-candidate/stokastisk-0.1.0-build1/`) is superseded and kept as a historical artifact.
+
 Project version: **0.1.0** (permanently locked — [VERSION_POLICY.md](VERSION_POLICY.md)). Release: `stokastisk-0.1.0-kaggle-t4-sm75`.
 Git tag / GitHub release: `v0.1.0`. Hub: <https://huggingface.co/waqasm86/stokastisk> · archive `releases/stokastisk-0.1.0-kaggle-t4-sm75/stokastisk-0.1.0-kaggle-t4-sm75-kaggle-input.zip`
 (SHA256 in `latest.json` and `releases/stokastisk-0.1.0-kaggle-t4-sm75/manifests/SHA256SUMS`).
@@ -16,7 +18,7 @@ Git tag / GitHub release: `v0.1.0`. Hub: <https://huggingface.co/waqasm86/stokas
 | Kaggle notebooks 01–14 | executed by the owner on 2 × T4: all PASS or WARNING, none FAIL — [docs/KAGGLE_T4_VERIFICATION.md](docs/KAGGLE_T4_VERIFICATION.md) |
 | TP=2, PP=2, replicas | **Kaggle-verified** (notebooks 13, 14); slower than TP=1 for a model that fits one T4 |
 
-Notebooks 13 and 14 ran the SDK wheel `e17b99b4…` (bundle manifest `efe492a6…`); notebooks 01–12 ran the earlier SDK wheel `a6b8596b…`, with the identical vLLM wheel in all cases (the SDK difference is the replica-routing fix that notebook 14 verifies). The released SDK wheel (`29edaa55…ee49`) differs from the wheel those two notebooks executed (`e17b99b4…6cae`) only in comments and descriptive note strings (identical Python AST ignoring string literals) and in the packaged README; the rebuilt wheel itself was not re-executed on Kaggle.
+Notebooks 13 and 14 were first run with SDK wheel `e17b99b4…` (bundle manifest `efe492a6…`) and **re-run on 2026-11-12 with the released SDK wheel `29edaa55…ee49` itself** (provenance printed by the executed notebooks); notebooks 01–12 ran the earlier SDK wheel `a6b8596b…`, with the identical vLLM wheel in all cases. The released SDK wheel predates `stokastisk.compat`, `stokastisk.serving` and `LLM.chat`, so those and the integrated wheel are not covered by any Kaggle run yet. See [docs/KAGGLE_T4_VERIFICATION.md](docs/KAGGLE_T4_VERIFICATION.md).
 
 ## Historical engineering measurements (earlier internal baseline build)
 

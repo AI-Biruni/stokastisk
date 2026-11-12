@@ -61,6 +61,7 @@ def load_json(path, what):
 
 
 # Patterns that DECLARE the project version (never match dependency versions).
+INTEGRATED_RELEASE_NAME = f"stokastisk-{LOCKED_VERSION}-integrated-kaggle-t4-sm75"   # the single-wheel release; its notebook (15) lives in notebooks/kaggle-t4-sm75/integrated/
 RELEASE_NAME_RE = re.compile(r"stokastisk-(\d+\.\d+\.\d+)(?:[-.a-z0-9]*?)(?=-kaggle-t4|-py3|\.tar|\.zip|\b)", re.I)
 RELEASE_DIR_RE = re.compile(r"stokastisk-(\d+\.\d+\.\d+)-kaggle-t4-sm75(-rc\d+)?")
 HEADLINE_RE = re.compile(r"^#+\s*Stokastisk\s+v?(\d+\.\d+\.\d+)", re.I | re.M)
@@ -107,7 +108,7 @@ def source_checks():
         except Exception as e:
             nbbad.append(f"{p.name}: unreadable notebook JSON ({type(e).__name__}: {e})"); continue
         for m in re.finditer(r'RELEASE\s*=\s*"([^"]+)"', src):
-            if m.group(1) != RELEASE_NAME:
+            if m.group(1) != (INTEGRATED_RELEASE_NAME if p.parent.name == "integrated" else RELEASE_NAME):
                 nbbad.append(f"{p.name}: {m.group(1)}")
     check(f"notebook RELEASE constants are {RELEASE_NAME}", not nbbad, nbbad)
 

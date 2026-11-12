@@ -1,0 +1,12 @@
+PASS tp1 stage evidence exists (a missing stage is NOT_RUN, never a pass) -- 15_fulfil_tp1.json
+PASS tp1 stage status PASS -- PASS
+PASS tp2 stage evidence exists (a missing stage is NOT_RUN, never a pass) -- 15_fulfil_tp2.json
+PASS tp2 stage status PASS -- PASS
+PASS pp2 stage evidence exists (a missing stage is NOT_RUN, never a pass) -- 15_fulfil_pp2.json
+PASS pp2 stage status PASS -- PASS
+PASS tp2 output agrees with tp1 on the first 20 characters of the first prompt -- {'tp1': [' Paris. The capital of France is also the capital of which country?\nA) Germany\nB) Italy\nC) Spain\nD) Belgium\nE) France\nTo determine the capital of France, we need to understand the concept of'], 'tp2': [' Paris. The capital of France is also the capital of which country?\nA) Germany\nB) Italy\nC) Spain\nD) Belgium\nE) France\nTo determine the capital of France, we need to understand the concept of']}
+WARNING tp2 output is not byte-identical to tp1 (fp16 numerics across parallel layouts) -- informational
+PASS pp2 greedy output equals tp1
+PASS all three modes ran on the same installed versions
+
+[15_fulfil_summary] OVERALL: PASS

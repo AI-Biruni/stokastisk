@@ -22,5 +22,13 @@ The installer changes nothing if the plan has a conflict (`02_install_plan.json`
 and never installs FlashAttention/FlashInfer. The two wheels are installed with `--force-reinstall --no-deps --no-index`, so a pre-existing Stokastisk distribution of any other version is replaced,
 and the run fails unless the installed version is exactly `0.1.0`. Kaggle starts every notebook in a fresh session, so each notebook that imports `stokastisk` must run the installer first.
 
-## Integrated SDK candidate (build tag 1) — not Kaggle-executed
-`stokastisk-0.1.0-1-cp313-cp313-linux_x86_64.whl` bundles the full SDK (`compat`, `serving`, `LLM.chat`) and the vLLM 0.25.1 Triton-attention tree in one wheel; project version stays 0.1.0. Status: `BUILT AND PACKAGED — STATICALLY INSPECTED — NOT EXECUTED ON KAGGLE DUAL T4 GPUs`. Install it **instead of** the two historical wheels (`pip uninstall -y vllm stokastisk` first; never install both). See [docs/SDK_CANDIDATE.md](docs/SDK_CANDIDATE.md) for commands, dependencies and limits.
+## Canonical: integrated wheel (Kaggle verification pending — notebook 15)
+Release `stokastisk-0.1.0-integrated-kaggle-t4-sm75`: one wheel `stokastisk-0.1.0-2-cp313-cp313-linux_x86_64.whl` (SDK + bundled vLLM 0.25.1 + CUDA 13.0 `sm_75` objects), project version 0.1.0.
+```python
+import urllib.request, runpy, subprocess, sys
+open('/tmp/fetch_release.py','wb').write(urllib.request.urlopen('https://huggingface.co/waqasm86/stokastisk/resolve/main/scripts/fetch_release.py').read())
+bundle = runpy.run_path('/tmp/fetch_release.py')['fetch_release']('stokastisk-0.1.0-integrated-kaggle-t4-sm75')
+subprocess.run([sys.executable, f'{bundle}/scripts/kaggle/02_install_integrated.py', str(bundle)], check=True)    # --dry-run plans only
+```
+Manual: `python3.13 scripts/kaggle/02_install_integrated.py <bundle> [--dry-run]`. Requirements checked: Python 3.13, `torch==2.11.0+cu130`, `triton==3.6.0`, CUDA 13.0, transformers `>=5.5.3,<6`, two Tesla T4 (SM75), wheel SHA256 equals the manifest. The installer never runs a dependency resolver: wheel `--no-deps --no-index`, eight pins with `--require-hashes`. A legacy two-wheel install is removed first (`stokastisk` and `vllm` only). Afterwards it proves that no preinstalled package (torch, triton, nvidia-*, NCCL, transformers …) changed and reports `pip check` honestly (documented xgrammar WARNING, anything else FAILS). Exit code is non-zero if any required check fails. Do not use `02_install.py` for this bundle (it requires exactly two wheels and refuses), and never install the integrated wheel next to the standalone `vllm` wheel.
+Verify in a fresh notebook session with notebook 15 (`notebooks/kaggle-t4-sm75/integrated/`).

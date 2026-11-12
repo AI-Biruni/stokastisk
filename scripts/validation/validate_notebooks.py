@@ -21,7 +21,9 @@ EXPECTED = ["01_stokastisk_environment_audit", "02_stokastisk_installation", "03
 SECRET_RE = re.compile(r"hf_[A-Za-z0-9]{20,}|ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|KAGGLE_KEY\s*=\s*['\"][0-9a-f]{20,}|-----BEGIN [A-Z ]*PRIVATE KEY")
 OLD_REL_RE = re.compile(r"stokastisk-(\d+\.\d+\.\d+)(-rc\d+)?-kaggle-t4")
 PIP_BAD_RE = re.compile(r"pip\s+install[^\n]*\b(torch|triton|vllm|nvidia-nccl|flash[-_]?attn|flashinfer)\b", re.I)
-PEND = ("PENDING", "UNEXECUTED", "NOT EXECUTED", "not executed")
+PEND = ("PENDING", "UNEXECUTED", "NOT EXECUTED", "not executed", "KAGGLE-EXECUTED")   # a notebook either states it is pending or states which Kaggle run it records
+INTEGRATED = ["15_stokastisk_candidate_sdk_integration"]
+RELEASE_INT = f"stokastisk-{LOCKED}-integrated-kaggle-t4-sm75"
 
 
 def code_of(cell):
@@ -44,7 +46,8 @@ def defined_names(tree):
     return names
 
 
-def check_notebook(path):
+def check_notebook(path, release=None):
+    release = release or RELEASE
     errs, warns = [], []
     try:
         nb = json.loads(path.read_text())
@@ -71,7 +74,7 @@ def check_notebook(path):
         if PIP_BAD_RE.search(src): errs.append(f"cell {i}: pip-installs a protected package (torch/triton/vllm/nccl/flash)")
         for m in re.finditer(r'RELEASE\s*=\s*"([^"]+)"', src):
             release_seen = True
-            if m.group(1) != RELEASE: errs.append(f"cell {i}: RELEASE={m.group(1)!r}, expected {RELEASE!r}")
+            if m.group(1) != release: errs.append(f"cell {i}: RELEASE={m.group(1)!r}, expected {release!r}")
         try:
             tree = ast.parse(code_of(c))
         except SyntaxError as e:
@@ -98,6 +101,15 @@ def main(argv=None):
         result["notebooks"][stem] = {"static_validation": "PASS" if not errs else "FAIL", "kaggle_status": "NOT_RUN", "errors": errs, "warnings": warns}
         ok &= not errs
         print(("PASS " if not errs else "FAIL ") + stem + "".join(f"\n    - {e}" for e in errs) + "".join(f"\n    ! {w}" for w in warns))
+    idir = d.parent / "integrated"
+    if d == ROOT / "notebooks" / "kaggle-t4-sm75" / "notebooks":
+        ifound = sorted(p.stem for p in idir.glob("*.ipynb"))
+        if ifound != INTEGRATED: set_errs.append(f"integrated notebook set is {ifound}, expected {INTEGRATED}"); ok = False
+        for stem in ifound:
+            errs, warns = check_notebook(idir / f"{stem}.ipynb", RELEASE_INT)
+            result["notebooks"][stem] = {"static_validation": "PASS" if not errs else "FAIL", "kaggle_status": "NOT_RUN", "errors": errs, "warnings": warns}
+            ok &= not errs
+            print(("PASS " if not errs else "FAIL ") + stem + "".join(f"\n    - {e}" for e in errs) + "".join(f"\n    ! {w}" for w in warns))
     for e in set_errs: print("FAIL set:", e)
     result["set_errors"] = set_errs; result["overall"] = "STATIC_PASS" if ok else "STATIC_FAIL"
     if a.json: pathlib.Path(a.json).write_text(json.dumps(result, indent=2) + "\n")

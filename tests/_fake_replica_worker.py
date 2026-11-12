@@ -13,6 +13,10 @@ def worker_main(worker_id, device, model, config_dict, engine_kwargs, in_q, out_
     while True:
         msg = in_q.get()
         if msg[0] == "shutdown":
+            if os.environ.get("FAKE_CLOSE_ERROR") == str(worker_id):
+                out_q.put(("close_error", worker_id, "LLM.close failed", "tb"))
+            if os.environ.get("FAKE_HANG_ON_SHUTDOWN") == str(worker_id):
+                time.sleep(120)                              # ignores the shutdown request: the pool must terminate it
             break
         if msg[0] == "generate":
             _, b, items, temp = msg

@@ -1,0 +1,65 @@
+{
+  "stage": "15_fulfil_summary",
+  "status": "PASS",
+  "checks": [
+    {
+      "check": "tp1 stage evidence exists (a missing stage is NOT_RUN, never a pass)",
+      "status": "PASS",
+      "detail": "15_fulfil_tp1.json"
+    },
+    {
+      "check": "tp1 stage status PASS",
+      "status": "PASS",
+      "detail": "PASS"
+    },
+    {
+      "check": "tp2 stage evidence exists (a missing stage is NOT_RUN, never a pass)",
+      "status": "PASS",
+      "detail": "15_fulfil_tp2.json"
+    },
+    {
+      "check": "tp2 stage status PASS",
+      "status": "PASS",
+      "detail": "PASS"
+    },
+    {
+      "check": "pp2 stage evidence exists (a missing stage is NOT_RUN, never a pass)",
+      "status": "PASS",
+      "detail": "15_fulfil_pp2.json"
+    },
+    {
+      "check": "pp2 stage status PASS",
+      "status": "PASS",
+      "detail": "PASS"
+    },
+    {
+      "check": "tp2 output agrees with tp1 on the first 20 characters of the first prompt",
+      "status": "PASS",
+      "detail": "{'tp1': [' Paris. The capital of France is also the capital of which country?\\nA) Germany\\nB) Italy\\nC) Spain\\nD) Belgium\\nE) France\\nTo determine the capital of France, we need to understand the concept of'], 'tp2': [' Paris. The capital of France is also the capital of which country?\\nA) Germany\\nB) Italy\\nC) Spain\\nD) Belgium\\nE) France\\nTo determine the capital of France, we need to understand the concept of']}"
+    },
+    {
+      "check": "tp2 output is not byte-identical to tp1 (fp16 numerics across parallel layouts)",
+      "status": "WARNING",
+      "detail": "informational"
+    },
+    {
+      "check": "pp2 greedy output equals tp1",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "all three modes ran on the same installed versions",
+      "status": "PASS",
+      "detail": ""
+    }
+  ],
+  "modes": {
+    "tp1": "PASS",
+    "tp2": "PASS",
+    "pp2": "PASS"
+  },
+  "output_dir_gib": {
+    "used": 0.033,
+    "quota": 20.0
+  }
+}

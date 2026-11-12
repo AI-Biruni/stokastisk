@@ -1,6 +1,7 @@
 #!/usr/bin/env python3.13
-"""Generate the eight UNEXECUTED Kaggle notebooks (07-14) into notebooks/kaggle-t4-sm75/notebooks/. Cells only call the bundled scripts; nothing runs here.
-Notebooks 01-06 (the baseline acceptance) are historical and are not regenerated."""
+"""Generate the Kaggle notebooks 07-14 (legacy two-wheel bundle) into notebooks/kaggle-t4-sm75/notebooks/ and notebook 15 (integrated wheel) into
+notebooks/kaggle-t4-sm75/integrated/. Cells only call the bundled scripts; nothing runs here, and the files stored here never contain outputs
+(the executed copies are preserved under evidence/). Notebooks 01-06 are maintained directly."""
 import json, pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -68,9 +69,22 @@ os.makedirs("/kaggle/working/stokastisk-acceptance", exist_ok=True)'''
 
 ZIP = '''import shutil
 print(shutil.make_archive("/kaggle/working/{nn}-stokastisk-acceptance", "zip", "/kaggle/working", "stokastisk-acceptance"))'''
-HEAD = ("**UNEXECUTED — Kaggle verification pending.** Stokastisk 0.1.0 features are verified only when *you* run this notebook on Kaggle "
-        "(Accelerator **GPU T4 x2**, Internet ON, Python 3.13). Statuses: PASS / FAIL / ERROR / WARNING / SKIPPED / NOT_RUN. "
-        "A feature that is unsupported is reported as such; it is never turned into a PASS.")
+EXECUTED = {   # notebook number -> (date, owner-observed result, wheel that ran). Source: docs/kaggle-t4-verification.json
+    "07": ("2026-11-11", "PASS", "earlier SDK wheel a6b8596b…"), "08": ("2026-11-11", "PASS (experimental)", "earlier SDK wheel a6b8596b…"),
+    "09": ("2026-11-11", "PASS validation; the scaling runs exposed the routing defect fixed and verified in 14", "earlier SDK wheel a6b8596b…"),
+    "10": ("2026-11-11", "WARNING (experimental transport)", "earlier SDK wheel a6b8596b…"), "11": ("2026-11-11", "PASS", "earlier SDK wheel a6b8596b…"),
+    "12": ("2026-11-11", "PASS (shallow)", "earlier SDK wheel a6b8596b…"),
+    "13": ("2026-11-12", "PASS — 7/7 stages; TP=1, TP=2 and PP=2 each 12/12 checks", "released SDK wheel 29edaa55… (its provenance cell printed this hash)"),
+    "14": ("2026-11-12", "PASS — 50/50 checks over 15 rounds", "released SDK wheel 29edaa55… (its provenance cell printed this hash)"),
+}
+
+
+def head_for(nn):
+    d, res, whl = EXECUTED[nn]
+    return (f"**KAGGLE-EXECUTED — legacy two-wheel bundle.** Run by the project owner on Kaggle (Accelerator **GPU T4 x2**, Internet ON, Python 3.13) on {d}: **{res}**; "
+            f"SDK wheel {whl}, vLLM wheel cc3bcafb… (`stokastisk-0.1.0-kaggle-t4-sm75`). This repository copy is the unexecuted source (no outputs); the executed notebook and its acceptance ZIP "
+            "are preserved under `evidence/kaggle-legacy-two-wheel/`. It does NOT verify the integrated wheel (see notebook 15). Statuses: PASS / FAIL / ERROR / WARNING / SKIPPED / NOT_RUN; "
+            "an unsupported feature is reported as such and never turned into a PASS.")
 
 
 def md(t): return {"cell_type": "markdown", "metadata": {}, "source": t.strip().splitlines(True)}
@@ -124,10 +138,47 @@ NB = {
      + pack("14") + verdict(["16_replica_balance", "bench_tp1", "bench_replicas2"])),
 }
 
+RELEASE_INT = "stokastisk-0.1.0-integrated-kaggle-t4-sm75"
+WHEEL_INT = "stokastisk-0.1.0-2-cp313-cp313-linux_x86_64.whl"
+FIND_INT = FIND.replace(f'RELEASE = "{RELEASE}"', f'RELEASE = "{RELEASE_INT}"')
+INSTALL_INT = '''import subprocess, sys, os, json
+r = subprocess.run([sys.executable, str(SCRIPTS / "02_install_integrated.py"), str(BUNDLE)],
+                   env=dict(os.environ, STOKASTISK_OUT="/kaggle/working/stokastisk-acceptance/prereq-install"))
+assert r.returncode == 0, "integrated installer failed (see output above and prereq-install/02_install_integrated.json); do not continue"
+EXPECTED_WHEEL_SHA256 = json.loads((BUNDLE / "manifests" / "RELEASE-MANIFEST.json").read_text())["integrated_wheel"]["sha256"]
+print("integrated wheel sha256 (manifest):", EXPECTED_WHEEL_SHA256)'''
+RUNPY_INT = RUNPY.replace('env = dict(os.environ, PYTHONPATH=', 'env = dict(os.environ, STOKASTISK_EXPECTED_WHEEL_SHA256=EXPECTED_WHEEL_SHA256, PYTHONPATH=')
+HEAD_INT = ("**UNEXECUTED — Kaggle verification of the integrated wheel is PENDING.** This notebook installs the single integrated wheel "
+            f"`{WHEEL_INT}` (Stokastisk 0.1.0 + bundled vLLM 0.25.1, Triton attention only, SM75) into a fresh session and verifies it; it does not repeat the TP/PP/replica benchmarks "
+            "(notebooks 13 and 14 verified those on the legacy two-wheel bundle). Run it on Kaggle with Accelerator **GPU T4 x2**, Internet ON, Python 3.13. "
+            "Statuses: PASS / FAIL / ERROR / WARNING / SKIPPED / NOT_RUN; an unsupported feature is never reported as PASS. "
+            "Outputs: `/kaggle/working/15-stokastisk-candidate-acceptance.zip`.")
+NB15 = ("15_stokastisk_candidate_sdk_integration", "15 — Integrated SDK wheel verification (candidate)",
+ "Verifies: Python 3.13, PyTorch 2.11.0+cu130, Triton 3.6.0, CUDA 13.0, two T4 (SM75); wheel SHA256; installation without touching protected packages; "
+ "versions; public API; `stokastisk.compat`; `stokastisk.serving` (real `vllm serve`, HTTP, streaming, metrics); `LLM.chat`; Qwen2.5-0.5B-Instruct FP16 inference; `TRITON_ATTN`; "
+ "xgrammar structured output; bfloat16 detection (rejected, never run); clean shutdown and GPU memory release; no Flash library; honest `pip check`.",
+ lambda: [md("## 1. Locate the integrated release bundle"), code(FIND_INT), md("## 2. Provenance: scripts and the wheel must match `manifests/SHA256SUMS`"), code(PROVENANCE),
+          md("## 3. Install the integrated wheel into this fresh session (`--no-deps`, hash-verified pins, protected packages untouched)"), code(INSTALL_INT), md("## 4. Stages (separate processes)"), code(RUNPY_INT),
+          code('RC = {}\nfor mode, tmo in (("static", 900), ("engine", 1500), ("server", 1800)):\n    RC["15c_" + mode] = run_stage("candidate_15_integration.py", mode, timeout=tmo, log=f"15c_{mode}.log")\nRC["15c_summary"] = run_stage("candidate_15_integration.py", "summary", timeout=120, log="15c_summary.log")'),
+          md("## Package evidence → `/kaggle/working/15-stokastisk-candidate-acceptance.zip`"),
+          code('import shutil, json as _j\nshutil.copy(BUNDLE / "manifests" / "SHA256SUMS", "/kaggle/working/stokastisk-acceptance/bundle-SHA256SUMS")\nshutil.copy(BUNDLE / "manifests" / "RELEASE-MANIFEST.json", "/kaggle/working/stokastisk-acceptance/bundle-RELEASE-MANIFEST.json")\nprint(shutil.make_archive("/kaggle/working/15-stokastisk-candidate-acceptance", "zip", "/kaggle/working", "stokastisk-acceptance"))')]
+          + verdict(["15c_static", "15c_engine", "15c_server", "15c_summary"], "All four stages are required. A WARNING (for example the documented xgrammar pip-check conflict) is reported, not hidden."))
+
+
+def write_integrated():
+    out = ROOT / "notebooks" / "kaggle-t4-sm75" / "integrated"; out.mkdir(parents=True, exist_ok=True)
+    name, title, body, cells = NB15
+    nb = {"nbformat": 4, "nbformat_minor": 5, "metadata": {"kernelspec": {"name": "python3", "display_name": "Python 3", "language": "python"}, "language_info": {"name": "python"}},
+          "cells": [md(f"# {title}\n\n{HEAD_INT}\n\n{body}")] + cells()}
+    (out / f"{name}.ipynb").write_text(json.dumps(nb, indent=1)); print("wrote", out / f"{name}.ipynb")
+
+
 if __name__ == "__main__":
+    write_integrated()
+
     OUT.mkdir(parents=True, exist_ok=True)
     for name, (title, body, cells) in NB.items():
         nb = {"nbformat": 4, "nbformat_minor": 5, "metadata": {"kernelspec": {"name": "python3", "display_name": "Python 3", "language": "python"}, "language_info": {"name": "python"}},
-              "cells": [md(f"# {title}\n\n{HEAD}\n\n{body}")] + cells()}
+              "cells": [md(f"# {title}\n\n{head_for(name[:2])}\n\n{body}")] + cells()}
         (OUT / f"{name}.ipynb").write_text(json.dumps(nb, indent=1))
     print("wrote", len(NB), "notebooks to", OUT)

@@ -1,6 +1,8 @@
 # Stokastisk 0.1.0
 
-**A Python 3.13 SDK and standalone CUDA 13.0 binary build of vLLM 0.25.1 for Kaggle's 2 × Tesla T4 (SM75).**
+**A Python 3.13 SDK with a bundled, T4-only build of vLLM 0.25.1 (CUDA 13.0, Triton attention) for Kaggle's 2 × Tesla T4 (SM75).**
+
+Stokastisk wraps vLLM 0.25.1 for one machine — two Tesla T4 GPUs behind a PCIe host bridge — and adds validated configuration, topology discovery, tensor-/pipeline-parallel and independent-replica execution, a parallelism recommender, telemetry, communication helpers, Kaggle resource limits, static T4 compatibility checks and an OpenAI-compatible server launcher. It exists because upstream vLLM wheels ship FlashAttention/FlashInfer kernels for newer GPUs and pull CUDA-12/13.2 packages that would replace Kaggle's preinstalled stack.
 
 [![Release](https://img.shields.io/badge/release-0.1.0-blue)](RELEASE.md)
 [![Kaggle](https://img.shields.io/badge/Kaggle%202xT4%20verification-VERIFIED-brightgreen)](RELEASE.md)
@@ -11,7 +13,9 @@
 | | |
 |---|---|
 | **Python** | 3.13 only |
-| **Engine** | vLLM 0.25.1 (T4-only derived wheel) |
+| **Engine** | vLLM 0.25.1, T4-only derivative, bundled inside the integrated wheel |
+| **Canonical distribution** | one integrated wheel `stokastisk-0.1.0-2-cp313-cp313-linux_x86_64.whl` (hash in the release manifest, GitHub release and Hub README) — **GPU verification pending (notebook 15)** |
+| **Legacy distribution** | two wheels `stokastisk-0.1.0-py3-none-any.whl` + `vllm-0.25.1-cp38-abi3-linux_x86_64.whl` — Kaggle-verified (notebooks 01–14) |
 | **PyTorch / Triton** | 2.11.0+cu130 / 3.6.0 (Kaggle's own — never replaced) |
 | **CUDA** | Toolkit 13.0 only (`libcudart.so.13`); no CUDA 12.x in any binary or script |
 | **GPU code** | `sm_75` cubins only, no PTX |
@@ -20,19 +24,24 @@
 | **Project version** | `0.1.0` (permanently locked, see [VERSION_POLICY.md](VERSION_POLICY.md)) |
 | **Download** | Hugging Face CDN: <https://huggingface.co/waqasm86/stokastisk> |
 
-## Status — `KAGGLE_T4_VERIFIED`
+## Status
+
+**Legacy two-wheel bundle — `KAGGLE_T4_VERIFIED`. Integrated wheel — built, statically inspected, CPU-tested; `KAGGLE_VERIFICATION_PENDING` until the project owner runs notebook 15.** The Kaggle evidence below was produced with the legacy bundle; it is evidence for the engine, the installer-protected environment and the parallel execution paths that the integrated wheel contains byte-identically (the vLLM tree and native objects are identical), not for the integrated wheel's own installation, `LLM.chat`, `stokastisk.compat` or `stokastisk.serving`.
+
+### Legacy bundle evidence
 
 All fourteen Kaggle notebooks were executed by the project owner on **2 × Tesla T4** (results, hashes and limits: [docs/KAGGLE_T4_VERIFICATION.md](docs/KAGGLE_T4_VERIFICATION.md)).
 Tensor parallelism (TP=2), pipeline parallelism (PP=2) and independent dual-GPU replicas all run on the Flash-free vLLM 0.25.1 wheel with `TRITON_ATTN`, with both GPUs holding model memory and memory released afterwards.
 **Measured fact: for a model that fits one T4, TP=1 is the fastest configuration.** TP=2 ran at about 0.55× and PP=2 about 0.6× of TP=1 (Qwen2.5-1.5B), and two replicas at 0.91–0.96× up to batch 64. TP/PP are for models that do not fit one 15 GiB GPU; that case was not measured.
 The development machine has one GeForce 940M (SM50) and is never used for GPU claims; the CPU tests use mocked GPUs and fake workers.
 
-| Level | Meaning |
+| Label | Meaning |
 |---|---|
 | Implemented | code exists in this repository |
 | CPU-tested | covered by `tests/` using mocks / fake workers (no GPU) |
 | CUDA-compiled | native C++ compiles for `sm_75` locally and links only `libcudart.so.13` |
-| Kaggle-tested | executed on 2 × T4 by the owner (see [docs/KAGGLE_T4_VERIFICATION.md](docs/KAGGLE_T4_VERIFICATION.md)) |
+| Kaggle-tested | executed on 2 × T4 by the owner (see [docs/KAGGLE_T4_VERIFICATION.md](docs/KAGGLE_T4_VERIFICATION.md)); applies to the legacy bundle's code unless stated |
+| Unsupported | cannot work on this build (bfloat16, FlashAttention/FlashInfer/FlashMLA, native FP8/FP4, L4/SM89) and is rejected with a clear error |
 | Experimental | no evidence of a benefit; may change or be removed |
 
 | Feature | API | Status |
@@ -75,6 +84,27 @@ this machine, and an installer that cannot break the Kaggle image.
 | GPUs | 2 × Tesla T4, SM75, ~15 GiB VRAM each | `gpu_memory_utilization` is bounded; `dtype="half"` (T4 has no bf16 tensor cores) |
 
 ## Quick start (Kaggle: Internet ON, Accelerator *GPU T4 × 2*, Python 3.13)
+
+### Canonical: integrated wheel (verification pending — notebook 15)
+```python
+import urllib.request, runpy, subprocess, sys
+url = "https://huggingface.co/waqasm86/stokastisk/resolve/main/scripts/fetch_release.py"
+open("/tmp/fetch_release.py", "wb").write(urllib.request.urlopen(url).read())
+bundle = runpy.run_path("/tmp/fetch_release.py")["fetch_release"]("stokastisk-0.1.0-integrated-kaggle-t4-sm75")      # SHA256-verified ZIP
+subprocess.run([sys.executable, f"{bundle}/scripts/kaggle/02_install_integrated.py", str(bundle)], check=True)         # one wheel, --no-deps, hash-pinned extras
+```
+The installer verifies the wheel SHA256, Python 3.13, PyTorch 2.11.0+cu130, Triton 3.6.0, CUDA 13.0 and two T4 GPUs; removes a legacy two-wheel install (only `stokastisk` and `vllm`); installs the wheel with `--no-deps --no-index`; downloads the few missing pins with `--require-hashes`; proves that no preinstalled package changed; prints every check as PASS / FAIL / WARNING / SKIPPED and exits non-zero on a required failure. `pip check` is **not** clean: it reports the documented xgrammar metadata conflict ([docs/DEPENDENCY_COMPATIBILITY.md](docs/DEPENDENCY_COMPATIBILITY.md)). **Never install the integrated wheel together with the separate vLLM wheel** — both own `vllm/`.
+
+```python
+import stokastisk
+llm = stokastisk.LLM("Qwen/Qwen2.5-0.5B-Instruct", config=stokastisk.StokastiskConfig(max_model_len=2048))
+print(llm.chat([{"role": "user", "content": "Hello"}], stokastisk.SamplingParams(max_tokens=32))[0].outputs[0].text)   # LLM.chat: packaged, not yet Kaggle-run
+llm.close()
+```
+OpenAI-compatible server (packaged, not yet Kaggle-run): `with stokastisk.serving.ServerProcess("Qwen/Qwen2.5-0.5B-Instruct") as srv: srv.wait_ready(); print(stokastisk.serving.chat(srv.base_url, "Qwen/Qwen2.5-0.5B-Instruct", [{"role": "user", "content": "Hi"}]))`.
+Parallelism: `StokastiskConfig(tensor_parallel_size=2)` (TP=2), `StokastiskConfig(pipeline_parallel_size=2, execution_strategy="pipeline_parallel")` (PP=2, experimental), `stokastisk.parallel.ReplicaPool(model, devices=[0, 1])` (two independent replicas); `stokastisk.discover_topology()` and `stokastisk.recommend_parallelism(...)` choose between them. For a model that fits one T4, **TP=1 is fastest**.
+
+### Legacy two-wheel bundle (Kaggle-verified; used by notebooks 01–14)
 
 ```python
 # 1. Download the release from the Hugging Face CDN (stdlib only; a single HTTP stream (parallel ranges are opt-in via `workers`; 4 parallel ranges stalled on the Hub CDN in a workstation test); SHA256-verified; ~37 MB)
@@ -119,19 +149,16 @@ Measured on Kaggle 2 × T4 with Qwen2.5-1.5B-Instruct (4096 new tokens, notebook
 
 ## vLLM 0.25.1 coverage on the T4
 
-> **Two distinct artifact sets — do not confuse them.**
-> **A. Kaggle-verified release (unchanged):** `stokastisk-0.1.0-py3-none-any.whl` (`29edaa55…`) + `vllm-0.25.1-cp38-abi3-linux_x86_64.whl` (`cc3bcafb…`) + the release ZIP. The SDK wheel was built before `stokastisk.compat`, `stokastisk.serving`, `LLM.chat` and the bfloat16 pre-check existed and does **not** contain them.
-> **B. New integrated SDK candidate (build tag 1):** `stokastisk-0.1.0-1-cp313-cp313-linux_x86_64.whl` — one wheel with the complete SDK (including `compat`, `serving`, `LLM.chat`, the bfloat16 pre-check), the bundled vLLM 0.25.1 Triton-attention tree (byte-identical to the verified vLLM wheel) and its CUDA 13.0 `sm_75` native objects. Project version stays `0.1.0`; only the PEP 427 build tag differs. Details: [docs/SDK_CANDIDATE.md](docs/SDK_CANDIDATE.md).
-> **C. Not executed:** everything in B beyond what A already ran. Status of B: `BUILT AND PACKAGED — STATICALLY INSPECTED — NOT EXECUTED ON KAGGLE DUAL T4 GPUs`. A successful wheel build is not GPU inference.
+> **Distributions.** (1) *Integrated wheel* — canonical, one file with the complete SDK (`compat`, `serving`, `LLM.chat`, bfloat16 pre-check) and the bundled vLLM 0.25.1 tree and CUDA 13.0 `sm_75` objects; Kaggle verification **pending (notebook 15)**. (2) *Legacy two-wheel bundle* — the Kaggle-verified release; its SDK wheel (`29edaa55…`) was built before `compat`/`serving`/`LLM.chat` existed and does not contain them. Project version is exactly `0.1.0` in both; only the PEP 427 build tag distinguishes them. Details, hashes and the exact unverified boundary: [docs/INTEGRATED_RELEASE.md](docs/INTEGRATED_RELEASE.md), [docs/KAGGLE_T4_VERIFICATION.md](docs/KAGGLE_T4_VERIFICATION.md).
 
 Not every vLLM feature works on a Tesla T4. [docs/VLLM_T4_COVERAGE.md](docs/VLLM_T4_COVERAGE.md) lists, per feature, whether it was **executed on Kaggle**, only compiled, CPU-tested, statically inspected or not run — and what cannot work on SM75 (bfloat16, Flash*, native FP8/FP4, Qwen Omni).
-In the repository source and in candidate B, `stokastisk.check_model(...)`, `check_dtype`, `check_quantization` and `check_feature` raise a clear `StokastiskCompatibilityError` before an engine starts; `stokastisk.serving` launches the bundled OpenAI-compatible server (implemented and packaged in candidate B; not yet run on Kaggle).
+`stokastisk.check_model(...)`, `check_dtype`, `check_quantization` and `check_feature` raise a clear `StokastiskCompatibilityError` before an engine starts; `stokastisk.serving` launches the bundled OpenAI-compatible server (implemented, CPU-tested and packaged in the integrated wheel; not yet run on Kaggle).
 
 ## Install options
 
 | Option | When |
 |---|---|
-| **Hub CDN** (above) | default; no dataset needed; needs Internet ON |
+| **Hub CDN** (above) | default; no dataset needed; needs Internet ON; integrated wheel or legacy bundle |
 | **Kaggle dataset** | offline runs: upload `releases/stokastisk-0.1.0-kaggle-t4-sm75/stokastisk-0.1.0-kaggle-t4-sm75-kaggle-input.zip` from the Hub as a dataset |
 | **Manual** | see [INSTALL.md](INSTALL.md) |
 
@@ -151,7 +178,9 @@ and verifies the after-state equals the before-state plus those eight packages.
 | `requirements/` | exact pins, constraints, prohibited list |
 | `tests/` | CPU-only unit tests (they do not prove GPU behaviour — Kaggle runs do) |
 | `docs/` | [ARCHITECTURE](docs/ARCHITECTURE.md), [DEPENDENCIES](docs/DEPENDENCIES.md), [KAGGLE_T4_VERIFICATION](docs/KAGGLE_T4_VERIFICATION.md) |
-| `notebooks/kaggle-t4-sm75/notebooks/` | the 14 Kaggle T4 notebooks (unexecuted sources); executed copies stay local and are not published |
+| `notebooks/kaggle-t4-sm75/notebooks/` | the 14 legacy-bundle Kaggle notebooks (sources without outputs; executed copies in `evidence/kaggle-legacy-two-wheel/`) |
+| `notebooks/kaggle-t4-sm75/integrated/` | notebook 15, the integrated-wheel verification (UNEXECUTED) |
+| `evidence/` | executed Kaggle notebooks 13/14 and their acceptance reports (legacy bundle), install and dependency evidence |
 | `notebooks/kaggle-l4-sm89/` | `PLANNED_NOT_IMPLEMENTED` — no L4 binaries, no L4 support claimed |
 | `VERSION`, `VERSION_POLICY.md`, `scripts/release/verify_project_version.py` | the permanent project-version lock |
 

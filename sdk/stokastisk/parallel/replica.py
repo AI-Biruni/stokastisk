@@ -4,8 +4,10 @@ Rules enforced here: the parent never initialises CUDA; each worker gets exactly
 distinct GPU UUID before the pool is considered ready; scripts that create a pool need an ``if __name__ == "__main__":`` guard (spawn)."""
 from __future__ import annotations
 
+import logging
 import multiprocessing as mp
 import queue as _queue
+import threading
 import time
 from typing import Any
 
@@ -15,6 +17,8 @@ from .queue import Request
 from .routing import WorkerLoad
 from .scheduler import Scheduler
 from .worker import worker_main
+
+log = logging.getLogger("stokastisk")
 
 
 class ReplicaPool:
@@ -33,6 +37,7 @@ class ReplicaPool:
         self.info: dict[int, dict[str, Any]] = {}
         self.sched = Scheduler([WorkerLoad(id=i, device=d, ready=False) for i, d in enumerate(devices)], max_attempts=max_attempts)
         self._next_id = 0; self._closed = False
+        self._lock = threading.Lock()      # generate() calls share one result queue: they are serialised, never interleaved
         self.last_stats: dict[str, Any] = {}
         self.config.apply_environment()
         try:
@@ -87,6 +92,18 @@ class ReplicaPool:
 
     # ------------------------------------------------------------------ inference
     def generate(self, prompts: list[str], *, max_tokens: int = 64, temperature: float = 0.0, timeout: float = 1800.0) -> list[str]:
+        if self._closed:
+            raise ReplicaError("pool is closed")
+        if isinstance(prompts, str) or not isinstance(prompts, (list, tuple)) or not all(isinstance(p, str) for p in prompts):
+            raise TypeError("prompts must be a list/tuple of str")
+        if isinstance(max_tokens, bool) or not isinstance(max_tokens, int) or max_tokens < 1:
+            raise ValueError("max_tokens must be a positive int")
+        if not prompts:
+            return []
+        with self._lock:
+            return self._generate_locked(list(prompts), max_tokens, temperature, timeout)
+
+    def _generate_locked(self, prompts: list[str], max_tokens: int, temperature: float, timeout: float) -> list[str]:
         if self._closed:
             raise ReplicaError("pool is closed")
         t0 = time.time()
@@ -144,8 +161,8 @@ class ReplicaPool:
             if self._procs[i].is_alive():
                 try:
                     q.put(("shutdown",))
-                except Exception:  # noqa: BLE001
-                    pass
+                except (ValueError, OSError):
+                    log.exception("could not send shutdown to replica %s; it will be terminated", i)
         end = time.time() + timeout; report = {}
         for i, p in self._procs.items():
             p.join(max(0.0, end - time.time()))
@@ -153,6 +170,11 @@ class ReplicaPool:
                 p.terminate(); p.join(10.0); report[i] = "terminated"
             else:
                 report[i] = f"exit {p.exitcode}"
+        for q in (*self._in.values(), self._out):
+            try:
+                q.close(); q.cancel_join_thread()
+            except (ValueError, OSError):
+                log.debug("queue already closed", exc_info=True)
         self.close_report = report
         return report
 

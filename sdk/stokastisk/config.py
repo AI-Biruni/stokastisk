@@ -97,6 +97,16 @@ class StokastiskConfig:
             if not devs or len(set(devs)) != len(devs) or any((not isinstance(d, int)) or d < 0 or d >= MAX_GPUS for d in devs):
                 raise UnsupportedParallelismError(f"replica_devices must be distinct GPU indices in [0, {MAX_GPUS - 1}], got {devs!r}")
             self.replica_devices = devs
+        for f in ("tensor_parallel_size", "pipeline_parallel_size"):
+            v = getattr(self, f)
+            if isinstance(v, bool) or not isinstance(v, int):
+                raise ConfigurationError(f"{f} must be an int, got {v!r}")
+        if self.max_model_len is not None and (isinstance(self.max_model_len, bool) or not isinstance(self.max_model_len, int) or self.max_model_len < 16):
+            raise ConfigurationError(f"max_model_len must be None or an int >= 16, got {self.max_model_len!r}")
+        if isinstance(self.gpu_memory_utilization, bool) or not isinstance(self.gpu_memory_utilization, (int, float)):
+            raise ConfigurationError(f"gpu_memory_utilization must be a number, got {self.gpu_memory_utilization!r}")
+        if not isinstance(self.kv_cache_dtype, str) or not self.kv_cache_dtype:
+            raise ConfigurationError("kv_cache_dtype must be a non-empty str")
         if not 0.1 <= self.gpu_memory_utilization <= 0.98:
             raise ConfigurationError("gpu_memory_utilization must be within [0.1, 0.98]")
         if self.gpu_memory_utilization * LIMITS.gpu_vram_gib > LIMITS.gpu_vram_gib:   # pragma: no cover - guards future edits of the bounds

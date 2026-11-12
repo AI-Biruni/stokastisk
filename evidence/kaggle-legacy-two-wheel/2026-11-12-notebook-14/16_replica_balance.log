@@ -1,0 +1,215 @@
+PASS parent process has NOT initialised CUDA before spawning workers
+INFO 11-12 15:37:31 [api_utils.py:273] non-default args: {'dtype': 'half', 'max_model_len': 2048, 'gpu_memory_utilization': 0.88, 'disable_log_stats': True, 'enforce_eager': True, 'disable_custom_all_reduce': True, 'attention_config': AttentionConfig(backend=<AttentionBackendEnum.TRITON_ATTN: 'vllm.v1.attention.backends.triton_attn.TritonAttentionBackend'>, flash_attn_version=None, use_prefill_decode_attention=False, flash_attn_max_num_splits_for_cuda_graph=32, tq_max_kv_splits_for_cuda_graph=32, use_trtllm_attention=None, disable_flashinfer_q_quantization=False, mla_prefill_backend=None, use_prefill_query_quantization=False, use_fp4_indexer_cache=False, indexer_kv_dtype='bf16', use_non_causal=False, flex_attn_block_m=None, flex_attn_block_n=None, flex_attn_q_block_size=None, flex_attn_kv_block_size=None), 'model': 'Qwen/Qwen2.5-1.5B-Instruct'}
+INFO 11-12 15:37:32 [api_utils.py:273] non-default args: {'dtype': 'half', 'max_model_len': 2048, 'gpu_memory_utilization': 0.88, 'disable_log_stats': True, 'enforce_eager': True, 'disable_custom_all_reduce': True, 'attention_config': AttentionConfig(backend=<AttentionBackendEnum.TRITON_ATTN: 'vllm.v1.attention.backends.triton_attn.TritonAttentionBackend'>, flash_attn_version=None, use_prefill_decode_attention=False, flash_attn_max_num_splits_for_cuda_graph=32, tq_max_kv_splits_for_cuda_graph=32, use_trtllm_attention=None, disable_flashinfer_q_quantization=False, mla_prefill_backend=None, use_prefill_query_quantization=False, use_fp4_indexer_cache=False, indexer_kv_dtype='bf16', use_non_causal=False, flex_attn_block_m=None, flex_attn_block_n=None, flex_attn_q_block_size=None, flex_attn_kv_block_size=None), 'model': 'Qwen/Qwen2.5-1.5B-Instruct'}
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+INFO 11-12 15:37:48 [model.py:619] Resolved architecture: Qwen2ForCausalLM
+WARNING 11-12 15:37:48 [model.py:2114] Casting torch.bfloat16 to torch.float16.
+INFO 11-12 15:37:48 [model.py:1776] Using max model len 2048
+INFO 11-12 15:37:48 [scheduler.py:252] Chunked prefill is enabled with max_num_batched_tokens=8192.
+INFO 11-12 15:37:48 [vllm.py:1042] Asynchronous scheduling is enabled.
+WARNING 11-12 15:37:48 [vllm.py:1096] Enforce eager set, disabling torch.compile and CUDAGraphs. This is equivalent to setting -cc.mode=none -cc.cudagraph_mode=none
+WARNING 11-12 15:37:48 [vllm.py:1144] Inductor compilation was disabled by user settings, optimizations settings that are only active during inductor compilation will be ignored.
+INFO 11-12 15:37:48 [kernel.py:292] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+INFO 11-12 15:37:48 [vllm.py:1322] Cudagraph is disabled under eager mode
+INFO 11-12 15:37:48 [compilation.py:312] Enabled custom fusions: norm_quant, act_quant
+INFO 11-12 15:37:48 [model.py:619] Resolved architecture: Qwen2ForCausalLM
+WARNING 11-12 15:37:48 [model.py:2114] Casting torch.bfloat16 to torch.float16.
+INFO 11-12 15:37:48 [model.py:1776] Using max model len 2048
+INFO 11-12 15:37:48 [scheduler.py:252] Chunked prefill is enabled with max_num_batched_tokens=8192.
+INFO 11-12 15:37:48 [vllm.py:1042] Asynchronous scheduling is enabled.
+WARNING 11-12 15:37:48 [vllm.py:1096] Enforce eager set, disabling torch.compile and CUDAGraphs. This is equivalent to setting -cc.mode=none -cc.cudagraph_mode=none
+WARNING 11-12 15:37:48 [vllm.py:1144] Inductor compilation was disabled by user settings, optimizations settings that are only active during inductor compilation will be ignored.
+INFO 11-12 15:37:48 [kernel.py:292] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+INFO 11-12 15:37:48 [vllm.py:1322] Cudagraph is disabled under eager mode
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+INFO 11-12 15:37:48 [compilation.py:312] Enabled custom fusions: norm_quant, act_quant
+(EngineCore pid=294) INFO 11-12 15:37:53 [core.py:114] Initializing a V1 LLM engine (v0.25.1) with config: model='Qwen/Qwen2.5-1.5B-Instruct', speculative_config=None, tokenizer='Qwen/Qwen2.5-1.5B-Instruct', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, tokenizer_revision=None, trust_remote_code=False, dtype=torch.float16, max_seq_len=2048, download_dir=None, load_format=auto, tensor_parallel_size=1, pipeline_parallel_size=1, data_parallel_size=1, decode_context_parallel_size=1, dcp_comm_backend=ag_rs, disable_custom_all_reduce=True, quantization=None, quantization_config=None, enforce_eager=True, enable_return_routed_experts=False, kv_cache_dtype=auto, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, kv_cache_metrics=False, kv_cache_metrics_sample=0.01, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False, jit_monitor_mode='warn', jit_monitor_verbose=False), seed=0, served_model_name=Qwen/Qwen2.5-1.5B-Instruct, enable_prefix_caching=True, enable_chunked_prefill=True, pooler_config=None, compilation_config={'mode': <CompilationMode.NONE: 0>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['all'], 'ir_enable_torch_wrap': False, 'splitting_ops': [], 'compile_mm_encoder': False, 'cudagraph_mm_encoder': False, 'encoder_cudagraph_token_budgets': [], 'encoder_cudagraph_max_vision_items_per_batch': 0, 'encoder_cudagraph_max_frames_per_batch': None, 'compile_sizes': [], 'compile_ranges_endpoints': [8192], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'size_asserts': False, 'alignment_asserts': False, 'scalar_asserts': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.NONE: 0>, 'cudagraph_num_of_warmups': 0, 'cudagraph_capture_sizes': [], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': True, 'fuse_act_quant': True, 'fuse_attn_quant': False, 'enable_sp': False, 'fuse_gemm_comms': False, 'fuse_allreduce_rms': False, 'fuse_rope_kvcache_cat_mla': False, 'fuse_act_padding': False}, 'max_cudagraph_capture_size': 0, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': False, 'static_all_moe_layers': []}, kernel_config=KernelConfig(ir_op_priority=IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native']), enable_flashinfer_autotune=True, enable_cutedsl_warmup=True, moe_backend='auto', linear_backend='auto')
+(EngineCore pid=302) INFO 11-12 15:37:53 [core.py:114] Initializing a V1 LLM engine (v0.25.1) with config: model='Qwen/Qwen2.5-1.5B-Instruct', speculative_config=None, tokenizer='Qwen/Qwen2.5-1.5B-Instruct', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, tokenizer_revision=None, trust_remote_code=False, dtype=torch.float16, max_seq_len=2048, download_dir=None, load_format=auto, tensor_parallel_size=1, pipeline_parallel_size=1, data_parallel_size=1, decode_context_parallel_size=1, dcp_comm_backend=ag_rs, disable_custom_all_reduce=True, quantization=None, quantization_config=None, enforce_eager=True, enable_return_routed_experts=False, kv_cache_dtype=auto, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, kv_cache_metrics=False, kv_cache_metrics_sample=0.01, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False, jit_monitor_mode='warn', jit_monitor_verbose=False), seed=0, served_model_name=Qwen/Qwen2.5-1.5B-Instruct, enable_prefix_caching=True, enable_chunked_prefill=True, pooler_config=None, compilation_config={'mode': <CompilationMode.NONE: 0>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['all'], 'ir_enable_torch_wrap': False, 'splitting_ops': [], 'compile_mm_encoder': False, 'cudagraph_mm_encoder': False, 'encoder_cudagraph_token_budgets': [], 'encoder_cudagraph_max_vision_items_per_batch': 0, 'encoder_cudagraph_max_frames_per_batch': None, 'compile_sizes': [], 'compile_ranges_endpoints': [8192], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'size_asserts': False, 'alignment_asserts': False, 'scalar_asserts': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.NONE: 0>, 'cudagraph_num_of_warmups': 0, 'cudagraph_capture_sizes': [], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': True, 'fuse_act_quant': True, 'fuse_attn_quant': False, 'enable_sp': False, 'fuse_gemm_comms': False, 'fuse_allreduce_rms': False, 'fuse_rope_kvcache_cat_mla': False, 'fuse_act_padding': False}, 'max_cudagraph_capture_size': 0, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': False, 'static_all_moe_layers': []}, kernel_config=KernelConfig(ir_op_priority=IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native']), enable_flashinfer_autotune=True, enable_cutedsl_warmup=True, moe_backend='auto', linear_backend='auto')
+(EngineCore pid=294) INFO 11-12 15:37:54 [parallel_state.py:1607] world_size=1 rank=0 local_rank=0 distributed_init_method=tcp://172.19.2.2:56153 backend=nccl
+(EngineCore pid=302) INFO 11-12 15:37:54 [parallel_state.py:1607] world_size=1 rank=0 local_rank=0 distributed_init_method=tcp://172.19.2.2:47471 backend=nccl
+(EngineCore pid=294) INFO 11-12 15:37:54 [parallel_state.py:1942] rank 0 in world size 1 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, EP rank N/A, EPLB rank N/A
+(EngineCore pid=294) INFO 11-12 15:37:54 [gpu_worker.py:360] Using V2 Model Runner
+(EngineCore pid=302) INFO 11-12 15:37:54 [parallel_state.py:1942] rank 0 in world size 1 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, EP rank N/A, EPLB rank N/A
+(EngineCore pid=302) INFO 11-12 15:37:54 [gpu_worker.py:360] Using V2 Model Runner
+(EngineCore pid=302) INFO 11-12 15:37:56 [model_runner.py:281] Loading model from scratch...
+(EngineCore pid=294) INFO 11-12 15:37:56 [model_runner.py:281] Loading model from scratch...
+(EngineCore pid=302) INFO 11-12 15:37:56 [cuda.py:416] Using AttentionBackendEnum.TRITON_ATTN backend.
+(EngineCore pid=294) INFO 11-12 15:37:56 [cuda.py:416] Using AttentionBackendEnum.TRITON_ATTN backend.
+(EngineCore pid=294) INFO 11-12 15:38:17 [weight_utils.py:530] Time spent downloading weights for Qwen/Qwen2.5-1.5B-Instruct: 19.877766 seconds
+(EngineCore pid=294) INFO 11-12 15:38:17 [weight_utils.py:574] No model.safetensors.index.json found in remote.
+(EngineCore pid=294) INFO 11-12 15:38:17 [weight_utils.py:849] Filesystem type for checkpoints: OVERLAY. Checkpoint size: 2.88 GiB. Available RAM: 25.46 GiB.
+(EngineCore pid=294) INFO 11-12 15:38:17 [weight_utils.py:872] Auto-prefetch is disabled because the filesystem (OVERLAY) is not a recognized network FS (NFS/Lustre). If you want to force prefetching, start vLLM with --safetensors-load-strategy=prefetch.
+(EngineCore pid=294) Loading safetensors checkpoint shards:   0% Completed | 0/1 [00:00<?, ?it/s]
+(EngineCore pid=302) INFO 11-12 15:38:17 [weight_utils.py:574] No model.safetensors.index.json found in remote.
+(EngineCore pid=302) INFO 11-12 15:38:17 [weight_utils.py:849] Filesystem type for checkpoints: OVERLAY. Checkpoint size: 2.88 GiB. Available RAM: 25.42 GiB.
+(EngineCore pid=302) INFO 11-12 15:38:17 [weight_utils.py:872] Auto-prefetch is disabled because the filesystem (OVERLAY) is not a recognized network FS (NFS/Lustre). If you want to force prefetching, start vLLM with --safetensors-load-strategy=prefetch.
+(EngineCore pid=302) Loading safetensors checkpoint shards:   0% Completed | 0/1 [00:00<?, ?it/s]
+(EngineCore pid=294) Loading safetensors checkpoint shards: 100% Completed | 1/1 [00:02<00:00,  2.83s/it]
+(EngineCore pid=294) Loading safetensors checkpoint shards: 100% Completed | 1/1 [00:02<00:00,  2.84s/it]
+(EngineCore pid=294) 
+(EngineCore pid=294) INFO 11-12 15:38:20 [default_loader.py:430] Loading weights took 2.86 seconds
+(EngineCore pid=302) Loading safetensors checkpoint shards: 100% Completed | 1/1 [00:02<00:00,  2.91s/it]
+(EngineCore pid=302) Loading safetensors checkpoint shards: 100% Completed | 1/1 [00:02<00:00,  2.91s/it]
+(EngineCore pid=302) 
+(EngineCore pid=302) INFO 11-12 15:38:20 [default_loader.py:430] Loading weights took 2.93 seconds
+(EngineCore pid=294) INFO 11-12 15:38:21 [model_runner.py:302] Model loading took 2.98 GiB and 25.462438 seconds
+(EngineCore pid=294) INFO 11-12 15:38:21 [topk_topp_sampler.py:39] FlashInfer top-p/top-k sampling disabled via VLLM_USE_FLASHINFER_SAMPLER=0.
+(EngineCore pid=302) INFO 11-12 15:38:21 [model_runner.py:302] Model loading took 2.98 GiB and 25.658152 seconds
+(EngineCore pid=302) INFO 11-12 15:38:21 [topk_topp_sampler.py:39] FlashInfer top-p/top-k sampling disabled via VLLM_USE_FLASHINFER_SAMPLER=0.
+(EngineCore pid=294) INFO 11-12 15:38:28 [gpu_worker.py:538] Available KV cache memory: 9.28 GiB
+(EngineCore pid=294) INFO 11-12 15:38:28 [kv_cache_utils.py:2146] GPU KV cache size: 347,472 tokens
+(EngineCore pid=294) INFO 11-12 15:38:28 [kv_cache_utils.py:2147] Maximum concurrency for 2,048 tokens per request: 169.66x
+(EngineCore pid=294) INFO 11-12 15:38:28 [cutedsl_warmup.py:97] Skipping CuTeDSL warmup because no compile units were requested.
+(EngineCore pid=302) INFO 11-12 15:38:28 [gpu_worker.py:538] Available KV cache memory: 9.28 GiB
+(EngineCore pid=302) INFO 11-12 15:38:28 [kv_cache_utils.py:2146] GPU KV cache size: 347,472 tokens
+(EngineCore pid=302) INFO 11-12 15:38:28 [kv_cache_utils.py:2147] Maximum concurrency for 2,048 tokens per request: 169.66x
+(EngineCore pid=302) INFO 11-12 15:38:28 [cutedsl_warmup.py:97] Skipping CuTeDSL warmup because no compile units were requested.
+(EngineCore pid=294) INFO 11-12 15:38:51 [jit_monitor.py:73] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.
+(EngineCore pid=302) INFO 11-12 15:38:52 [jit_monitor.py:73] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.
+(EngineCore pid=294) INFO 11-12 15:38:52 [core.py:344] init engine (profile, create kv cache, warmup model) took 31.20 s
+(EngineCore pid=302) INFO 11-12 15:38:52 [core.py:344] init engine (profile, create kv cache, warmup model) took 31.09 s
+(EngineCore pid=294) WARNING 11-12 15:38:52 [vllm.py:1096] Enforce eager set, disabling torch.compile and CUDAGraphs. This is equivalent to setting -cc.mode=none -cc.cudagraph_mode=none
+(EngineCore pid=294) WARNING 11-12 15:38:52 [vllm.py:1144] Inductor compilation was disabled by user settings, optimizations settings that are only active during inductor compilation will be ignored.
+(EngineCore pid=294) INFO 11-12 15:38:52 [kernel.py:292] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(EngineCore pid=294) INFO 11-12 15:38:52 [vllm.py:1322] Cudagraph is disabled under eager mode
+(EngineCore pid=302) WARNING 11-12 15:38:52 [vllm.py:1096] Enforce eager set, disabling torch.compile and CUDAGraphs. This is equivalent to setting -cc.mode=none -cc.cudagraph_mode=none
+(EngineCore pid=302) WARNING 11-12 15:38:52 [vllm.py:1144] Inductor compilation was disabled by user settings, optimizations settings that are only active during inductor compilation will be ignored.
+(EngineCore pid=302) INFO 11-12 15:38:52 [kernel.py:292] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(EngineCore pid=302) INFO 11-12 15:38:52 [vllm.py:1322] Cudagraph is disabled under eager mode
+Rendering prompts:   0%|          | 0/1 [00:00<?, ?it/s]Rendering prompts:   0%|          | 0/1 [00:00<?, ?it/s]Rendering prompts: 100%|██████████| 1/1 [00:00<00:00, 10.69it/s]
+Processed prompts:   0%|          | 0/1 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]Rendering prompts: 100%|██████████| 1/1 [00:00<00:00, 10.37it/s]
+Processed prompts:   0%|          | 0/1 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s](EngineCore pid=302) WARNING 11-12 15:39:01 [jit_monitor.py:129] Triton kernel JIT compilation during inference: kernel_unified_attention. This causes a latency spike; consider extending warmup to cover this shape/config.
+(EngineCore pid=294) WARNING 11-12 15:39:01 [jit_monitor.py:129] Triton kernel JIT compilation during inference: kernel_unified_attention. This causes a latency spike; consider extending warmup to cover this shape/config.
+(EngineCore pid=294) WARNING 11-12 15:39:03 [jit_monitor.py:129] Triton kernel JIT compilation during inference: reduce_segments. This causes a latency spike; consider extending warmup to cover this shape/config.
+(EngineCore pid=302) WARNING 11-12 15:39:03 [jit_monitor.py:129] Triton kernel JIT compilation during inference: reduce_segments. This causes a latency spike; consider extending warmup to cover this shape/config.
+Processed prompts: 100%|██████████| 1/1 [00:03<00:00,  3.59s/it, est. speed input: 0.56 toks/s, output: 2.23 toks/s]Processed prompts: 100%|██████████| 1/1 [00:03<00:00,  3.59s/it, est. speed input: 0.56 toks/s, output: 2.23 toks/s]Processed prompts: 100%|██████████| 1/1 [00:03<00:00,  3.59s/it, est. speed input: 0.56 toks/s, output: 2.23 toks/s]
+Processed prompts: 100%|██████████| 1/1 [00:03<00:00,  3.65s/it, est. speed input: 0.55 toks/s, output: 2.19 toks/s]Processed prompts: 100%|██████████| 1/1 [00:03<00:00,  3.65s/it, est. speed input: 0.55 toks/s, output: 2.19 toks/s]Processed prompts: 100%|██████████| 1/1 [00:03<00:00,  3.65s/it, est. speed input: 0.55 toks/s, output: 2.19 toks/s]
+Rendering prompts:   0%|          | 0/1 [00:00<?, ?it/s]Rendering prompts:   0%|          | 0/1 [00:00<?, ?it/s]Rendering prompts: 100%|██████████| 1/1 [00:00<00:00, 864.98it/s]Rendering prompts: 100%|██████████| 1/1 [00:00<00:00, 876.00it/s]
+
+Processed prompts:   0%|          | 0/1 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]Processed prompts:   0%|          | 0/1 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]Processed prompts: 100%|██████████| 1/1 [00:01<00:00,  1.25s/it, est. speed input: 7.20 toks/s, output: 25.59 toks/s]Processed prompts: 100%|██████████| 1/1 [00:01<00:00,  1.25s/it, est. speed input: 7.20 toks/s, output: 25.59 toks/s]Processed prompts: 100%|██████████| 1/1 [00:01<00:00,  1.25s/it, est. speed input: 7.20 toks/s, output: 25.59 toks/s]
+Processed prompts: 100%|██████████| 1/1 [00:01<00:00,  1.28s/it, est. speed input: 7.02 toks/s, output: 24.95 toks/s]Processed prompts: 100%|██████████| 1/1 [00:01<00:00,  1.28s/it, est. speed input: 7.02 toks/s, output: 24.95 toks/s]Processed prompts: 100%|██████████| 1/1 [00:01<00:00,  1.28s/it, est. speed input: 7.02 toks/s, output: 24.95 toks/s]
+Rendering prompts:   0%|          | 0/1 [00:00<?, ?it/s]Rendering prompts:   0%|          | 0/1 [00:00<?, ?it/s]Rendering prompts: 100%|██████████| 1/1 [00:00<00:00, 1112.84it/s]
+Rendering prompts: 100%|██████████| 1/1 [00:00<00:00, 970.01it/s]
+Processed prompts:   0%|          | 0/1 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]Processed prompts:   0%|          | 0/1 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]Processed prompts: 100%|██████████| 1/1 [00:01<00:00,  1.25s/it, est. speed input: 7.21 toks/s, output: 25.63 toks/s]Processed prompts: 100%|██████████| 1/1 [00:01<00:00,  1.25s/it, est. speed input: 7.21 toks/s, output: 25.63 toks/s]Processed prompts: 100%|██████████| 1/1 [00:01<00:00,  1.25s/it, est. speed input: 7.21 toks/s, output: 25.63 toks/s]
+Processed prompts: 100%|██████████| 1/1 [00:01<00:00,  1.29s/it, est. speed input: 6.95 toks/s, output: 24.72 toks/s]Processed prompts: 100%|██████████| 1/1 [00:01<00:00,  1.29s/it, est. speed input: 6.95 toks/s, output: 24.72 toks/s]Processed prompts: 100%|██████████| 1/1 [00:01<00:00,  1.29s/it, est. speed input: 6.95 toks/s, output: 24.72 toks/s]
+Rendering prompts:   0%|          | 0/1 [00:00<?, ?it/s]Rendering prompts:   0%|          | 0/1 [00:00<?, ?it/s]Rendering prompts: 100%|██████████| 1/1 [00:00<00:00, 1194.28it/s]
+Rendering prompts: 100%|██████████| 1/1 [00:00<00:00, 1011.16it/s]
+Processed prompts:   0%|          | 0/1 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]Processed prompts:   0%|          | 0/1 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]Processed prompts: 100%|██████████| 1/1 [00:01<00:00,  1.22s/it, est. speed input: 7.41 toks/s, output: 26.33 toks/s]Processed prompts: 100%|██████████| 1/1 [00:01<00:00,  1.22s/it, est. speed input: 7.41 toks/s, output: 26.33 toks/s]Processed prompts: 100%|██████████| 1/1 [00:01<00:00,  1.22s/it, est. speed input: 7.41 toks/s, output: 26.33 toks/s]
+Processed prompts: 100%|██████████| 1/1 [00:01<00:00,  1.24s/it, est. speed input: 7.24 toks/s, output: 25.75 toks/s]Processed prompts: 100%|██████████| 1/1 [00:01<00:00,  1.24s/it, est. speed input: 7.24 toks/s, output: 25.75 toks/s]Processed prompts: 100%|██████████| 1/1 [00:01<00:00,  1.24s/it, est. speed input: 7.24 toks/s, output: 25.75 toks/s]
+Rendering prompts:   0%|          | 0/4 [00:00<?, ?it/s]Rendering prompts:   0%|          | 0/4 [00:00<?, ?it/s]Rendering prompts: 100%|██████████| 4/4 [00:00<00:00, 963.99it/s]
+Processed prompts:   0%|          | 0/4 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]Rendering prompts: 100%|██████████| 4/4 [00:00<00:00, 701.39it/s]
+Processed prompts:   0%|          | 0/4 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]Processed prompts:  25%|██▌       | 1/4 [00:03<00:11,  3.89s/it, est. speed input: 2.31 toks/s, output: 8.23 toks/s]Processed prompts: 100%|██████████| 4/4 [00:03<00:00,  3.89s/it, est. speed input: 9.26 toks/s, output: 32.91 toks/s]Processed prompts: 100%|██████████| 4/4 [00:03<00:00,  1.03it/s, est. speed input: 9.26 toks/s, output: 32.91 toks/s]
+Processed prompts:  25%|██▌       | 1/4 [00:03<00:11,  3.89s/it, est. speed input: 2.31 toks/s, output: 8.22 toks/s]Processed prompts: 100%|██████████| 4/4 [00:03<00:00,  3.89s/it, est. speed input: 9.25 toks/s, output: 32.88 toks/s]Processed prompts: 100%|██████████| 4/4 [00:03<00:00,  1.03it/s, est. speed input: 9.25 toks/s, output: 32.88 toks/s]
+Rendering prompts:   0%|          | 0/4 [00:00<?, ?it/s]Rendering prompts:   0%|          | 0/4 [00:00<?, ?it/s]Rendering prompts: 100%|██████████| 4/4 [00:00<00:00, 1099.14it/s]
+Processed prompts:   0%|          | 0/4 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]Rendering prompts: 100%|██████████| 4/4 [00:00<00:00, 1045.31it/s]
+Processed prompts:   0%|          | 0/4 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]Processed prompts:  25%|██▌       | 1/4 [00:01<00:04,  1.37s/it, est. speed input: 6.56 toks/s, output: 23.31 toks/s]Processed prompts: 100%|██████████| 4/4 [00:01<00:00,  1.37s/it, est. speed input: 26.21 toks/s, output: 93.19 toks/s]Processed prompts: 100%|██████████| 4/4 [00:01<00:00,  2.91it/s, est. speed input: 26.21 toks/s, output: 93.19 toks/s]
+Processed prompts:  25%|██▌       | 1/4 [00:01<00:04,  1.37s/it, est. speed input: 6.55 toks/s, output: 23.29 toks/s]Processed prompts: 100%|██████████| 4/4 [00:01<00:00,  1.37s/it, est. speed input: 26.19 toks/s, output: 93.12 toks/s]Processed prompts: 100%|██████████| 4/4 [00:01<00:00,  2.91it/s, est. speed input: 26.19 toks/s, output: 93.12 toks/s]
+Rendering prompts:   0%|          | 0/4 [00:00<?, ?it/s]Rendering prompts:   0%|          | 0/4 [00:00<?, ?it/s]Rendering prompts: 100%|██████████| 4/4 [00:00<00:00, 1135.44it/s]
+Rendering prompts: 100%|██████████| 4/4 [00:00<00:00, 1143.25it/s]
+Processed prompts:   0%|          | 0/4 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]Processed prompts:   0%|          | 0/4 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]Processed prompts:  25%|██▌       | 1/4 [00:01<00:03,  1.31s/it, est. speed input: 6.86 toks/s, output: 24.40 toks/s]Processed prompts: 100%|██████████| 4/4 [00:01<00:00,  1.31s/it, est. speed input: 27.43 toks/s, output: 97.51 toks/s]Processed prompts: 100%|██████████| 4/4 [00:01<00:00,  3.05it/s, est. speed input: 27.43 toks/s, output: 97.51 toks/s]
+Processed prompts:  25%|██▌       | 1/4 [00:01<00:03,  1.32s/it, est. speed input: 6.81 toks/s, output: 24.23 toks/s]Processed prompts: 100%|██████████| 4/4 [00:01<00:00,  1.32s/it, est. speed input: 27.24 toks/s, output: 96.86 toks/s]Processed prompts: 100%|██████████| 4/4 [00:01<00:00,  3.03it/s, est. speed input: 27.24 toks/s, output: 96.86 toks/s]
+Rendering prompts:   0%|          | 0/8 [00:00<?, ?it/s]Rendering prompts:   0%|          | 0/8 [00:00<?, ?it/s]Rendering prompts: 100%|██████████| 8/8 [00:00<00:00, 1148.69it/s]
+Rendering prompts: 100%|██████████| 8/8 [00:00<00:00, 1123.31it/s]
+Processed prompts:   0%|          | 0/8 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]Processed prompts:   0%|          | 0/8 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]Processed prompts:  12%|█▎        | 1/8 [00:01<00:08,  1.24s/it, est. speed input: 7.24 toks/s, output: 25.75 toks/s]Processed prompts: 100%|██████████| 8/8 [00:01<00:00,  1.24s/it, est. speed input: 60.21 toks/s, output: 205.51 toks/s]Processed prompts: 100%|██████████| 8/8 [00:01<00:00,  6.42it/s, est. speed input: 60.21 toks/s, output: 205.51 toks/s]
+Processed prompts:  12%|█▎        | 1/8 [00:01<00:09,  1.30s/it, est. speed input: 6.95 toks/s, output: 24.70 toks/s]Processed prompts: 100%|██████████| 8/8 [00:01<00:00,  1.30s/it, est. speed input: 57.87 toks/s, output: 197.54 toks/s]Processed prompts: 100%|██████████| 8/8 [00:01<00:00,  6.17it/s, est. speed input: 57.87 toks/s, output: 197.54 toks/s]
+Rendering prompts:   0%|          | 0/8 [00:00<?, ?it/s]Rendering prompts:   0%|          | 0/8 [00:00<?, ?it/s]Rendering prompts: 100%|██████████| 8/8 [00:00<00:00, 1220.61it/s]
+Processed prompts:   0%|          | 0/8 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]Rendering prompts: 100%|██████████| 8/8 [00:00<00:00, 1012.81it/s]
+Processed prompts:   0%|          | 0/8 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]Processed prompts:  12%|█▎        | 1/8 [00:01<00:09,  1.30s/it, est. speed input: 6.95 toks/s, output: 24.70 toks/s]Processed prompts:  12%|█▎        | 1/8 [00:01<00:09,  1.30s/it, est. speed input: 6.94 toks/s, output: 24.66 toks/s]Processed prompts: 100%|██████████| 8/8 [00:01<00:00,  1.30s/it, est. speed input: 57.84 toks/s, output: 197.44 toks/s]Processed prompts: 100%|██████████| 8/8 [00:01<00:00,  6.17it/s, est. speed input: 57.84 toks/s, output: 197.44 toks/s]
+Processed prompts: 100%|██████████| 8/8 [00:01<00:00,  1.30s/it, est. speed input: 57.76 toks/s, output: 197.15 toks/s]Processed prompts: 100%|██████████| 8/8 [00:01<00:00,  6.16it/s, est. speed input: 57.76 toks/s, output: 197.15 toks/s]
+Rendering prompts:   0%|          | 0/8 [00:00<?, ?it/s]Rendering prompts:   0%|          | 0/8 [00:00<?, ?it/s]Rendering prompts: 100%|██████████| 8/8 [00:00<00:00, 1264.77it/s]
+Processed prompts:   0%|          | 0/8 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]Rendering prompts: 100%|██████████| 8/8 [00:00<00:00, 939.35it/s]
+Processed prompts:   0%|          | 0/8 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]Processed prompts:  12%|█▎        | 1/8 [00:01<00:08,  1.26s/it, est. speed input: 7.12 toks/s, output: 25.30 toks/s]Processed prompts: 100%|██████████| 8/8 [00:01<00:00,  1.26s/it, est. speed input: 59.24 toks/s, output: 202.21 toks/s]Processed prompts: 100%|██████████| 8/8 [00:01<00:00,  6.32it/s, est. speed input: 59.24 toks/s, output: 202.21 toks/s]
+Processed prompts:  12%|█▎        | 1/8 [00:01<00:08,  1.28s/it, est. speed input: 7.01 toks/s, output: 24.94 toks/s]Processed prompts: 100%|██████████| 8/8 [00:01<00:00,  1.28s/it, est. speed input: 58.39 toks/s, output: 199.31 toks/s]Processed prompts: 100%|██████████| 8/8 [00:01<00:00,  6.23it/s, est. speed input: 58.39 toks/s, output: 199.31 toks/s]
+Rendering prompts:   0%|          | 0/16 [00:00<?, ?it/s]Rendering prompts:   0%|          | 0/16 [00:00<?, ?it/s]Rendering prompts: 100%|██████████| 16/16 [00:00<00:00, 1311.69it/s]
+Processed prompts:   0%|          | 0/16 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]Rendering prompts: 100%|██████████| 16/16 [00:00<00:00, 1130.62it/s]
+Processed prompts:   0%|          | 0/16 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]Processed prompts:   6%|▋         | 1/16 [00:02<00:35,  2.34s/it, est. speed input: 3.85 toks/s, output: 13.70 toks/s]Processed prompts: 100%|██████████| 16/16 [00:02<00:00,  2.34s/it, est. speed input: 66.33 toks/s, output: 219.12 toks/s]Processed prompts: 100%|██████████| 16/16 [00:02<00:00,  6.85it/s, est. speed input: 66.33 toks/s, output: 219.12 toks/s]
+Processed prompts:   6%|▋         | 1/16 [00:02<00:35,  2.36s/it, est. speed input: 3.81 toks/s, output: 13.54 toks/s]Processed prompts: 100%|██████████| 16/16 [00:02<00:00,  2.36s/it, est. speed input: 65.57 toks/s, output: 216.59 toks/s]Processed prompts: 100%|██████████| 16/16 [00:02<00:00,  6.77it/s, est. speed input: 65.57 toks/s, output: 216.59 toks/s]
+Rendering prompts:   0%|          | 0/16 [00:00<?, ?it/s]Rendering prompts:   0%|          | 0/16 [00:00<?, ?it/s]Rendering prompts: 100%|██████████| 16/16 [00:00<00:00, 1302.38it/s]
+Processed prompts:   0%|          | 0/16 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]Rendering prompts: 100%|██████████| 16/16 [00:00<00:00, 1083.57it/s]
+Processed prompts:   0%|          | 0/16 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]Processed prompts:   6%|▋         | 1/16 [00:01<00:19,  1.31s/it, est. speed input: 6.88 toks/s, output: 24.45 toks/s]Processed prompts: 100%|██████████| 16/16 [00:01<00:00,  1.31s/it, est. speed input: 118.31 toks/s, output: 390.81 toks/s]Processed prompts: 100%|██████████| 16/16 [00:01<00:00, 12.21it/s, est. speed input: 118.31 toks/s, output: 390.81 toks/s]
+Processed prompts:   6%|▋         | 1/16 [00:01<00:19,  1.32s/it, est. speed input: 6.82 toks/s, output: 24.23 toks/s]Processed prompts: 100%|██████████| 16/16 [00:01<00:00,  1.32s/it, est. speed input: 117.26 toks/s, output: 387.32 toks/s]Processed prompts: 100%|██████████| 16/16 [00:01<00:00, 12.10it/s, est. speed input: 117.26 toks/s, output: 387.32 toks/s]
+Rendering prompts:   0%|          | 0/16 [00:00<?, ?it/s]Rendering prompts:   0%|          | 0/16 [00:00<?, ?it/s]Rendering prompts: 100%|██████████| 16/16 [00:00<00:00, 1146.14it/s]
+Processed prompts:   0%|          | 0/16 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]Rendering prompts: 100%|██████████| 16/16 [00:00<00:00, 1054.96it/s]
+Processed prompts:   0%|          | 0/16 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]Processed prompts:   6%|▋         | 1/16 [00:01<00:20,  1.36s/it, est. speed input: 6.60 toks/s, output: 23.48 toks/s]Processed prompts: 100%|██████████| 16/16 [00:01<00:00,  1.36s/it, est. speed input: 113.61 toks/s, output: 375.29 toks/s]Processed prompts: 100%|██████████| 16/16 [00:01<00:00, 11.73it/s, est. speed input: 113.61 toks/s, output: 375.29 toks/s]
+Processed prompts:   6%|▋         | 1/16 [00:01<00:20,  1.37s/it, est. speed input: 6.58 toks/s, output: 23.40 toks/s]Processed prompts: 100%|██████████| 16/16 [00:01<00:00,  1.37s/it, est. speed input: 113.15 toks/s, output: 373.77 toks/s]Processed prompts: 100%|██████████| 16/16 [00:01<00:00, 11.68it/s, est. speed input: 113.15 toks/s, output: 373.77 toks/s]
+Rendering prompts:   0%|          | 0/32 [00:00<?, ?it/s]Rendering prompts:   0%|          | 0/32 [00:00<?, ?it/s]Rendering prompts: 100%|██████████| 32/32 [00:00<00:00, 1117.31it/s]
+Processed prompts:   0%|          | 0/32 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]Rendering prompts: 100%|██████████| 32/32 [00:00<00:00, 986.18it/s]
+Processed prompts:   0%|          | 0/32 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]Processed prompts:   3%|▎         | 1/32 [00:01<00:41,  1.35s/it, est. speed input: 6.66 toks/s, output: 23.69 toks/s]Processed prompts: 100%|██████████| 32/32 [00:01<00:00,  1.35s/it, est. speed input: 232.66 toks/s, output: 756.32 toks/s]Processed prompts: 100%|██████████| 32/32 [00:01<00:00, 23.63it/s, est. speed input: 232.66 toks/s, output: 756.32 toks/s]
+Processed prompts:   3%|▎         | 1/32 [00:01<00:42,  1.36s/it, est. speed input: 6.62 toks/s, output: 23.55 toks/s]Processed prompts: 100%|██████████| 32/32 [00:01<00:00,  1.36s/it, est. speed input: 231.26 toks/s, output: 751.75 toks/s]Processed prompts: 100%|██████████| 32/32 [00:01<00:00, 23.49it/s, est. speed input: 231.26 toks/s, output: 751.75 toks/s]
+Rendering prompts:   0%|          | 0/32 [00:00<?, ?it/s]Rendering prompts:   0%|          | 0/32 [00:00<?, ?it/s]Rendering prompts: 100%|██████████| 32/32 [00:00<00:00, 1270.41it/s]
+Processed prompts:   0%|          | 0/32 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]Rendering prompts: 100%|██████████| 32/32 [00:00<00:00, 1083.70it/s]
+Processed prompts:   0%|          | 0/32 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]Processed prompts:   3%|▎         | 1/32 [00:01<00:42,  1.37s/it, est. speed input: 6.57 toks/s, output: 23.35 toks/s]Processed prompts: 100%|██████████| 32/32 [00:01<00:00,  1.37s/it, est. speed input: 229.36 toks/s, output: 745.59 toks/s]Processed prompts: 100%|██████████| 32/32 [00:01<00:00, 23.29it/s, est. speed input: 229.36 toks/s, output: 745.59 toks/s]
+Processed prompts:   3%|▎         | 1/32 [00:01<00:42,  1.39s/it, est. speed input: 6.50 toks/s, output: 23.10 toks/s]Processed prompts: 100%|██████████| 32/32 [00:01<00:00,  1.39s/it, est. speed input: 226.77 toks/s, output: 737.16 toks/s]Processed prompts: 100%|██████████| 32/32 [00:01<00:00, 23.03it/s, est. speed input: 226.77 toks/s, output: 737.16 toks/s]
+Rendering prompts:   0%|          | 0/32 [00:00<?, ?it/s]Rendering prompts:   0%|          | 0/32 [00:00<?, ?it/s]Rendering prompts: 100%|██████████| 32/32 [00:00<00:00, 1161.55it/s]
+Rendering prompts: 100%|██████████| 32/32 [00:00<00:00, 1151.36it/s]
+Processed prompts:   0%|          | 0/32 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]Processed prompts:   0%|          | 0/32 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]Processed prompts:   3%|▎         | 1/32 [00:01<00:40,  1.32s/it, est. speed input: 6.82 toks/s, output: 24.26 toks/s]Processed prompts: 100%|██████████| 32/32 [00:01<00:00,  1.32s/it, est. speed input: 238.21 toks/s, output: 774.35 toks/s]Processed prompts: 100%|██████████| 32/32 [00:01<00:00, 24.19it/s, est. speed input: 238.21 toks/s, output: 774.35 toks/s]
+Processed prompts:   3%|▎         | 1/32 [00:01<00:41,  1.33s/it, est. speed input: 6.78 toks/s, output: 24.09 toks/s]Processed prompts: 100%|██████████| 32/32 [00:01<00:00,  1.33s/it, est. speed input: 236.68 toks/s, output: 769.38 toks/s]Processed prompts: 100%|██████████| 32/32 [00:01<00:00, 24.04it/s, est. speed input: 236.68 toks/s, output: 769.38 toks/s]
+INFO 11-12 15:39:27 [core_client.py:655] [shutdown] MPClient: start timeout=default
+INFO 11-12 15:39:27 [core_client.py:655] [shutdown] MPClient: start timeout=default
+INFO 11-12 15:39:27 [core_client.py:657] [shutdown] MPClient: stopping engine manager
+INFO 11-12 15:39:27 [core_client.py:657] [shutdown] MPClient: stopping engine manager
+(EngineCore pid=294) INFO 11-12 15:39:27 [core.py:1214] [shutdown] EngineCore: trigger received signal=SIGTERM
+(EngineCore pid=302) INFO 11-12 15:39:27 [core.py:1214] [shutdown] EngineCore: trigger received signal=SIGTERM
+(EngineCore pid=302) INFO 11-12 15:39:27 [core.py:1333] [shutdown] EngineCore: start mode=abort timeout=0s
+(EngineCore pid=294) INFO 11-12 15:39:27 [core.py:1333] [shutdown] EngineCore: start mode=abort timeout=0s
+(EngineCore pid=302) INFO 11-12 15:39:27 [core.py:1364] [shutdown] EngineCore: request processing complete; starting resource teardown
+(EngineCore pid=302) INFO 11-12 15:39:27 [core.py:1227] [shutdown] EngineCore: exiting busy loop
+(EngineCore pid=294) INFO 11-12 15:39:27 [core.py:1364] [shutdown] EngineCore: request processing complete; starting resource teardown
+(EngineCore pid=294) INFO 11-12 15:39:27 [core.py:1227] [shutdown] EngineCore: exiting busy loop
+INFO 11-12 15:39:29 [core_client.py:659] [shutdown] MPClient: engine manager stopped
+INFO 11-12 15:39:29 [core_client.py:660] [shutdown] MPClient: cleaning up background resources
+INFO 11-12 15:39:29 [core_client.py:662] [shutdown] MPClient: complete
+INFO 11-12 15:39:29 [core_client.py:659] [shutdown] MPClient: engine manager stopped
+INFO 11-12 15:39:29 [core_client.py:660] [shutdown] MPClient: cleaning up background resources
+INFO 11-12 15:39:29 [core_client.py:662] [shutdown] MPClient: complete
+PASS two workers ready on distinct GPU UUIDs
+PASS b2 r0: all 2 requests answered, assignment sums to the batch -- {0: 1, 1: 1}
+PASS b2 r0: BOTH replicas received work -- {0: 1, 1: 1}
+PASS b2 r0: split within one request plus 25% of the batch -- {0: 1, 1: 1}
+PASS b2 r1: all 2 requests answered, assignment sums to the batch -- {0: 1, 1: 1}
+PASS b2 r1: BOTH replicas received work -- {0: 1, 1: 1}
+PASS b2 r1: split within one request plus 25% of the batch -- {0: 1, 1: 1}
+PASS b2 r2: all 2 requests answered, assignment sums to the batch -- {0: 1, 1: 1}
+PASS b2 r2: BOTH replicas received work -- {0: 1, 1: 1}
+PASS b2 r2: split within one request plus 25% of the batch -- {0: 1, 1: 1}
+PASS b8 r0: all 8 requests answered, assignment sums to the batch -- {0: 4, 1: 4}
+PASS b8 r0: BOTH replicas received work -- {0: 4, 1: 4}
+PASS b8 r0: split within one request plus 25% of the batch -- {0: 4, 1: 4}
+PASS b8 r1: all 8 requests answered, assignment sums to the batch -- {0: 4, 1: 4}
+PASS b8 r1: BOTH replicas received work -- {0: 4, 1: 4}
+PASS b8 r1: split within one request plus 25% of the batch -- {0: 4, 1: 4}
+PASS b8 r2: all 8 requests answered, assignment sums to the batch -- {0: 4, 1: 4}
+PASS b8 r2: BOTH replicas received work -- {0: 4, 1: 4}
+PASS b8 r2: split within one request plus 25% of the batch -- {0: 4, 1: 4}
+PASS b16 r0: all 16 requests answered, assignment sums to the batch -- {0: 8, 1: 8}
+PASS b16 r0: BOTH replicas received work -- {0: 8, 1: 8}
+PASS b16 r0: split within one request plus 25% of the batch -- {0: 8, 1: 8}
+PASS b16 r1: all 16 requests answered, assignment sums to the batch -- {0: 8, 1: 8}
+PASS b16 r1: BOTH replicas received work -- {0: 8, 1: 8}
+PASS b16 r1: split within one request plus 25% of the batch -- {0: 8, 1: 8}
+PASS b16 r2: all 16 requests answered, assignment sums to the batch -- {0: 8, 1: 8}
+PASS b16 r2: BOTH replicas received work -- {0: 8, 1: 8}
+PASS b16 r2: split within one request plus 25% of the batch -- {0: 8, 1: 8}
+PASS b32 r0: all 32 requests answered, assignment sums to the batch -- {0: 16, 1: 16}
+PASS b32 r0: BOTH replicas received work -- {0: 16, 1: 16}
+PASS b32 r0: split within one request plus 25% of the batch -- {0: 16, 1: 16}
+PASS b32 r1: all 32 requests answered, assignment sums to the batch -- {0: 16, 1: 16}
+PASS b32 r1: BOTH replicas received work -- {0: 16, 1: 16}
+PASS b32 r1: split within one request plus 25% of the batch -- {0: 16, 1: 16}
+PASS b32 r2: all 32 requests answered, assignment sums to the batch -- {0: 16, 1: 16}
+PASS b32 r2: BOTH replicas received work -- {0: 16, 1: 16}
+PASS b32 r2: split within one request plus 25% of the batch -- {0: 16, 1: 16}
+PASS b64 r0: all 64 requests answered, assignment sums to the batch -- {0: 32, 1: 32}
+PASS b64 r0: BOTH replicas received work -- {0: 32, 1: 32}
+PASS b64 r0: split within one request plus 25% of the batch -- {0: 32, 1: 32}
+PASS b64 r1: all 64 requests answered, assignment sums to the batch -- {0: 32, 1: 32}
+PASS b64 r1: BOTH replicas received work -- {0: 32, 1: 32}
+PASS b64 r1: split within one request plus 25% of the batch -- {0: 32, 1: 32}
+PASS b64 r2: all 64 requests answered, assignment sums to the batch -- {0: 32, 1: 32}
+PASS b64 r2: BOTH replicas received work -- {0: 32, 1: 32}
+PASS b64 r2: split within one request plus 25% of the batch -- {0: 32, 1: 32}
+PASS all worker processes exited -- {0: 'exit 0', 1: 'exit 0'}
+PASS no live engine process after close
+PASS GPU memory released after close (<500 MiB each) -- [3, 3]
+
+[16_replica_balance] OVERALL: PASS

@@ -63,6 +63,6 @@ def worker_main(worker_id: int, device: int, model: str, config_dict: dict, engi
         try:
             if llm is not None:
                 llm.close()
-        except Exception:  # noqa: BLE001
-            pass
+        except Exception:  # noqa: BLE001 - reported to the parent, which logs it; the worker must still announce its exit
+            out_q.put(("close_error", worker_id, f"{type(llm).__name__}.close failed", traceback.format_exc()))
         out_q.put(("exited", worker_id, os.getpid()))
