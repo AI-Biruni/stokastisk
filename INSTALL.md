@@ -21,3 +21,6 @@ python3.13 .../02_install.py <bundle>                                           
 The installer changes nothing if the plan has a conflict (`02_install_plan.json`), fails if any protected package (torch, triton, CUDA, NCCL, transformers 5.x…) would change,
 and never installs FlashAttention/FlashInfer. The two wheels are installed with `--force-reinstall --no-deps --no-index`, so a pre-existing Stokastisk distribution of any other version is replaced,
 and the run fails unless the installed version is exactly `0.1.0`. Kaggle starts every notebook in a fresh session, so each notebook that imports `stokastisk` must run the installer first.
+
+## Integrated SDK candidate (build tag 1) — not Kaggle-executed
+`stokastisk-0.1.0-1-cp313-cp313-linux_x86_64.whl` bundles the full SDK (`compat`, `serving`, `LLM.chat`) and the vLLM 0.25.1 Triton-attention tree in one wheel; project version stays 0.1.0. Status: `BUILT AND PACKAGED — STATICALLY INSPECTED — NOT EXECUTED ON KAGGLE DUAL T4 GPUs`. Install it **instead of** the two historical wheels (`pip uninstall -y vllm stokastisk` first; never install both). See [docs/SDK_CANDIDATE.md](docs/SDK_CANDIDATE.md) for commands, dependencies and limits.

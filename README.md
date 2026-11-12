@@ -119,10 +119,13 @@ Measured on Kaggle 2 × T4 with Qwen2.5-1.5B-Instruct (4096 new tokens, notebook
 
 ## vLLM 0.25.1 coverage on the T4
 
-> **Repository source is ahead of the verified release.** The `main` branch additionally contains `stokastisk.compat`, `stokastisk.serving`, `LLM.chat` and the explicit-bfloat16 pre-check. This code is **implemented but not yet executed** (no tests, no Kaggle run) and is **not** in the published SDK wheel (`29edaa55…`), which — with the vLLM wheel and the ZIP — remains the Kaggle-verified release. Installing the release does not give you these functions; use the repository source.
+> **Two distinct artifact sets — do not confuse them.**
+> **A. Kaggle-verified release (unchanged):** `stokastisk-0.1.0-py3-none-any.whl` (`29edaa55…`) + `vllm-0.25.1-cp38-abi3-linux_x86_64.whl` (`cc3bcafb…`) + the release ZIP. The SDK wheel was built before `stokastisk.compat`, `stokastisk.serving`, `LLM.chat` and the bfloat16 pre-check existed and does **not** contain them.
+> **B. New integrated SDK candidate (build tag 1):** `stokastisk-0.1.0-1-cp313-cp313-linux_x86_64.whl` — one wheel with the complete SDK (including `compat`, `serving`, `LLM.chat`, the bfloat16 pre-check), the bundled vLLM 0.25.1 Triton-attention tree (byte-identical to the verified vLLM wheel) and its CUDA 13.0 `sm_75` native objects. Project version stays `0.1.0`; only the PEP 427 build tag differs. Details: [docs/SDK_CANDIDATE.md](docs/SDK_CANDIDATE.md).
+> **C. Not executed:** everything in B beyond what A already ran. Status of B: `BUILT AND PACKAGED — STATICALLY INSPECTED — NOT EXECUTED ON KAGGLE DUAL T4 GPUs`. A successful wheel build is not GPU inference.
 
 Not every vLLM feature works on a Tesla T4. [docs/VLLM_T4_COVERAGE.md](docs/VLLM_T4_COVERAGE.md) lists, per feature, whether it was **executed on Kaggle**, only compiled, CPU-tested, statically inspected or not run — and what cannot work on SM75 (bfloat16, Flash*, native FP8/FP4, Qwen Omni).
-In the repository source, `stokastisk.check_model(...)`, `check_dtype`, `check_quantization` and `check_feature` raise a clear `StokastiskCompatibilityError` before an engine starts; `stokastisk.serving` launches the bundled OpenAI-compatible server (implemented, not yet run on Kaggle).
+In the repository source and in candidate B, `stokastisk.check_model(...)`, `check_dtype`, `check_quantization` and `check_feature` raise a clear `StokastiskCompatibilityError` before an engine starts; `stokastisk.serving` launches the bundled OpenAI-compatible server (implemented and packaged in candidate B; not yet run on Kaggle).
 
 ## Install options
 
