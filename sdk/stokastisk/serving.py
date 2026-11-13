@@ -80,6 +80,7 @@ def port_is_free(host: str, port: int) -> bool:
     """True if nothing is listening on (host, port) and the address can be bound."""
     family = socket.AF_INET6 if ":" in host else socket.AF_INET
     with socket.socket(family, socket.SOCK_STREAM) as s:
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)      # connections in TIME_WAIT from a stopped server must not make a restart on the same port fail
         try:
             s.bind((host, port))
             return True

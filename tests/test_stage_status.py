@@ -38,7 +38,7 @@ class StageStatus(unittest.TestCase):
             r = subprocess.run([sys.executable, "candidate_15_integration.py", "summary"], cwd=K, env=dict(os.environ, STOKASTISK_OUT=d, PYTHONDONTWRITEBYTECODE="1"), capture_output=True, text=True)
             self.assertEqual(r.returncode, 1)
             doc = json.load(open(f"{d}/15c_summary.json"))
-            self.assertEqual(doc["modes"], {"static": "NOT_RUN", "engine": "NOT_RUN", "server": "NOT_RUN", "installer": "NOT_RUN"})
+            self.assertEqual(doc["modes"], {"static": "NOT_RUN", "engine": "NOT_RUN", "parallel": "NOT_RUN", "server": "NOT_RUN", "installer": "NOT_RUN"})
             self.assertNotEqual(doc["status"], "PASS"); self.assertNotEqual(doc["overall"], "PASS")
 
     def test_summary_rejects_stages_that_describe_different_wheels(self):

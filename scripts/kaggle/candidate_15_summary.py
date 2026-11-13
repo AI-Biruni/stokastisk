@@ -3,7 +3,7 @@ import json, pathlib
 from _common import OUT, check, finish, error
 from candidate_15_common import *   # noqa: F401,F403
 
-STAGES = ("static", "engine", "server")
+STAGES = ("static", "engine", "parallel", "server")
 
 
 def summary() -> int:
@@ -35,7 +35,7 @@ def summary() -> int:
     check(R, "all stages ran on the same Python / torch / Triton / vLLM / Stokastisk / transformers", len(set(keyv.values())) == 1 and len(keyv) >= 2, keyv)
     check(R, "the release came from the attached input (no remote fallback)", str(bundle.get("source", "")).startswith("attached"), bundle.get("source"))
     # kernel-level backend evidence from the captured stage logs
-    for m, need in (("engine", True), ("server", True)):
+    for m, need in (("engine", True), ("parallel", True), ("server", True)):
         lp = OUT / f"15c_{m}.log"
         if lp.is_file():
             t = lp.read_text(errors="replace")

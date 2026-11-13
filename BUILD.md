@@ -1,11 +1,8 @@
 # Build / reproduce
-Toolchain (verified before any build): CPython 3.13, PyTorch 2.11.0+cu130, **CUDA Toolkit 13.0 only** (local 13.0.48; Kaggle runs 13.0.88), GCC 13.3, `TORCH_CUDA_ARCH_LIST=7.5`. CUDA 12.x toolkits must not be on `PATH`/`CUDA_HOME`.
-* `scripts/build_vllm_sm75.sh` — the original native vLLM build (SM75). `scripts/release/build_t4_tree.py`, `build_t4_wheel.py`, `repack_vllm_wheel.py`, `patch_vllm_wheel_t4.py` — derive the T4-only Python tree/wheel from that build and `patches/0001–0003`.
-* `scripts/make_notebooks.py` — generates the unexecuted notebooks 07–14 into `notebooks/kaggle-t4-sm75/notebooks/` (`dual_*.py` stage scripts live in `scripts/kaggle`; notebooks 01–06 are maintained directly).
-* `native/host_staged_xfer.cpp` — optional experimental transport; `nvcc -O2 -std=c++17 -shared -Xcompiler -fPIC -gencode arch=compute_75,code=sm_75 host_staged_xfer.cpp -o libstokastisk_xfer.so -lcudart` (no device code; links `libcudart.so.13`). It is not packaged in the wheel.
-* `scripts/fetch_release.py` — stdlib CDN downloader (also uploaded to the Hub). `notebooks/kaggle-t4-sm75/notebooks/` holds notebooks 01–14 (unexecuted); the assembler requires all fourteen.
-* `scripts/release/assemble_release.py BASE` — assembles `dist-rc/stokastisk-0.1.0-kaggle-t4-sm75` (the name is fixed by the version lock) from the private baseline directory `dist-rc/BASE` (byte-pinned vLLM wheel carried over, SDK wheel rebuilt and checked against `sdk/`), runs the CPU tests, writes manifests/SHA256SUMS, builds and re-verifies the ZIP, then runs `verify_project_version.py`. It refuses any project version other than 0.1.0.
-* `scripts/release/verify_project_version.py` and `scripts/release/prepare_hf_release.py` — version-lock verifier and Hugging Face staging (see [VERSION_POLICY.md](VERSION_POLICY.md)). The wheel version comes from the `VERSION` file; nothing derives or bumps versions.
-* `scripts/release/make_kaggle_input_zip.py NAME` — reproducible, idempotent Kaggle/Hub ZIP + `.sha256`.
-* `scripts/audit/native_audit.py` — ELF/cubin/GLIBC/CUDA-12-marker audit of every native object. `scripts/audit/forensic_notebooks.py` — executed-notebook forensics.
-Tests: `python3.13 -m pytest tests` (CPU only; they do not prove GPU behaviour — the Kaggle acceptance runs do).
+Toolchain: CPython 3.13, `build`, `setuptools`, `packaging`. No Docker, virtualenv or uv. A GPU is **not** needed (and the local GeForce 940M must not be used): the native objects come from the byte‑pinned vLLM wheel.
+
+1. Put the pinned base wheel at `inputs/vllm-0.25.1-cp38-abi3-linux_x86_64.whl` (SHA256 `cc3bcafb6516791990ca302073ae153a08465d3df1e460d666e3ec09b4e98f5e`; GitHub release asset of `v0.1.0`). It was produced from vLLM 0.25.1 with `scripts/build_vllm_sm75.sh` (CUDA 13.0 only, `sm_75`).
+2. `python3.13 scripts/release/assemble_build3_release.py` — builds the Flash‑free wheel (`build_integrated_wheel.py` → `t4_flash_free.py`), verifies it independently (`scripts/audit/verify_build3_wheel.py`, `native_audit.py`), writes `dist/stokastisk-0.1.0-build3-kaggle-t4-sm75/`, the reproducible ZIP + `.sha256`, and the notebook (`notebooks/kaggle-t4-sm75/notebooks/15_…ipynb`, pinned to the wheel, ZIP and `SHA256SUMS` hashes), then re‑verifies everything from the finished files. `dist/` is local and git‑ignored.
+3. Dependencies: `python3.13 scripts/release/lock_closure.py requirements/kaggle-baseline-2026-11-13.json requirements/<profile>.roots requirements/<profile> --cache <dir>` regenerates a lock from its `.roots`.
+4. Tests: `CUDA_VISIBLE_DEVICES= python3.13 -m pytest tests -q`.
+5. Optional, maintainer only: `scripts/release/kaggle_run.py` publishes the bundle as a Kaggle dataset version and runs the notebook on T4 × 2.

@@ -28,8 +28,7 @@ if "--report-dir" in args:
     i = args.index("--report-dir"); report_dir = pathlib.Path(args[i + 1]); del args[i:i + 2]
 assert tag.isdigit() and int(tag) >= 3 and len(args) == 1, "usage: build_integrated_wheel.py OUT_DIR [--build-tag N>=3] [--report-dir DIR]"
 OUT = pathlib.Path(args[0]); OUT.mkdir(parents=True, exist_ok=True)
-HIST = ROOT / "dist-rc/stokastisk-0.1.0-kaggle-t4-sm75/wheels"
-VLLM_WHL = HIST / "vllm-0.25.1-cp38-abi3-linux_x86_64.whl"
+VLLM_WHL = ROOT / "inputs/vllm-0.25.1-cp38-abi3-linux_x86_64.whl"
 PIN = "cc3bcafb6516791990ca302073ae153a08465d3df1e460d666e3ec09b4e98f5e"
 sha = lambda b: hashlib.sha256(b).hexdigest()  # noqa: E731
 assert sha(VLLM_WHL.read_bytes()) == PIN, "vLLM wheel is not the byte-pinned Kaggle-verified wheel"

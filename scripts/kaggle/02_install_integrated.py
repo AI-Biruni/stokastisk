@@ -32,8 +32,10 @@ PROFILES = ("core", "structured-output", "serving")
 OWN = ("stokastisk", "vllm")
 # distributions that must keep exactly the version they have: torch/triton exactly, CUDA/NCCL runtimes by prefix (checked on the whole inventory by diff())
 PROTECTED_PREFIXES = ("torch", "triton", "nvidia-", "cuda-", "numpy", "transformers", "tokenizers", "pydantic", "fastapi", "starlette", "protobuf")
+# NOTE: lmformatenforcer.integrations.vllm is deliberately NOT imported: lm-format-enforcer 0.11.3 imports vllm.transformers_utils.tokenizer.MistralTokenizer, which does not exist in
+# vLLM 0.25.1. Only the lm-format-enforcer *backend* uses that adapter and Stokastisk pins xgrammar; vLLM itself needs just the top-level package (see dependencies.py).
 IMPORTS = ["transformers", "tokenizers", "vllm", "stokastisk", "stokastisk.compat", "stokastisk.serving", "stokastisk.structured", "stokastisk.dependencies", "xgrammar", "tvm_ffi", "llguidance",
-           "lmformatenforcer", "lmformatenforcer.integrations.vllm", "outlines_core", "diskcache", "interegular", "fastapi_cli", "sse_starlette", "pydantic_settings",
+           "lmformatenforcer", "outlines_core", "diskcache", "interegular", "fastapi_cli", "sse_starlette", "pydantic_settings",
            "model_hosting_container_standards.sagemaker", "prometheus_fastapi_instrumentator", "vllm._C_stable_libtorch", "vllm._moe_C_stable_libtorch", "vllm.cumem_allocator",
            "vllm.spinloop", "vllm.fs_io_C", "vllm.engine.arg_utils", "vllm.v1.attention.backends.registry", "vllm.v1.attention.selector", "vllm.v1.attention.backends.triton_attn",
            "vllm.v1.engine.llm_engine", "vllm.v1.executor.multiproc_executor", "vllm.distributed.device_communicators.cuda_communicator", "vllm.model_executor.models.qwen2",

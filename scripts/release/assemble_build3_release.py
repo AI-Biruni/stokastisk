@@ -2,9 +2,9 @@
 """Assemble the Stokastisk 0.1.0 BUILD 3 Kaggle input bundle from the CURRENT source tree. Never uploads anything; refuses to overwrite anything.
 usage: assemble_build3_release.py [--build-tag 3]
 
- 1. builds the integrated, Flash-free wheel (scripts/release/build_integrated_wheel.py) into dist-rc/integrated-0.1.0-build3/
+ 1. builds the integrated, Flash-free wheel (scripts/release/build_integrated_wheel.py) into dist/wheel-build3/
  2. verifies it independently (scripts/audit/verify_build3_wheel.py) and audits its native objects (scripts/audit/native_audit.py)
- 3. writes dist-rc/stokastisk-0.1.0-build3-kaggle-t4-sm75/ : wheel, installer + stage scripts, hash-pinned locks, manifests, docs, notebook 15
+ 3. writes dist/stokastisk-0.1.0-build3-kaggle-t4-sm75/ : wheel, installer + stage scripts, hash-pinned locks, manifests, docs, notebook 15
  4. builds the reproducible ZIP + .sha256, plus a STANDALONE notebook that also carries the ZIP's SHA256 (the ZIP cannot contain its own hash)
  5. re-verifies from a fresh extraction: SHA256SUMS, the notebook's own discovery code against a simulated /kaggle/input, a pip --target install of the wheel and the strict
     Flash scan of the installed tree (ordinary pip, no virtualenv, no container, no GPU)
@@ -16,23 +16,22 @@ sys.path.insert(0, str(ROOT / "scripts/kaggle")); sys.path.insert(0, str(ROOT / 
 args = sys.argv[1:]; tag = args[args.index("--build-tag") + 1] if "--build-tag" in args else "3"
 assert (ROOT / "VERSION").read_text() == "0.1.0\n"
 NAME = "stokastisk-0.1.0-build3-kaggle-t4-sm75"
-WORK = ROOT / "dist-rc" / f"integrated-0.1.0-build{tag}"; B = ROOT / "dist-rc" / NAME
-assert not WORK.exists() and not B.exists(), "never overwrite a built release"
+WORK = ROOT / "dist" / "wheel-build3"; B = ROOT / "dist" / NAME          # dist/ is a local, git-ignored output directory: a rebuild replaces it (nothing else is ever deleted)
+for d in (WORK, B):
+    if d.exists():
+        shutil.rmtree(d)
 sha = lambda p: hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()  # noqa: E731
 run = lambda *a, **k: subprocess.run(a, capture_output=True, text=True, cwd=ROOT, **k)  # noqa: E731
 git = lambda *a: run("git", *a).stdout.strip()  # noqa: E731
 head, dirty = git("rev-parse", "HEAD"), git("status", "--porcelain", "--untracked-files=no").splitlines()
-LEG = ROOT / "dist-rc/stokastisk-0.1.0-kaggle-t4-sm75/wheels"
-VLLM_PIN = LEG / "vllm-0.25.1-cp38-abi3-linux_x86_64.whl"
-hist = {"vllm-0.25.1-cp38-abi3-linux_x86_64.whl": sha(VLLM_PIN), "stokastisk-0.1.0-py3-none-any.whl": sha(LEG / "stokastisk-0.1.0-py3-none-any.whl"),
-        "build1": sha(ROOT / "dist-rc/sdk-candidate-0.1.0-build1/stokastisk-0.1.0-1-cp313-cp313-linux_x86_64.whl"), "build2": sha(ROOT / "dist-rc/integrated-0.1.0-build2/stokastisk-0.1.0-2-cp313-cp313-linux_x86_64.whl")}
-assert hist["vllm-0.25.1-cp38-abi3-linux_x86_64.whl"] == "cc3bcafb6516791990ca302073ae153a08465d3df1e460d666e3ec09b4e98f5e", "historical vLLM wheel altered"
-assert hist["build1"] == "815f978346cfc6d85b7b47f9b96ce6805b5630ea2e0d3c0070c45f538c11cf6b" and hist["build2"] == "7e4b700929ec7f3489570e93252ef5a49da2d1682c111c5feefb55efead84369", "historical builds altered"
+VLLM_PIN = ROOT / "inputs/vllm-0.25.1-cp38-abi3-linux_x86_64.whl"
+assert sha(VLLM_PIN) == "cc3bcafb6516791990ca302073ae153a08465d3df1e460d666e3ec09b4e98f5e", "pinned vLLM base wheel altered"
+hist = {"vllm-0.25.1-cp38-abi3-linux_x86_64.whl": sha(VLLM_PIN), "build1": "815f978346cfc6d85b7b47f9b96ce6805b5630ea2e0d3c0070c45f538c11cf6b", "build2": "7e4b700929ec7f3489570e93252ef5a49da2d1682c111c5feefb55efead84369"}
 
 r = run(sys.executable, "scripts/release/build_integrated_wheel.py", str(WORK), "--build-tag", tag, "--report-dir", str(WORK / "reports"))
 assert r.returncode == 0, r.stderr[-2000:]
 whl = next(WORK.glob("*.whl")); print(r.stdout.strip().splitlines()[-1])
-assert whl.name not in {"stokastisk-0.1.0-1-cp313-cp313-linux_x86_64.whl", "stokastisk-0.1.0-2-cp313-cp313-linux_x86_64.whl"} and sha(whl) not in hist.values()
+assert sha(whl) not in hist.values()
 r = run(sys.executable, "scripts/audit/verify_build3_wheel.py", str(whl), str(VLLM_PIN), str(WORK / "static-verification.json"))
 assert r.returncode == 0, "independent wheel verification failed:\n" + r.stdout[-2500:]
 r = run(sys.executable, "scripts/audit/native_audit.py", str(whl), str(WORK / "native-audit.json")); assert r.returncode == 0, r.stderr[-800:]
@@ -42,7 +41,7 @@ for d in ("wheels", "scripts/kaggle", "requirements/closure", "manifests", "evid
     (B / d).mkdir(parents=True)
 shutil.copy2(whl, B / "wheels" / whl.name)
 KS = ["02_install_integrated.py", "_common.py", "_inventory.py", "bundle.py", "prohibited.py", "structured_output_cpu_check.py", "candidate_15_common.py", "candidate_15_static.py",
-      "candidate_15_engine.py", "candidate_15_server.py", "candidate_15_summary.py", "candidate_15_integration.py"]
+      "candidate_15_engine.py", "candidate_15_parallel.py", "candidate_15_server.py", "candidate_15_summary.py", "candidate_15_integration.py"]
 for f in KS:
     shutil.copy2(ROOT / "scripts/kaggle" / f, B / "scripts/kaggle" / f)
 for p in ("core", "structured-output", "serving", "models"):
@@ -62,6 +61,7 @@ for f in ("flash-free-transform-report.json", "wheel-flash-scan.json"):
 import make_notebook15_build3 as mk
 wsha = sha(whl)
 mk.nbformat.write(mk.build(wsha, None), B / "notebooks/15_stokastisk_candidate_sdk_integration.ipynb")
+NB_DIR = ROOT / "notebooks/kaggle-t4-sm75/notebooks"; NB_DIR.mkdir(parents=True, exist_ok=True)
 
 created = time.strftime("%FT%T%z")
 manifest = {"name": NAME, "version": "0.1.0", "kind": "integrated-wheel", "created": created, "source_commit": head, "source_tree_dirty_tracked_files": dirty,
@@ -71,7 +71,7 @@ manifest = {"name": NAME, "version": "0.1.0", "kind": "integrated-wheel", "creat
             "vllm_tree": "vllm-0.25.1-cp38-abi3-linux_x86_64.whl (cc3bcafb...) through scripts/release/t4_flash_free.py; native objects byte-identical; 28 Flash-family files removed (evidence/flash-free-transform-report.json)",
             "dependency_profiles": {"installed_by_default": ["core", "structured-output", "serving"], "optional": ["models"], "unsupported": ["observability (opentelemetry exporters conflict with Kaggle protobuf 7.x)"]},
             "supersedes": {"build1": hist["build1"], "build2": hist["build2"], "note": "builds 1 and 2 stay published and untouched; build 2 failed Kaggle notebook 15 (evidence/kaggle/build-2-failed-notebook-15/)"},
-            "legacy_release": {"name": "stokastisk-0.1.0-kaggle-t4-sm75", "status": "KAGGLE_T4_VERIFIED", "wheels": {k: hist[k] for k in ("vllm-0.25.1-cp38-abi3-linux_x86_64.whl", "stokastisk-0.1.0-py3-none-any.whl")}}}
+            }
 (B / "manifests/RELEASE-MANIFEST.json").write_text(json.dumps(manifest, indent=1) + "\n")
 build = {"timestamp": created, "source_revision": head, "source_tree_dirty_tracked_files": dirty, "build_command": f"python3.13 scripts/release/build_integrated_wheel.py {WORK.name} --build-tag {tag}", "python": sys.version.split()[0],
          "setuptools_build": "python -m build --wheel --no-isolation", "wheel": whl.name, "wheel_size": whl.stat().st_size, "wheel_sha256": wsha, "vllm_wheel_pinned_sha256": hist["vllm-0.25.1-cp38-abi3-linux_x86_64.whl"],
@@ -95,8 +95,8 @@ with zipfile.ZipFile(zp, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as z:
             z.writestr(zi, p.read_bytes())
 zsha = sha(zp)
 (WORK / (zp.name + ".sha256")).write_text(f"{zsha}  {zp.name}\n")
-standalone = WORK / "15_stokastisk_candidate_sdk_integration.ipynb"
-mk.nbformat.write(mk.build(wsha, zsha), standalone)
+standalone = NB_DIR / "15_stokastisk_candidate_sdk_integration.ipynb"                   # the repository copy of the notebook (pins the wheel AND the bundle ZIP hash)
+mk.nbformat.write(mk.build(wsha, zsha, sha(B / "manifests/SHA256SUMS")), standalone)
 
 # ------------------------------------------------------------------------------------------------------------------------------------------------ re-verification from the finished artifacts
 import bundle

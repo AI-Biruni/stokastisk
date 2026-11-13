@@ -4,7 +4,7 @@ Date: 2026-11-13 · Project version: **0.1.0** (unchanged) · Build tag: **3** �
 
 ## 1. Evidence reproduced (nothing assumed)
 * The uploaded build-1 wheel is `stokastisk-0.1.0-1-…` — 38,148,975 bytes, SHA256 `815f9783…cf6b` — verified against the local file.
-* The executed notebook 15 **did not test it**: its setup cell found no directory with `manifests/SHA256SUMS` and printed `not attached (attached: []); downloading from Hugging Face`; it then installed **build 2** (`7e4b7009…4369`, 38,151,399 bytes). All Notebook-15 evidence is therefore build-2 evidence. The original notebook and acceptance ZIP are preserved byte-for-byte in `evidence/kaggle/build-2-failed-notebook-15/` (plus JSON reports, logs, inventory, environment versions, `SHA256SUMS`).
+* The executed notebook 15 **did not test it**: its setup cell found no directory with `manifests/SHA256SUMS` and printed `not attached (attached: []); downloading from Hugging Face`; it then installed **build 2** (`7e4b7009…4369`, 38,151,399 bytes). All Notebook-15 evidence is therefore build-2 evidence. The original notebook and acceptance ZIP are preserved byte-for-byte in `(removed from the repository)` (plus JSON reports, logs, inventory, environment versions, `SHA256SUMS`).
 * Installer stage: 30 checks, PASS with one WARNING. `static`, `engine`, `server`, `summary`: FAIL.
 * What **passed** on build 2 and is therefore not in doubt: Python/torch/Triton/CUDA/T4 checks, FP16 engine start, `TRITON_ATTN` in the live config, `generate`, `chat`, `complete`, determinism, `generate([])`, invalid-input rejection, one-GPU residency, compiled `kernel_unified_attention`, no Flash library mapped, `close()` semantics, no live process and GPU memory released.
 
@@ -28,8 +28,18 @@ Audit of the byte-pinned vLLM wheel (`cc3bcafb…`): **28** Flash-family modules
 Removal was done by a deterministic transform, not by hand: 54 import sites in 28 files redirected to one generated placeholder, 5 files patched (registries, `AttentionConfig`, CUDA selector message, `vllm/__init__`), 2 files added (`t4_backend_policy.py`, `t4_prohibited_stubs.py`). Verified: independent byte-equality re-derivation (`verify_build3_wheel.py`), 1,783-module import sweep — **0 regressions**, auto-selection on SM7.5 → `[TRITON_ATTN, FLEX_ATTENTION]` with `FLASH_ATTN`/`FLASHINFER` refused by name. **Not** verified until Kaggle: the same on the GPU, and any model family whose module imported a removed backend (they now fail with an explicit `ProhibitedBackendError`; `check_model` reports them).
 
 ## 4. Tests (exact)
-`CUDA_VISIBLE_DEVICES= python3.13 -m pytest tests -q -rs` — see `STOKASTISK_0.1.0_BUILD3_FINAL_REPORT.md` for the final counts. CPU only; the local GeForce 940M was hidden and never used. Mocks do not establish GPU behaviour: ReplicaPool failure recovery, structured generation, serving and Flash-free runtime behaviour are **Verification pending**.
+`CUDA_VISIBLE_DEVICES= python3.13 -m pytest tests -q -rs` — see `RELEASE.md` for the final counts. CPU only; the local GeForce 940M was hidden and never used. Mocks do not establish GPU behaviour: ReplicaPool failure recovery, structured generation, serving and Flash-free runtime behaviour are **Verification pending**.
 
 ## 5. What was deliberately not done
 * No metadata patching; no downgrade of Transformers; no change to torch/Triton/CUDA/NCCL; no `--no-deps` removal; no weakening of any check; the version stays 0.1.0; builds 1/2 and the `v0.1.0` tag are untouched.
 * Observability (OpenTelemetry exporters) is **Unsupported** on this image (protobuf 7.x vs `protobuf<7`) rather than forced.
+
+## 6. Findings from the first Kaggle runs of build 3 (2026-11-13, 2 × T4)
+| Run | Result | Cause | Fix |
+|---|---|---|---|
+| Owner's run | installer 31/32 PASS, rest NOT_RUN | the installer imported `lmformatenforcer.integrations.vllm`; lm-format-enforcer 0.11.3's adapter needs `vllm.transformers_utils.tokenizer.MistralTokenizer`, absent in vLLM 0.25.1. Only the unused lm-format-enforcer *backend* needs it (xgrammar is pinned) | import removed from the installer list; documented |
+| Maintainer run 1 | input not found | `find_candidates` stopped at depth 4; Kaggle mounts at `/kaggle/input/datasets/<user>/<slug>/<release>/manifests/…` (depth 5) | depth 8 + regression test with the real layout; the error now lists what is mounted |
+| Maintainer run 2 | installer 32/32, **static 79/79**, engine and server ERROR | `kernel_warmup()` calls `flashinfer_sparse_mla_decode_autotune_warmup()` and `deepseek_v4_sparse_mla_attention_warmup()` for every model; my placeholders raised instead of doing nothing | `*_warmup` placeholders are no‑ops; regression test pins the unconditional calls in `kernel_warmup()` |
+| (same run) | stale scripts mounted | Kaggle served the previous dataset version though `datasets status` said ready | standalone notebook pins the bundle's `SHA256SUMS` hash; the runner waits for the new files |
+Mistral: `mistral_common` and `ijson` removed from every profile; `check_model` refuses Mistral‑family architectures.
+Lesson recorded: a CPU import sweep cannot prove call‑time behaviour of placeholders — only the GPU run can; the GPU stages for the final wheel remain **Verification pending** (owner to run).

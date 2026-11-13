@@ -4,7 +4,7 @@ from _common import run_guarded
 
 if __name__ == "__main__":
     import multiprocessing; multiprocessing.freeze_support()
-    if len(sys.argv) < 2 or sys.argv[1] not in ("static", "engine", "server", "summary"):
+    if len(sys.argv) < 2 or sys.argv[1] not in ("static", "engine", "parallel", "server", "summary"):
         raise SystemExit(__doc__)
     mode = sys.argv[1]
     mod = __import__(f"candidate_15_{mode}")

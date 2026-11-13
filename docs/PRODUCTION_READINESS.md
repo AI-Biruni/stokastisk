@@ -1,6 +1,6 @@
 # Stokastisk 0.1.0 build 3 — production readiness
 
-**Verdict: NOT production-verified. Ready for final Kaggle verification (Gate E).** Gates A–D below are met locally; Gate E needs the owner's run of notebook 15.
+**Verdict: NOT yet production-verified. Ready for the owner's final Kaggle run (Gate E).** Gates A–D are met locally; the first GPU runs found and fixed three defects (see `docs/REMEDIATION.md` §6); the corrected wheel has not been re-run on a GPU.
 
 | Gate | State | Basis |
 |---|---|---|
@@ -17,11 +17,12 @@
 | Structured output (xgrammar 0.2.3, pinned) | Implemented, CPU-tested (vLLM's `XgrammarBackend` on CPU); **Verification pending** (build 2 failed on the missing package) |
 | OpenAI server, streaming, metrics, restart, startup-failure report | Implemented, CPU-tested against fake servers; **Verification pending** (build 2 failed on the missing package) |
 | Flash-free tree | Implemented, independently verified, CPU import sweep; GPU run **pending** |
-| TP=2, PP=2, ReplicaPool | Kaggle-tested on the legacy bundle (notebooks 13, 14); not re-run on build 3; PP/replica **Experimental**; slower than TP=1 for models that fit one T4 |
+| TP=2, PP=2, ReplicaPool | Implemented; the `parallel` GPU stage is part of notebook 15 — **Verification pending**; PP/replica **Experimental**; slower than TP=1 for models that fit one T4 |
 | ReplicaPool worker-failure recovery | CPU-tested with fake workers only — **not** a GPU claim |
 | Observability (OpenTelemetry exporters) | **Unsupported** on this Kaggle image |
 | Direct `vllm.LLM` / `vllm serve` | **Unsupported** entry point (cannot select Flash; not verified as supported) |
-| `models` profile (quantisation, Mistral tokenizers) | Implemented as an optional lock; not exercised |
+| `models` profile (compressed-tensors, depyf, setproctitle) | Implemented as an optional lock; not exercised |
+| Mistral-family models | **Unsupported**: `mistral_common` removed from every profile, `check_model` refuses them |
 | L4/SM89, bf16 | **Unsupported** |
 
 ## Remaining limitations / risks

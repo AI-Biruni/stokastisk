@@ -1,25 +1,11 @@
 # Changelog
 
-Project version is permanently **0.1.0** (VERSION_POLICY.md). Entries are distinguished by date and build tag, never by version.
+Project version is permanently **0.1.0** (VERSION_POLICY.md). Entries are distinguished by date and wheel build tag, never by version.
 
-## 2026-11-13 — integrated wheel, build tag 3 (Kaggle verification pending)
-* **Why:** build 2 failed Kaggle notebook 15 — structured output (`No module named 'lmformatenforcer'`), HTTP serving (`No module named 'model_hosting_container_standards'`), a package-inventory comparison that used two different name normalisers, Flash `.pyc`/source files in the vLLM tree, and an input-discovery defect that silently downloaded build 2 instead of the uploaded wheel. Evidence preserved: `evidence/kaggle/build-2-failed-notebook-15/`.
-* **Wheel:** `stokastisk-0.1.0-3-cp313-cp313-linux_x86_64.whl`. vLLM tree = the byte-pinned vLLM wheel through `scripts/release/t4_flash_free.py`: 28 Flash-family modules removed, imports redirected to one explicit placeholder, backend registries/`AttentionConfig` refuse Flash backends, import guard for `flashinfer`/`flash_attn`/`flash_mla`; native objects byte-identical. Reproducible build (two builds → identical bytes).
-* **Dependencies:** complete hash-pinned locks (`core`, `structured-output`, `serving`, optional `models`) resolved against the real Kaggle inventory; xgrammar **0.2.3** (metadata-compatible with transformers 5.x and apache-tvm-ffi 0.1.9 — no patched distribution); `pip check` must show no new line; observability extras unsupported (protobuf conflict).
-* **SDK:** structured-output backend pinned to xgrammar (`StokastiskConfig.structured_output_backend`, no `auto` fallback) + `LLM.generate_structured` + `stokastisk.structured.validate_json_output`; `LLM` lifecycle (`EngineClosedError`, `EngineTimeoutError`, `EngineCloseError`, serialised calls, `timeout=`); `serving` (persistent log, `ServerStartupError` with exit code/command/log/excerpt, validation, port check, process-group cleanup, restart, typed HTTP errors, truncated-stream detection); `ReplicaPool` (unique batch ids, close problems reported, kill escalation); strict config types (bool is not an int); no silent `except: pass`.
-* **Kaggle framework:** single inventory implementation; status vocabulary `PASS FAIL ERROR WARNING SKIPPED NOT_RUN` (only PASS passes); bundle discovery/verification embedded in the notebook; no HF fallback unless `STOKASTISK_ALLOW_HF_FALLBACK=1`; acceptance ZIP always written; notebook fails unless every stage is PASS.
-* Builds 1 and 2 and the legacy release are untouched.
-
-## 2026-11-12 — integrated wheel, build tag 2 (Kaggle verification pending)
-* New canonical distribution: `stokastisk-0.1.0-2-cp313-cp313-linux_x86_64.whl` = SDK + bundled vLLM 0.25.1 (byte-identical to the verified vLLM wheel) + CUDA 13.0 `sm_75` objects; installer `02_install_integrated.py`; release `stokastisk-0.1.0-integrated-kaggle-t4-sm75`.
-* SDK: `stokastisk.compat`, `stokastisk.serving`, `LLM.chat`, explicit bfloat16 pre-check packaged; `LLM` closed-state/idempotent close/context manager/input validation; `ReplicaPool` input validation, serialised `generate`, queue cleanup; stricter `StokastiskConfig` validation; worker close errors reported.
-* Dependency finding documented: xgrammar 0.2.5.post1 metadata (`transformers<5`) vs transformers 5.x — `docs/DEPENDENCY_COMPATIBILITY.md`; core pins now hash-verified.
-* Evidence: notebooks 13 and 14 re-run on the released legacy bundle (SDK wheel 29edaa55…) — PASS; preserved under `evidence/kaggle-legacy-two-wheel/`. Notebook 15 (integrated wheel) added, unexecuted.
-* Kaggle stage framework: a stage with no PASS check now fails.
-* Build-tag-1 candidate (`sdk-candidate-0.1.0-build1`) superseded, kept.
-
-## 2026-11-12 — build-tag-1 candidate
-* First integrated wheel (unexecuted), GitHub pre-release `sdk-candidate-0.1.0-build1`, Hub `sdk-candidate/stokastisk-0.1.0-build1/`.
-
-## 2026-11-08 … 2026-11-12 — legacy two-wheel release `stokastisk-0.1.0-kaggle-t4-sm75`
-* Kaggle-verified on 2 × Tesla T4 (notebooks 01–14). See RELEASE.md.
+## 2026-11-13 — build tag 3 (the only distribution; GPU stages: verification pending)
+* **Wheel:** `stokastisk-0.1.0-3-cp313-cp313-linux_x86_64.whl` = SDK + the byte‑pinned vLLM 0.25.1 tree passed through `scripts/release/t4_flash_free.py` (28 Flash‑family modules removed, one explicit placeholder module, guarded backend registries and `AttentionConfig`, import guard for `flashinfer`/`flash_attn`/`flash_mla`; native objects byte‑identical). Reproducible.
+* **Dependencies:** complete hash‑pinned locks (`core`, `structured-output`, `serving`, optional `models`) resolved against Kaggle's real inventory, 0 conflicts; xgrammar **0.2.3** (no `transformers<5` cap, tvm‑ffi `>=0.1.9`; nothing patched); `pip check` must show no new line. **Removed:** `mistral_common`, `ijson` — Mistral‑family models are unsupported and `check_model` refuses them. Observability (OpenTelemetry exporters) unsupported (Kaggle protobuf 7.x).
+* **SDK:** pinned xgrammar structured output (`generate_structured`, `validate_json_output`); `LLM` timeouts / serialised calls / reported close failures; `serving` with persistent log and `ServerStartupError`; `ReplicaPool` unique batch ids and reported close problems; strict config types; no silent `except: pass`.
+* **Kaggle framework:** bundle discovery + verification embedded in notebook cell 1 (depth‑8 search of the real `/kaggle/input/datasets/…` layout, pinned `SHA256SUMS`), no silent download fallback, one inventory implementation, status vocabulary `PASS FAIL ERROR WARNING SKIPPED NOT_RUN` (only PASS passes), stages `static`, `engine`, `parallel`, `server`, `summary`, acceptance ZIP always written.
+* **Fixes from the first Kaggle runs:** installer no longer imports `lmformatenforcer.integrations.vllm` (its adapter needs a vLLM API that 0.25.1 lacks; unused with xgrammar); warm‑up placeholders are no‑ops (a raising placeholder in vLLM's unconditional `kernel_warmup()` stopped the engine); `port_is_free` honours `SO_REUSEADDR`; `ServerProcess` restores SIGINT in the child.
+* **Why a rebuild:** the earlier integrated builds 1 and 2 failed or were never run: build 2 failed Kaggle notebook 15 (missing `lmformatenforcer`, missing server packages, an inventory comparison with two name normalisers, Flash `.pyc` files) and the notebook had silently downloaded build 2 instead of the uploaded wheel. Both builds, the legacy two‑wheel release and their evidence were removed from the repository and the Hub/GitHub releases when the project was reduced to this single distribution.

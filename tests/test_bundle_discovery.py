@@ -45,6 +45,14 @@ class Discovery(unittest.TestCase):
         p = self.locate(); self.assertEqual(p["source"], "attached-zip"); self.assertEqual(p["wheel"], WHEEL); self.assertEqual(p["wheel_sha256"], sha(b"WHEEL-BYTES"))
         self.assertEqual(p["bundle_zip_sha256"], sha((ds / "bundle.zip").read_bytes())); self.assertTrue((pathlib.Path(p["release_root"]) / "wheels" / WHEEL).is_file())
 
+    def test_the_real_kaggle_mount_layout_is_found(self):
+        """Kaggle mounts a dataset at /kaggle/input/datasets/<user>/<slug>/<release>/manifests/... (5 levels below /kaggle/input): a depth limit of 4 found nothing."""
+        make_release(self.inp / "datasets" / "waqasm86" / "stokastisk-0-1-0-build3-t4-sm75-kaggle-input" / "stokastisk-0.1.0-build3-kaggle-t4-sm75")
+        p = self.locate(); self.assertEqual(p["source"], "attached-directory"); self.assertEqual(p["wheel"], WHEEL)
+        z = self.td / "z"; z.mkdir(); zip_dir(make_release(self.td / "rel2"), z / "bundle.zip")
+        deep = self.inp.parent / "input2" / "datasets" / "waqasm86" / "slug"; deep.mkdir(parents=True); (deep / "bundle.zip").write_bytes((z / "bundle.zip").read_bytes())
+        self.assertEqual(len(b.find_candidates(self.inp.parent / "input2")["zips"]), 1)
+
     def test_already_extracted_directory_is_found(self):
         make_release(self.inp / "ds" / "stokastisk-0.1.0-build3-kaggle-t4-sm75")
         self.assertEqual(self.locate()["source"], "attached-directory")
@@ -115,6 +123,12 @@ class Verification(unittest.TestCase):
     def test_wheel_sha_compiled_into_the_notebook(self):
         r = make_release(self.td / "r"); self.verify(r, expected_wheel_sha256=sha(b"WHEEL-BYTES"))
         with self.assertRaises(b.BundleError): self.verify(r, expected_wheel_sha256="1" * 64)
+
+    def test_a_stale_or_different_bundle_is_rejected_by_the_pinned_sums_hash(self):
+        r = make_release(self.td / "r"); good = sha((r / "manifests/SHA256SUMS").read_bytes())
+        self.verify(r, expected_sums_sha256=good)
+        with self.assertRaises(b.BundleError) as c: self.verify(r, expected_sums_sha256="2" * 64)
+        self.assertIn("stale", str(c.exception))
 
     def test_wrong_build_is_refused(self):
         with self.assertRaises(b.BundleError) as c: self.verify(make_release(self.td / "r", build="2"))

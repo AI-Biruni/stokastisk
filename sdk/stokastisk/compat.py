@@ -9,7 +9,6 @@ needs the network, so it can run (and be unit-tested) anywhere. It never claims 
             implemented-cpu-tested (build 3: implemented and unit-tested on CPU; Kaggle verification pending) | implemented-not-executed
 
 ``check_*`` functions raise :class:`StokastiskCompatibilityError` with the reason when something cannot work on SM75, so the user never meets an obscure ImportError.
-The matrix is the machine-readable twin of ``docs/VLLM_T4_COVERAGE.md``.
 """
 from __future__ import annotations
 
@@ -86,6 +85,9 @@ QUANT_MIN_CAPABILITY: dict[str, tuple[int, str]] = {
     "torchao": (75, "torchao.py"), "humming": (75, "humming.py"), "fp8": (75, "fp8.py"),
     "experts_int8": (80, "experts_int8.py"), "fbgemm_fp8": (80, "fbgemm_fp8.py"), "mxfp4": (80, "mxfp4.py"), "fp_quant": (100, "fp_quant.py"),
 }
+# Mistral-family checkpoints are NOT supported on this build: they use the mistral_common tokenizer/loader (removed from every dependency profile), are published in bfloat16, and the
+# Pixtral/Voxtral/Mistral3 variants add vision/audio towers; none of them was ever run on the T4s. Refused up front instead of failing late with an ImportError.
+UNSUPPORTED_ARCHITECTURE_MARKERS = ("Mistral", "Ministral", "Pixtral", "Voxtral", "Mixtral")
 # Verified on Kaggle: only dense Qwen2 (Qwen2.5-0.5B/1.5B-Instruct).
 KAGGLE_VERIFIED_ARCHITECTURES = {"Qwen2ForCausalLM"}
 
@@ -242,6 +244,9 @@ def check_model(model: str | None = None, *, architectures: Iterable[str] | None
     registry = read_registry(package_root)
     worst = "SUPPORTED"
     for a in archs:
+        if any(m in a for m in UNSUPPORTED_ARCHITECTURE_MARKERS):
+            raise StokastiskCompatibilityError(f"{a}: Mistral-family models are not supported on the Tesla T4 / SM75 / TRITON_ATTN build (mistral_common is not part of the supported dependency set; "
+                                               "no Mistral-family model was ever run on the T4s). Use a dense Qwen2-family model.")
         if a not in registry:
             report["architectures"].append({"architecture": a, "status": "UNKNOWN_REQUIRES_EVIDENCE", "evidence": "static",
                                             "note": "not in the vLLM 0.25.1 registry; vLLM may fall back to its Transformers backend, which was not run on Kaggle"})
@@ -271,5 +276,5 @@ def check_model(model: str | None = None, *, architectures: Iterable[str] | None
     return report
 
 
-__all__ = ["FEATURES", "BLOCKING", "STUB_MODULE", "uses_removed_backend", "QUANT_MIN_CAPABILITY", "KAGGLE_VERIFIED_ARCHITECTURES", "feature_matrix", "get_feature", "check_feature", "check_dtype", "check_quantization",
+__all__ = ["FEATURES", "BLOCKING", "UNSUPPORTED_ARCHITECTURE_MARKERS", "STUB_MODULE", "uses_removed_backend", "QUANT_MIN_CAPABILITY", "KAGGLE_VERIFIED_ARCHITECTURES", "feature_matrix", "get_feature", "check_feature", "check_dtype", "check_quantization",
            "read_registry", "find_missing_imports", "check_model"]

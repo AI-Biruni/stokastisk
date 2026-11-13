@@ -2,7 +2,7 @@
 import ast, hashlib, json, os, pathlib, subprocess, sys, tempfile, textwrap, unittest, zipfile
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "sdk")); sys.path.insert(0, str(ROOT / "scripts/release"))
-PIN = ROOT / "dist-rc/stokastisk-0.1.0-kaggle-t4-sm75/wheels/vllm-0.25.1-cp38-abi3-linux_x86_64.whl"
+PIN = ROOT / "inputs/vllm-0.25.1-cp38-abi3-linux_x86_64.whl"
 PIN_SHA = "cc3bcafb6516791990ca302073ae153a08465d3df1e460d666e3ec09b4e98f5e"
 import t4_flash_free as t
 from stokastisk import prohibited
@@ -58,6 +58,15 @@ class Transform(unittest.TestCase):
         self.assertIn("validate_backend_not_prohibited", self.out["vllm/config/attention.py"].decode())
         self.assertIn("import vllm.t4_backend_policy", self.out["vllm/__init__.py"].decode())
         self.assertIn('f"{type(e).__name__}: {e}"', self.out["vllm/platforms/cuda.py"].decode())
+
+    def test_default_path_warmup_placeholders_are_noops_not_errors(self):
+        """Kaggle run 2: kernel_warmup() calls these for EVERY model; a raising placeholder made the engine fail to start."""
+        tr = ast.parse(self.out["vllm/model_executor/warmup/kernel_warmup.py"].decode()); fn = next(n for n in tr.body if isinstance(n, ast.FunctionDef) and n.name == "kernel_warmup")
+        called = {s.value.func.id for s in fn.body if isinstance(s, ast.Expr) and isinstance(s.value, ast.Call) and isinstance(s.value.func, ast.Name)}     # unconditional top-level calls
+        stubs = {n for n in called if n in self.rep["stub_entries"]}
+        self.assertIn("flashinfer_sparse_mla_decode_autotune_warmup", stubs); self.assertIn("deepseek_v4_sparse_mla_attention_warmup", stubs)
+        for n in stubs: self.assertEqual(self.rep["stub_entries"][n], "none", f"{n} is called unconditionally by kernel_warmup() and must be a no-op")
+        stub_src = self.out[t.STUB_PATH].decode(); self.assertIn("none_function('flashinfer_sparse_mla_decode_autotune_warmup')", stub_src)
 
     def test_anchor_mismatch_fails_the_build(self):
         broken = dict(self.src); broken["vllm/config/attention.py"] = self.src["vllm/config/attention.py"].replace(b'@field_validator("mla_prefill_backend", mode="before")', b"# gone")

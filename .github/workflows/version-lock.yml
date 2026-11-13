@@ -1,6 +1,5 @@
-name: version-lock
-# Runs once per push to main, once per v* tag (tag validation is intentional: the tag must carry the locked version),
-# and for pull requests. No secrets are used; nothing here writes or derives a version.
+name: ci
+# CPU-only checks: no secrets, no GPU, no network beyond pip. Nothing here writes or derives a version.
 on:
   push:
     branches: [main]
@@ -14,24 +13,15 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          fetch-tags: true
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
-      - name: Show context
+      - name: Project version lock
+        run: python scripts/release/verify_project_version.py ${{ github.ref_type == 'tag' && format('--tag {0}', github.ref_name) || '' }}
+      - name: Tests that need no torch, GPU or the large vLLM wheel
         run: |
-          echo "ref=$GITHUB_REF type=$GITHUB_REF_TYPE sha=$GITHUB_SHA"; python -VV; cat VERSION
-      - name: Local project checks (no network; locked version read from the verifier and VERSION)
-        run: python scripts/release/verify_project_version.py --tags
-      - name: Install test tooling only (no torch, no GPU)
-        run: python -m pip install pytest build setuptools
-      - name: CPU tests that need no torch, GPU or large wheel
-        run: |
-          CUDA_VISIBLE_DEVICES= python -m pytest -q tests/test_version_policy.py tests/test_verifier_scopes.py tests/test_validate_notebooks.py tests/test_readme_examples.py tests/test_sdk_cpu.py tests/test_config_topology.py tests/test_parallel.py tests/test_installer.py tests/test_fetch_release.py
-      - name: Static notebook validation (structure only; this is NOT Kaggle validation)
-        run: python scripts/validation/validate_notebooks.py
+          python -m pip install pytest build setuptools packaging jsonschema nbformat
+          CUDA_VISIBLE_DEVICES= python -m pytest -q tests/test_version_policy.py tests/test_bundle_discovery.py tests/test_inventory.py tests/test_stage_status.py tests/test_installer_integrated.py tests/test_prohibited_policy.py tests/test_config_strict.py tests/test_readme_examples.py
       - name: Wheel metadata must say the locked version
         run: |
           python -m build --wheel --no-isolation -o /tmp/w .

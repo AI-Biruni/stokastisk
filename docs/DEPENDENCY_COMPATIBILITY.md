@@ -3,7 +3,7 @@
 Status labels used here: **Implemented**, **CPU-tested**, **Kaggle-tested**, **Verification pending**, **Unsupported**. Nothing in this page is *Kaggle-tested for build 3* until the owner has run
 notebook 15 (`docs/KAGGLE_BUILD3_VERIFICATION.md`). Build 2's Kaggle run is cited only as the evidence of what failed.
 
-## 1. What failed in build 2 (executed notebook 15, evidence `evidence/kaggle/build-2-failed-notebook-15/`)
+## 1. What failed in build 2 (the owner's executed notebook 15; the raw outputs were removed from the repository when it was slimmed down — the findings are recorded here and in `docs/REMEDIATION.md`)
 | # | Failure | Root cause (verified) | Build-3 fix |
 |---|---|---|---|
 | 1 | `engine`: `No module named 'lmformatenforcer'` | `vllm/v1/structured_output/backend_lm_format_enforcer.py` has no `from __future__ import annotations`; its dataclass annotation `lmformatenforcer.TokenEnforcer` is evaluated at import time, and `SamplingParams._validate_structured_outputs` imports that module **before looking at the backend** → every structured-output request, even with `backend="xgrammar"`, needs `lmformatenforcer`. Upstream lists `lm-format-enforcer`, `outlines_core`, `diskcache` as hard requirements; build 2 had demoted them to a `models` extra and the installer never installed them. | `requirements/structured-output.lock` (lm-format-enforcer 0.11.3, outlines_core 0.2.14, diskcache 5.6.3, interegular 0.3.3), installed by default and declared as hard `Requires-Dist`. Backend **pinned** to xgrammar. |
@@ -24,11 +24,11 @@ compatible wheel of the chosen version. Audit trail: `requirements/closure/*.clo
 | `core` | yes | apache-tvm-ffi 0.1.9, cbor2 6.2.0.post2, llguidance 1.7.6, msgspec 0.22.0, openai-harmony 0.0.8, partial-json-parser 0.2.1.1.post7, pybase64 1.5.1, xgrammar 0.2.3 |
 | `structured-output` | yes | diskcache 5.6.3, interegular 0.3.3, lm-format-enforcer 0.11.3, outlines-core 0.2.14 |
 | `serving` | yes | fastapi-cli 0.0.33, model-hosting-container-standards 0.1.16, prometheus-fastapi-instrumentator 8.1.0, pydantic-settings 2.16.2, rich-toolkit 0.20.6, sse-starlette 3.7.0, supervisor 4.3.0 |
-| `models` | **no** (`--with-models`) | astor, compressed-tensors 0.17.0, depyf 0.20.0, ijson, loguru, mistral-common 1.13.1, pycountry, pydantic-extra-types, setproctitle |
+| `models` | **no** (`--with-models`) | astor, compressed-tensors 0.17.0, depyf 0.20.0, loguru, setproctitle. `mistral_common` and `ijson` (Mistral tool parser) are deliberately **not** included — Mistral-family models are unsupported on this build |
 | observability | **Unsupported** | `opentelemetry-exporter-otlp` needs `protobuf<7`; Kaggle has protobuf 7.36.2 (protected). The resolver reports the conflict; it is not hidden. vLLM treats the exporters as optional. |
 
 Why `models` is optional: a full-tree import sweep (1,781 modules) with and without those packages shows that **no** module on the `vllm.LLM`, `vllm serve`, Qwen2, Triton-attention or structured-output
-paths needs them; 49 off-path modules (quantisation, Mistral tokenizers) do. They stay a documented opt-in.
+paths needs them; off-path modules (quantisation; Mistral/Pixtral/Voxtral tokenizers and models) do. They stay a documented opt-in.
 
 ## 3. xgrammar / transformers / apache-tvm-ffi — resolved without patching metadata
 PyPI metadata (queried 2026-11-13):

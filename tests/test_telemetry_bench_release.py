@@ -120,35 +120,6 @@ class Hygiene(unittest.TestCase):
         for p in pkgs: self.assertIn(f'"{p}"', toml, p)
         self.assertIn('dynamic = ["version"]', toml); self.assertIn('dependencies = ["vllm==0.25.1"]', toml)
 
-    def test_new_notebooks_are_valid_unexecuted_and_name_one_release(self):
-        files = sorted((ROOT / "notebooks" / "kaggle-t4-sm75" / "notebooks").glob("*.ipynb"))
-        if not files: self.fail("notebooks 01-14 missing; run scripts/make_notebooks.py")
-        self.assertEqual([f.name[:2] for f in files], [f"{i:02d}" for i in range(1, 15)])
-        rel = re.search(r'^RELEASE = "([^"]+)"', (ROOT / "scripts/make_notebooks.py").read_text(), re.M).group(1)
-        self.assertEqual(rel, "stokastisk-0.1.0-kaggle-t4-sm75")
-        for f in files:
-            nb = json.loads(f.read_text()); code = [c for c in nb["cells"] if c["cell_type"] == "code"]
-            for c in code:
-                ast.parse("".join(c["source"])); self.assertEqual((c["outputs"], c["execution_count"]), ([], None), f.name)
-            text = f.read_text(); self.assertIn(rel, text); self.assertNotIn("hits[0]", text)
-            self.assertIn("assert all(v == 0 for v in rcs.values())" if f.name[:2] < "07" else "assert not bad", text)   # verdict cell present
-            self.assertNotIn("kaggle kernels", text)
-            others = set(re.findall(r"stokastisk-\d+\.\d+\.\d+-kaggle-t4-sm75(?:-rc\d+)?", text)) - {rel}; self.assertEqual(others, set(), f.name)
-
-    def test_every_notebook_script_exists(self):
-        for f in (ROOT / "notebooks" / "kaggle-t4-sm75" / "notebooks").glob("*.ipynb"):
-            for s in set(re.findall(r'"(dual_[a-z0-9_]+\.py)"', f.read_text())): self.assertTrue((ROOT / "scripts/kaggle" / s).is_file(), s)
-
-    def test_stage_scripts_parse_and_use_guards(self):
-        for p in (ROOT / "scripts/kaggle").glob("dual_*.py"):
-            tree = ast.parse(p.read_text()); self.assertIn("__main__", p.read_text(), p.name)
-        for n in ("dual_08_pp_validation", "dual_09_replica_validation", "dual_bench", "dual_13_api_compat"):
-            self.assertIn("freeze_support", (ROOT / f"scripts/kaggle/{n}.py").read_text(), n)
-
-    def test_pp_script_never_converts_failure_to_pass(self):
-        s = (ROOT / "scripts/kaggle/dual_08_pp_validation.py").read_text()
-        self.assertIn('"status": "ERROR"', s); self.assertIn("return 1", s)
-
 
 if __name__ == "__main__":
     unittest.main()

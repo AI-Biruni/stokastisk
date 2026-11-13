@@ -16,6 +16,7 @@
 | static | `candidate_15_static.py` | inventory identical live vs installer (PEP 503, dotted names present), configuration/compat/serving-command validation, backend registry + SM7.5 auto-selection, Flash guard, dependency-lock completeness, CPU structured-output stack |
 | engine | `candidate_15_engine.py` | FP16 `generate/chat/complete`, determinism, invalid-input rejection, **structured output with the pinned xgrammar backend** (schema-valid, invalid detected, unsupported schema *rejected* — no hidden fallback), serialisation + timeout, `TRITON_ATTN` in config **and** Triton cache, no Flash library mapped, close/cleanup, upstream `vllm.LLM` never selects Flash |
 | server | `candidate_15_server.py` | `vllm serve` start/ready, `/v1/models`, chat, **streaming**, HTTP errors, structured output over HTTP, metrics, startup-failure report (exit code, command, log, excerpt), port collision, restart, graceful shutdown, no surviving process, GPU memory released |
+| parallel | `candidate_15_parallel.py` | TP=2, PP=2 (experimental) and `ReplicaPool` on build 3: real generation, both GPUs engaged, `TRITON_ATTN`, no Flash library, clean shutdown and GPU memory released; topology + recommender last |
 | summary | `candidate_15_summary.py` | all stages and the installer describe the **same wheel SHA256** and runtime; a missing report is `NOT_RUN`; only `PASS` passes |
 
 The acceptance archive `/kaggle/working/15-stokastisk-build3-acceptance.zip` is created **even if a stage fails**; the last cell then fails the notebook unless every stage is `PASS`.
@@ -27,4 +28,4 @@ Send back: the executed notebook (`.ipynb` with outputs) and `15-stokastisk-buil
 `PASS`, `FAIL`, `ERROR` (the check itself crashed), `WARNING` (a documented limitation — not a pass), `SKIPPED` (not performed — not a pass), `NOT_RUN` (no evidence — not a pass).
 
 ## What this does not cover (remaining limitations)
-Tensor/pipeline-parallel and ReplicaPool GPU behaviour on build 3 are not re-run by notebook 15 (they were verified on the legacy two-wheel bundle, notebooks 01–14); `ReplicaPool` failure recovery is CPU-tested with fake workers only. Models other than Qwen2.5-0.5B-Instruct, quantisation, LoRA, multimodal, CUDA graphs and speculative decoding are unverified. See `STOKASTISK_0.1.0_BUILD3_PRODUCTION_READINESS.md`.
+`ReplicaPool` *failure recovery* is CPU-tested with fake workers only (the `parallel` stage covers the healthy path). Models other than Qwen2.5-0.5B-Instruct, quantisation, LoRA, multimodal, CUDA graphs and speculative decoding are unverified. See `docs/PRODUCTION_READINESS.md`.

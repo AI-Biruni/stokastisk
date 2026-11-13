@@ -51,3 +51,7 @@ stokastisk-analysis
 
 # local pre-repair backups
 backups/
+
+# local build outputs and private inputs
+dist/
+inputs/

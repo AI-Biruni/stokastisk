@@ -142,7 +142,7 @@ def read_sums(root: pathlib.Path) -> dict[str, str]:
     return sums
 
 
-def verify_release(root, *, expected_wheel_name: str, expected_wheel_sha256: str | None = None, expected_version: str = "0.1.0", expected_build: str = "3") -> dict:
+def verify_release(root, *, expected_wheel_name: str, expected_wheel_sha256: str | None = None, expected_sums_sha256: str | None = None, expected_version: str = "0.1.0", expected_build: str = "3") -> dict:
     """Verify an extracted (or pre-extracted) release directory completely. Returns the provenance record. Raises BundleError on any mismatch."""
     root = pathlib.Path(root)
     for need in ("manifests/RELEASE-MANIFEST.json", "manifests/SHA256SUMS"):
@@ -156,6 +156,9 @@ def verify_release(root, *, expected_wheel_name: str, expected_wheel_sha256: str
         raise BundleError(f"wheel build tag {w.get('build_tag')!r} != expected build {expected_build!r} (this notebook verifies build {expected_build} only)")
     if w.get("filename") != expected_wheel_name:
         raise BundleError(f"manifest wheel {w.get('filename')!r} != expected {expected_wheel_name!r}")
+    if expected_sums_sha256 and sha256_file(root / "manifests" / "SHA256SUMS") != expected_sums_sha256.lower():
+        raise BundleError(f"manifests/SHA256SUMS hash {sha256_file(root / 'manifests' / 'SHA256SUMS')} != the bundle this notebook was generated for ({expected_sums_sha256}): "
+                          "the attached input is a different (stale or newer) bundle - re-attach the matching dataset version")
     sums = read_sums(root)
     on_disk = sorted(p.relative_to(root).as_posix() for p in root.rglob("*") if p.is_file() and p.relative_to(root).as_posix() != "manifests/SHA256SUMS")
     unlisted = sorted(set(on_disk) - set(sums))
@@ -182,7 +185,7 @@ def verify_release(root, *, expected_wheel_name: str, expected_wheel_sha256: str
 
 
 # ------------------------------------------------------------------------------------------------------------------------------------------------ discovery
-def find_candidates(input_root="/kaggle/input", max_depth: int = 4) -> dict[str, list[pathlib.Path]]:
+def find_candidates(input_root="/kaggle/input", max_depth: int = 8) -> dict[str, list[pathlib.Path]]:
     """Everything under ``input_root`` that could be the bundle: ``zips`` (any .zip), ``dirs`` (directories holding manifests/RELEASE-MANIFEST.json), ``wheels`` (loose .whl)."""
     base = pathlib.Path(input_root)
     out: dict[str, list[pathlib.Path]] = {"zips": [], "dirs": [], "wheels": []}
@@ -225,7 +228,7 @@ def download_pinned(url: str, dest, *, expected_sha256: str, expected_size: int)
 
 
 def locate_and_verify(*, input_root="/kaggle/input", work_dir="/kaggle/working/stokastisk-release", expected_wheel_name: str, expected_wheel_sha256: str | None = None,
-                      expected_bundle_zip_sha256: str | None = None, fallback: dict | None = None) -> dict:
+                      expected_bundle_zip_sha256: str | None = None, expected_sums_sha256: str | None = None, fallback: dict | None = None) -> dict:
     """Find the attached bundle, verify everything and return the provenance record (with ``release_root``). Never substitutes a different release silently."""
     c = find_candidates(input_root)
     print(f"attached input under {input_root}: {len(c['zips'])} zip(s), {len(c['dirs'])} extracted release dir(s), {len(c['wheels'])} loose wheel(s)")
@@ -269,11 +272,12 @@ def locate_and_verify(*, input_root="/kaggle/input", work_dir="/kaggle/working/s
             shutil.rmtree(wd)
         root = extract_zip(zp, wd)
     else:
-        why = "; ".join(rejected) or "nothing is attached"
+        seen = sorted(str(q.relative_to(input_root)) for q in pathlib.Path(input_root).glob("*/*") if pathlib.Path(input_root).is_dir())[:20] if pathlib.Path(input_root).is_dir() else ["(input root missing)"]
+        why = "; ".join(rejected) or f"nothing recognisable is attached; top of {input_root}: {seen}"
         loose = f" Loose wheel(s) found: {[x.name for x in c['wheels']]} - a wheel alone is not a release." if c["wheels"] else ""
         raise BundleError(f"no complete Stokastisk release bundle is attached under {input_root} ({why}).{loose} Attach {RELEASE_ROOT_NAME}-kaggle-input.zip as a notebook input. "
                           "No network fallback is used (set STOKASTISK_ALLOW_HF_FALLBACK=1 to opt in to the pinned Hugging Face copy).")
-    prov.update(verify_release(root, expected_wheel_name=expected_wheel_name, expected_wheel_sha256=expected_wheel_sha256))
+    prov.update(verify_release(root, expected_wheel_name=expected_wheel_name, expected_wheel_sha256=expected_wheel_sha256, expected_sums_sha256=expected_sums_sha256))
     prov["finished"] = time.strftime("%FT%T%z")
     print(f"RELEASE  : {RELEASE_ROOT_NAME}   source: {prov['source']}")
     print(f"WHEEL    : {prov['wheel']}   sha256 {prov['wheel_sha256']}   {prov['wheel_size']} bytes")

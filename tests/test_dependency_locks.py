@@ -10,7 +10,7 @@ import import_closure as ic
 R = ROOT / "requirements"
 PROFILES = ("core", "structured-output", "serving", "models")
 BASE = json.loads((R / "kaggle-baseline-2026-11-13.json").read_text())
-PIN = ROOT / "dist-rc/stokastisk-0.1.0-kaggle-t4-sm75/wheels/vllm-0.25.1-cp38-abi3-linux_x86_64.whl"
+PIN = ROOT / "inputs/vllm-0.25.1-cp38-abi3-linux_x86_64.whl"
 
 
 def lock_pins(p):

@@ -39,6 +39,9 @@ STUB_PATH = "vllm/utils/t4_prohibited_stubs.py"
 POLICY_PATH = "vllm/t4_backend_policy.py"
 PREDICATE_PREFIXES = ("has_", "is_", "should_use_", "supports_", "can_use_", "flash_attn_supports_")
 NONE_RETURNING = frozenset({"get_flash_attn_version"})          # "no FlashAttention version available" is None, not False
+# Warm-up hooks are called UNCONDITIONALLY by vllm.model_executor.warmup.kernel_warmup.kernel_warmup() for every model (build 3, Kaggle run 2: the engine failed to start because a
+# raising placeholder was called there). The original modules returned immediately when the backend was not in use; the placeholder therefore does nothing.
+WARMUP_SUFFIX = "_warmup"
 sha = lambda b: hashlib.sha256(b).hexdigest()  # noqa: E731
 
 POLICY_SOURCE = '''\
@@ -191,7 +194,7 @@ def module_name(path: str) -> str:
 
 
 def classify(name: str) -> str:
-    if name in NONE_RETURNING:
+    if name in NONE_RETURNING or name.endswith(WARMUP_SUFFIX):
         return "none"
     if name.startswith(PREDICATE_PREFIXES):
         return "false"

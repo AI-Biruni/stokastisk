@@ -18,8 +18,8 @@ LOCKED: dict[str, tuple[str, ...]] = {
     # `vllm serve`: fastapi_cli (CLI), sse_starlette (streaming), pydantic_settings + model_hosting_container_standards (SageMaker routes, bootstrapped unconditionally
     # by build_app), prometheus_fastapi_instrumentator (/metrics), rich_toolkit (fastapi_cli), supervisor (model_hosting_container_standards)
     "serving": ("fastapi_cli", "sse_starlette", "pydantic_settings", "model_hosting_container_standards", "prometheus_fastapi_instrumentator", "rich_toolkit", "supervisor"),
-    # optional, NOT installed by default (`--with-models`): quantised checkpoints, Mistral tokenizers, torch.compile debugging
-    "models": ("compressed_tensors", "mistral_common", "depyf", "ijson", "setproctitle"),
+    # optional, NOT installed by default (`--with-models`): quantised checkpoints, torch.compile debugging (Mistral-family models are unsupported: mistral_common is not part of any profile)
+    "models": ("compressed_tensors", "depyf", "setproctitle"),
 }
 # provided by the protected Kaggle baseline (never installed by Stokastisk) ----------------------------------------------------------------------------------
 BASELINE: dict[str, tuple[str, ...]] = {
