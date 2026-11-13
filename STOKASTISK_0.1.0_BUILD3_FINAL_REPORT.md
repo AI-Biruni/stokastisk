@@ -50,3 +50,9 @@ Gate E; fastapi 0.141.1 vs upstream's `<0.137` cap (CPU-built app only); xgramma
 3. New Notebook → Import the notebook → Accelerator **GPU T4 × 2**, Internet **ON**, Python 3.13.
 4. Add the dataset as input → **Run All**. Cell 1 must print `RELEASE: stokastisk-0.1.0-build3-kaggle-t4-sm75 source: attached-zip`, the wheel SHA256 `1d43089a…7ad3` and `VERIFIED: 42 files`.
 5. Download `/kaggle/working/15-stokastisk-build3-acceptance.zip` (written even on failure) and save the executed notebook with outputs; send both back. The notebook fails unless every stage is `PASS`.
+
+## Publication (verified by re-downloading the assets)
+* GitHub: `main` fast-forwarded `85e6a08` → `df56240f5ffcd5d19d7af78540a4750896fc6108`; new pre-release `integrated-0.1.0-build3` (tag at the build commit `3a73b364…`) with the wheel, bundle ZIP (+ .sha256), standalone notebook, manifests and audits. `v0.1.0` tag (`b31f1995…`) and its 11 assets, and the `sdk-candidate-0.1.0-build1` pre-release, untouched.
+* Hugging Face: new commit `5690da351874366548405abd8bfd04f7e778fb7e` (previous head `789686488e07…`) adding `releases/stokastisk-0.1.0-build3-kaggle-t4-sm75/…`, reports, docs and the preserved build-2 evidence; the Hub card now states build 3 as pending and build 2 as failed. Build 1/2 files are still present.
+* Re-downloaded wheel and ZIP from both hosts: SHA256 equal to the values above.
+* This publication note was added after the build; the wheel and bundle were not rebuilt.
