@@ -1,0 +1,7 @@
+# OPTIONAL (installer --with-models). Upstream vLLM lists these as hard requirements; the verified Qwen2/Triton/serve import paths do not import them (sweep evidence:
+# docs/DEPENDENCY_COMPATIBILITY.md). Quantised checkpoints, Mistral tokenizers, torch.compile debugging.
+compressed-tensors==0.17.0
+mistral_common[image]==1.13.1
+depyf==0.20.0
+ijson==3.6.0
+setproctitle==1.3.8

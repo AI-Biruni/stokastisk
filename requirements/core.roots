@@ -1,0 +1,9 @@
+# Stokastisk core profile: what `vllm.LLM` (Triton attention, Qwen2 loader, TP 1/2) imports and Kaggle's image does not provide.
+xgrammar==0.2.3                  # 0.2.3 is the newest xgrammar whose metadata is compatible with BOTH transformers 5.x (no <5 cap) and vLLM's apache-tvm-ffi==0.1.9 pin
+apache-tvm-ffi==0.1.9
+llguidance==1.7.6
+cbor2==6.2.0.post2
+msgspec==0.22.0
+openai-harmony==0.0.8
+partial-json-parser==0.2.1.1.post7
+pybase64==1.5.1

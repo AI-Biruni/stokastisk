@@ -1,11 +1,15 @@
 """Local JSON evidence + optional OpenTelemetry spans. All metrics are available as JSON without any network telemetry."""
 from __future__ import annotations
 
+import logging
+
 import json
 import pathlib
 import time
 from contextlib import contextmanager
 from typing import Any
+
+log = logging.getLogger("stokastisk")
 
 
 def write_json(path: str | pathlib.Path, obj: Any) -> pathlib.Path:
@@ -21,7 +25,7 @@ def span(name: str, **attrs: Any):
         from opentelemetry import trace  # type: ignore
         tracer = trace.get_tracer("stokastisk")
     except Exception:  # noqa: BLE001
-        pass
+        log.debug("ignored Exception (best-effort probe)", exc_info=True)
     if tracer is None:
         yield None; return
     with tracer.start_as_current_span(name) as s:
@@ -29,7 +33,7 @@ def span(name: str, **attrs: Any):
             try:
                 s.set_attribute(k, v)
             except Exception:  # noqa: BLE001
-                pass
+                log.debug("ignored Exception (best-effort probe)", exc_info=True)
         yield s
 
 
@@ -47,7 +51,7 @@ def provenance() -> dict[str, Any]:
         import torch
         d["cuda"] = torch.version.cuda; d["nccl_compiled"] = ".".join(map(str, torch.cuda.nccl.version()))
     except Exception:  # noqa: BLE001
-        pass
+        log.debug("ignored Exception (best-effort probe)", exc_info=True)
     try:
         d["git_commit"] = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, timeout=10).stdout.strip() or None
     except Exception:  # noqa: BLE001

@@ -7,6 +7,7 @@ import platform
 import sys
 from typing import Any
 
+from . import prohibited as _prohibited
 from ._version import CUDA_BUILD_TARGET, GPU_COMPUTE_CAPABILITY, VLLM_BASE_VERSION, __version__
 from .errors import EnvironmentValidationError, GPUDiscoveryError
 
@@ -57,34 +58,41 @@ def flash_attn_native_loaded() -> list[str]:
     return [m for m in FLASH_NATIVE_MODULES if m in sys.modules]
 
 
-PROHIBITED_DISTS = ("flash-attn", "flash_attn", "vllm-flash-attn", "flashinfer", "flashinfer-python", "flashinfer-cubin",
-                    "flashinfer-jit-cache")
-PROHIBITED_MODULES = ("flashinfer", "flash_attn", "vllm.vllm_flash_attn")
+PROHIBITED_DISTS = _prohibited.PROHIBITED_DISTS
+PROHIBITED_MODULES = _prohibited.BLOCKED_IMPORT_NAMES
 
 
 def prohibited_report() -> dict[str, Any]:
-    """Detect FlashAttention / FlashInfer distributions, modules and native binaries (expected: all empty)."""
+    """Detect FlashAttention / FlashInfer / FlashMLA distributions, importable modules and shipped files (expected: all empty).
+
+    distributions: installed pip distributions on the prohibited list. modules: top-level Flash packages the import system can still FIND (the vLLM import guard makes
+    ``find_spec`` return None for them, so a non-empty list means the guard is absent or the package was imported first). files: path hits inside the installed ``vllm`` tree
+    by the shared policy (``stokastisk.prohibited``) - source, bytecode and native alike."""
     import importlib.metadata as md
     import importlib.util
     import pathlib
     norm = lambda s: s.replace("_", "-").lower()  # noqa: E731
-    dists = sorted({d.metadata["Name"] for d in md.distributions() if d.metadata["Name"] and norm(d.metadata["Name"]) in {norm(x) for x in PROHIBITED_DISTS}})
+    wanted = {norm(x) for x in PROHIBITED_DISTS}
+    dists = sorted({d.metadata["Name"] for d in md.distributions() if d.metadata["Name"] and norm(d.metadata["Name"]) in wanted})
     mods = []
     for m in PROHIBITED_MODULES:
         try:
             if importlib.util.find_spec(m) is not None:
                 mods.append(m)
         except (ImportError, ValueError):
-            pass
-    bins = []
+            log.debug("ignored (ImportError, ValueError) (best-effort probe)", exc_info=True)
+    files: list[str] = []
+    native: dict[str, list[str]] = {}
     try:
         spec = importlib.util.find_spec("vllm")
         root = pathlib.Path(next(iter(spec.submodule_search_locations))) if spec and spec.submodule_search_locations else None
         if root:
-            bins = sorted(str(p.relative_to(root)) for p in root.rglob("*.so") if any(k in p.name.lower() for k in ("flash", "_fa2", "_fa3", "_fa4")))
+            scan = _prohibited.scan_tree(root)
+            files, native = [f"vllm/{p}" for p in scan["path_hits"]] + [f"vllm/{p}" for p in scan["binding_hits"]], {f"vllm/{k}": v for k, v in scan["native_hits"].items()}
     except Exception:  # noqa: BLE001
-        pass
-    return {"distributions": dists, "modules": mods, "binaries": bins, "clean": not (dists or mods or bins)}
+        log.debug("ignored Exception (best-effort probe)", exc_info=True)
+    return {"distributions": dists, "modules": mods, "files": files, "native_hits": native, "binaries": sorted(native),
+            "clean": not (dists or mods or files or native)}
 
 
 def validate_environment(*, require_gpus: int = 2, strict_torch: bool = True) -> dict[str, Any]:

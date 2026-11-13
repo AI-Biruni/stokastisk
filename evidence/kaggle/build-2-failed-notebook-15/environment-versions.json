@@ -1,0 +1,37 @@
+{
+ "python": "3.13.16",
+ "torch": "2.11.0+cu130",
+ "triton": "3.6.0",
+ "vllm": "0.25.1",
+ "transformers": "5.20.2",
+ "stokastisk": "0.1.0",
+ "torch_cuda": "13.0",
+ "nccl_compiled": "2.28.9",
+ "gpus": [
+  {
+   "name": "Tesla T4",
+   "capability": [
+    7,
+    5
+   ]
+  },
+  {
+   "name": "Tesla T4",
+   "capability": [
+    7,
+    5
+   ]
+  }
+ ],
+ "cuda_toolkit": {
+  "nvcc": "Build cuda_13.0.r13.0/compiler.36424714_0",
+  "nvidia_packages": {
+   "nvidia-cuda-nvcc-cu12": "12.9.86",
+   "nvidia-cuda-runtime": "13.0.96",
+   "nvidia-nccl-cu12": "2.32.3",
+   "nvidia-nccl-cu13": "2.28.9",
+   "nvidia-cuda-runtime-cu12": "12.9.79",
+   "nvidia-cuda-nvcc": "13.0.88"
+  }
+ }
+}

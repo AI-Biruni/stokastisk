@@ -1,0 +1,187 @@
+{
+ "roots": [
+  "fastapi-cli==0.0.33",
+  "sse-starlette==3.7.0",
+  "pydantic-settings==2.16.2",
+  "model-hosting-container-standards==0.1.16",
+  "prometheus-fastapi-instrumentator==8.1.0"
+ ],
+ "new_packages": {
+  "fastapi-cli": {
+   "version": "0.0.33",
+   "required_by": [
+    "root"
+   ],
+   "files": [
+    "fastapi_cli-0.0.33-py3-none-any.whl"
+   ]
+  },
+  "model-hosting-container-standards": {
+   "version": "0.1.16",
+   "required_by": [
+    "root"
+   ],
+   "files": [
+    "model_hosting_container_standards-0.1.16-py3-none-any.whl"
+   ]
+  },
+  "prometheus-fastapi-instrumentator": {
+   "version": "8.1.0",
+   "required_by": [
+    "root"
+   ],
+   "files": [
+    "prometheus_fastapi_instrumentator-8.1.0-py3-none-any.whl"
+   ]
+  },
+  "pydantic-settings": {
+   "version": "2.16.2",
+   "required_by": [
+    "root"
+   ],
+   "files": [
+    "pydantic_settings-2.16.2-py3-none-any.whl"
+   ]
+  },
+  "rich-toolkit": {
+   "version": "0.20.6",
+   "required_by": [
+    "fastapi-cli==0.0.33"
+   ],
+   "files": [
+    "rich_toolkit-0.20.6-py3-none-any.whl"
+   ]
+  },
+  "sse-starlette": {
+   "version": "3.7.0",
+   "required_by": [
+    "root"
+   ],
+   "files": [
+    "sse_starlette-3.7.0-py3-none-any.whl"
+   ]
+  },
+  "supervisor": {
+   "version": "4.3.0",
+   "required_by": [
+    "model-hosting-container-standards==0.1.16"
+   ],
+   "files": [
+    "supervisor-4.3.0-py2.py3-none-any.whl"
+   ]
+  }
+ },
+ "satisfied_by_baseline": {
+  "anyio": {
+   "baseline": "4.15.1",
+   "required_by": [
+    "sse-starlette==3.7.0"
+   ],
+   "spec": ">=4.7.0"
+  },
+  "click": {
+   "baseline": "8.5.0",
+   "required_by": [
+    "rich-toolkit==0.20.6"
+   ],
+   "spec": ">=8.1.7"
+  },
+  "fastapi": {
+   "baseline": "0.141.1",
+   "required_by": [
+    "model-hosting-container-standards==0.1.16"
+   ],
+   "spec": ""
+  },
+  "httpx": {
+   "baseline": "0.28.1",
+   "required_by": [
+    "model-hosting-container-standards==0.1.16"
+   ],
+   "spec": ""
+  },
+  "jmespath": {
+   "baseline": "1.1.0",
+   "required_by": [
+    "model-hosting-container-standards==0.1.16"
+   ],
+   "spec": ""
+  },
+  "prometheus-client": {
+   "baseline": "0.26.0",
+   "required_by": [
+    "prometheus-fastapi-instrumentator==8.1.0"
+   ],
+   "spec": "<1.0.0,>=0.8.0"
+  },
+  "pydantic": {
+   "baseline": "2.14.1",
+   "required_by": [
+    "model-hosting-container-standards==0.1.16",
+    "pydantic-settings==2.16.2"
+   ],
+   "spec": ">=2.7.0"
+  },
+  "python-dotenv": {
+   "baseline": "1.2.4",
+   "required_by": [
+    "pydantic-settings==2.16.2"
+   ],
+   "spec": ">=1.2.2"
+  },
+  "rich": {
+   "baseline": "13.9.4",
+   "required_by": [
+    "rich-toolkit==0.20.6"
+   ],
+   "spec": ">=13.7.1"
+  },
+  "setuptools": {
+   "baseline": "68.1.2",
+   "required_by": [
+    "model-hosting-container-standards==0.1.16"
+   ],
+   "spec": ""
+  },
+  "starlette": {
+   "baseline": "1.9.0",
+   "required_by": [
+    "model-hosting-container-standards==0.1.16",
+    "prometheus-fastapi-instrumentator==8.1.0",
+    "sse-starlette==3.7.0"
+   ],
+   "spec": "<2.0.0,>=0.49.1,>=1.0.0"
+  },
+  "typer": {
+   "baseline": "0.27.3",
+   "required_by": [
+    "fastapi-cli==0.0.33"
+   ],
+   "spec": ">=0.26.1"
+  },
+  "typing-extensions": {
+   "baseline": "4.16.0",
+   "required_by": [
+    "pydantic-settings==2.16.2",
+    "rich-toolkit==0.20.6"
+   ],
+   "spec": ">=4.0.0,>=4.12.2"
+  },
+  "typing-inspection": {
+   "baseline": "0.4.4",
+   "required_by": [
+    "pydantic-settings==2.16.2"
+   ],
+   "spec": ">=0.4.0"
+  },
+  "uvicorn": {
+   "baseline": "0.54.0",
+   "required_by": [
+    "fastapi-cli==0.0.33"
+   ],
+   "spec": ">=0.15.0"
+  }
+ },
+ "conflicts": [],
+ "unresolvable": []
+}

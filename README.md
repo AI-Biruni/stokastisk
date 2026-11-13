@@ -14,7 +14,7 @@ Stokastisk wraps vLLM 0.25.1 for one machine — two Tesla T4 GPUs behind a PCIe
 |---|---|
 | **Python** | 3.13 only |
 | **Engine** | vLLM 0.25.1, T4-only derivative, bundled inside the integrated wheel |
-| **Canonical distribution** | one integrated wheel `stokastisk-0.1.0-2-cp313-cp313-linux_x86_64.whl` (hash in the release manifest, GitHub release and Hub README) — **GPU verification pending (notebook 15)** |
+| **Canonical distribution** | one integrated, **Flash-free** wheel `stokastisk-0.1.0-3-cp313-cp313-linux_x86_64.whl` (build 3; hash in the release manifest, GitHub release and Hub README) — **Kaggle verification pending (notebook 15, build 3)**. Build 2 *failed* notebook 15 and is superseded (see Status) |
 | **Legacy distribution** | two wheels `stokastisk-0.1.0-py3-none-any.whl` + `vllm-0.25.1-cp38-abi3-linux_x86_64.whl` — Kaggle-verified (notebooks 01–14) |
 | **PyTorch / Triton** | 2.11.0+cu130 / 3.6.0 (Kaggle's own — never replaced) |
 | **CUDA** | Toolkit 13.0 only (`libcudart.so.13`); no CUDA 12.x in any binary or script |
@@ -26,7 +26,16 @@ Stokastisk wraps vLLM 0.25.1 for one machine — two Tesla T4 GPUs behind a PCIe
 
 ## Status
 
-**Legacy two-wheel bundle — `KAGGLE_T4_VERIFIED`. Integrated wheel — built, statically inspected, CPU-tested; `KAGGLE_VERIFICATION_PENDING` until the project owner runs notebook 15.** The Kaggle evidence below was produced with the legacy bundle; it is evidence for the engine, the installer-protected environment and the parallel execution paths that the integrated wheel contains byte-identically (the vLLM tree and native objects are identical), not for the integrated wheel's own installation, `LLM.chat`, `stokastisk.compat` or `stokastisk.serving`.
+| Distribution | State |
+|---|---|
+| Legacy two-wheel bundle `stokastisk-0.1.0-kaggle-t4-sm75` | `KAGGLE_T4_VERIFIED` — **Kaggle-tested** (notebooks 01–14), unchanged, still published |
+| Integrated wheel **build 3** `stokastisk-0.1.0-3-…` | Implemented · independently verified (RECORD, byte-equality with the pinned vLLM wheel + documented transform, strict Flash scan) · **CPU-tested** · **Verification pending** — becomes *Kaggle-tested* only when the owner runs notebook 15 and provides the executed notebook and acceptance ZIP |
+| Integrated wheel build 2 `stokastisk-0.1.0-2-…` | **Failed** Kaggle notebook 15 (2026-11-13): structured output (`No module named 'lmformatenforcer'`), HTTP serving (`No module named 'model_hosting_container_standards'`), a misreported package-inventory comparison and Flash `.pyc` files. Basic FP16 inference, chat, complete, determinism, input validation and cleanup **passed** on it. Evidence: `evidence/kaggle/build-2-failed-notebook-15/`. Kept published, superseded |
+| Build 1 `stokastisk-0.1.0-1-…` | Never executed on Kaggle (the build-2 run downloaded build 2 instead of the uploaded build 1 — an input-discovery defect fixed in build 3). Superseded |
+
+What build 3 changes, with root causes: [STOKASTISK_0.1.0_BUILD3_REMEDIATION_REPORT.md](STOKASTISK_0.1.0_BUILD3_REMEDIATION_REPORT.md) · remaining limits: [STOKASTISK_0.1.0_BUILD3_PRODUCTION_READINESS.md](STOKASTISK_0.1.0_BUILD3_PRODUCTION_READINESS.md) · dependencies: [docs/DEPENDENCY_COMPATIBILITY.md](docs/DEPENDENCY_COMPATIBILITY.md) · how to run notebook 15: [docs/KAGGLE_BUILD3_VERIFICATION.md](docs/KAGGLE_BUILD3_VERIFICATION.md).
+
+The Kaggle evidence below was produced with the legacy bundle; it is evidence for the engine, the installer-protected environment and the parallel execution paths whose vLLM native objects the integrated wheels contain byte-identically, not for build 3's installation, structured output, serving or Flash-free tree.
 
 ### Legacy bundle evidence
 
@@ -85,23 +94,22 @@ this machine, and an installer that cannot break the Kaggle image.
 
 ## Quick start (Kaggle: Internet ON, Accelerator *GPU T4 × 2*, Python 3.13)
 
-### Canonical: integrated wheel (verification pending — notebook 15)
+### Canonical: integrated wheel, build 3 (verification pending — notebook 15)
+Attach the dataset containing `stokastisk-0.1.0-build3-kaggle-t4-sm75-kaggle-input.zip` and run notebook 15 (`docs/KAGGLE_BUILD3_VERIFICATION.md`). The first cell finds the attached bundle, verifies it and prints the exact build; there is **no silent download fallback**. Manual install of an extracted bundle:
 ```python
-import urllib.request, runpy, subprocess, sys
-url = "https://huggingface.co/waqasm86/stokastisk/resolve/main/scripts/fetch_release.py"
-open("/tmp/fetch_release.py", "wb").write(urllib.request.urlopen(url).read())
-bundle = runpy.run_path("/tmp/fetch_release.py")["fetch_release"]("stokastisk-0.1.0-integrated-kaggle-t4-sm75")      # SHA256-verified ZIP
-subprocess.run([sys.executable, f"{bundle}/scripts/kaggle/02_install_integrated.py", str(bundle)], check=True)         # one wheel, --no-deps, hash-pinned extras
+import subprocess, sys
+subprocess.run([sys.executable, "scripts/kaggle/02_install_integrated.py", "<bundle dir>"], check=True)      # --dry-run plans only; --with-models adds the optional models lock
 ```
-The installer verifies the wheel SHA256, Python 3.13, PyTorch 2.11.0+cu130, Triton 3.6.0, CUDA 13.0 and two T4 GPUs; removes a legacy two-wheel install (only `stokastisk` and `vllm`); installs the wheel with `--no-deps --no-index`; downloads the few missing pins with `--require-hashes`; proves that no preinstalled package changed; prints every check as PASS / FAIL / WARNING / SKIPPED and exits non-zero on a required failure. `pip check` is **not** clean: it reports the documented xgrammar metadata conflict ([docs/DEPENDENCY_COMPATIBILITY.md](docs/DEPENDENCY_COMPATIBILITY.md)). **Never install the integrated wheel together with the separate vLLM wheel** — both own `vllm/`.
+The installer verifies every bundle file against `SHA256SUMS`, the wheel against the manifest, Python 3.13, PyTorch 2.11.0+cu130, Triton 3.6.0, CUDA 13.0 and two T4 GPUs; installs the wheel with `--no-deps --no-index` and the hash-pinned locks (`core`, `structured-output`, `serving`) with `pip download --require-hashes --no-deps` then `--no-deps --no-index`; proves that no pre-installed package changed (one inventory implementation, PEP 503 names); and requires `pip check` to show **no new line**. It never runs a resolver and never touches torch/triton/CUDA/NCCL. **Never install the integrated wheel together with the separate vLLM wheel** — both own `vllm/`.
 
 ```python
 import stokastisk
 llm = stokastisk.LLM("Qwen/Qwen2.5-0.5B-Instruct", config=stokastisk.StokastiskConfig(max_model_len=2048))
-print(llm.chat([{"role": "user", "content": "Hello"}], stokastisk.SamplingParams(max_tokens=32))[0].outputs[0].text)   # LLM.chat: packaged, not yet Kaggle-run
-llm.close()
+print(llm.chat([{"role": "user", "content": "Hello"}], stokastisk.SamplingParams(max_tokens=32))[0].outputs[0].text)   # Kaggle-tested on build 2; build 3 pending
+print(llm.generate_structured(["Describe Paris."], {"type": "object", "properties": {"city": {"type": "string"}}, "required": ["city"]}))   # pinned xgrammar backend + schema validation; verification pending
+llm.close()          # raises EngineCloseError if the engine's own shutdown failed (after finishing the cleanup)
 ```
-OpenAI-compatible server (packaged, not yet Kaggle-run): `with stokastisk.serving.ServerProcess("Qwen/Qwen2.5-0.5B-Instruct") as srv: srv.wait_ready(); print(stokastisk.serving.chat(srv.base_url, "Qwen/Qwen2.5-0.5B-Instruct", [{"role": "user", "content": "Hi"}]))`.
+OpenAI-compatible server (CPU-tested; Kaggle verification pending for build 3): `with stokastisk.serving.ServerProcess("Qwen/Qwen2.5-0.5B-Instruct") as srv: srv.wait_ready(); print(stokastisk.serving.chat(srv.base_url, "Qwen/Qwen2.5-0.5B-Instruct", [{"role": "user", "content": "Hi"}]))`.
 Parallelism: `StokastiskConfig(tensor_parallel_size=2)` (TP=2), `StokastiskConfig(pipeline_parallel_size=2, execution_strategy="pipeline_parallel")` (PP=2, experimental), `stokastisk.parallel.ReplicaPool(model, devices=[0, 1])` (two independent replicas); `stokastisk.discover_topology()` and `stokastisk.recommend_parallelism(...)` choose between them. For a model that fits one T4, **TP=1 is fastest**.
 
 ### Legacy two-wheel bundle (Kaggle-verified; used by notebooks 01–14)

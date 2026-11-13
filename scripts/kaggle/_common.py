@@ -1,10 +1,32 @@
 """Shared helpers for the Stokastisk Kaggle acceptance scripts."""
 import hashlib, importlib, json, os, pathlib, subprocess, sys, time, traceback
 
-# Statuses: PASS FAIL ERROR SKIPPED WARNING NOT_RUN. Only these never fail a stage; FAIL/ERROR/NOT_RUN do.
-OK_STATUSES = ("PASS", "WARNING", "SKIPPED")   # INSUFFICIENT_EVIDENCE is deliberately NOT here
+# Result vocabulary (build 3): PASS FAIL ERROR WARNING SKIPPED NOT_RUN.  Only PASS passes.
+#   check level : PASS | FAIL | ERROR (the check itself crashed) | WARNING (a documented limitation) | SKIPPED (not performed, reason given)
+#   stage level : ERROR > FAIL > NOT_RUN (no checks recorded / missing report) > WARNING (any WARNING or SKIPPED) > SKIPPED (everything skipped) > PASS (>=1 PASS, nothing else)
+# A warning therefore never becomes a pass, a missing report is never a pass, and a stage with no PASS proves nothing.
+STATUSES = ("PASS", "FAIL", "ERROR", "WARNING", "SKIPPED", "NOT_RUN")
+OK_STATUSES = ("PASS", "WARNING", "SKIPPED")      # LEGACY (notebooks 01-14 summaries only): statuses that do not fail a single check. Build-3 stages use stage_status().
 OUT = pathlib.Path(os.environ.get("STOKASTISK_OUT", "/kaggle/working/stokastisk-acceptance"))
 OUT.mkdir(parents=True, exist_ok=True)
+_STARTED = time.strftime("%FT%T%z")
+
+
+def stage_status(results):
+    st = {r["status"] for r in results}
+    if not results:
+        return "NOT_RUN"
+    if "ERROR" in st:
+        return "ERROR"
+    if "FAIL" in st or (st - set(STATUSES)):      # any status outside the vocabulary (e.g. the legacy INSUFFICIENT_EVIDENCE) is a failure, never a pass
+        return "FAIL"
+    if "NOT_RUN" in st:
+        return "NOT_RUN"
+    if "WARNING" in st or ("SKIPPED" in st and "PASS" in st):
+        return "WARNING"
+    if st == {"SKIPPED"}:
+        return "SKIPPED"
+    return "PASS" if "PASS" in st else "NOT_RUN"
 
 
 def save(name, obj):
@@ -24,21 +46,52 @@ def check(results, name, ok, detail=""):
     return ok
 
 
-def finish(stage, results, extra=None):
-    # WARNING/SKIPPED = a documented limitation (e.g. cuobjdump absent); it never hides a FAIL and never counts as a verified PASS.
-    # A stage whose checks are ALL warnings/skips proved nothing: it needs at least one real PASS, and its counts are always recorded.
+def error(results, name, detail=""):
+    results.append({"check": name, "status": "ERROR", "detail": str(detail)})
+    print(f"ERROR {name} -- {detail}")
+
+
+def _safe_sha(path):
+    try:
+        return sha256(path) if path else None
+    except OSError:
+        return None
+
+
+def provenance(script_file=None):
+    """Identity block embedded in EVERY stage report: which release/wheel/scripts/runtime produced the evidence."""
+    pv = {}
+    for rel in ("provenance.json", "prereq-install/02_install_integrated.json"):
+        p = next((q for q in (OUT / rel, OUT.parent / rel) if q.is_file()), OUT / rel)    # the installer writes into prereq-install/, everything else into the root
+        if p.is_file():
+            try:
+                pv[rel.split("/")[-1][:-5]] = json.loads(p.read_text())
+            except ValueError:
+                pv[rel] = "unreadable"
+    inst, bun = pv.get("02_install_integrated", {}) or {}, pv.get("provenance", {}) or {}
+    here = pathlib.Path(__file__).resolve()
+    out = {"project_version": "0.1.0", "build": bun.get("build") or inst.get("build"), "wheel": bun.get("wheel") or inst.get("wheel"),
+           "wheel_sha256": inst.get("wheel_sha256") or bun.get("wheel_sha256"), "bundle_zip_sha256": bun.get("bundle_zip_sha256"), "bundle_source": bun.get("source"),
+           "manifest_sha256": bun.get("manifest_sha256"), "source_commit": bun.get("source_commit"), "installer_sha256": inst.get("installer_sha256"),
+           "stage_script_sha256": _safe_sha(script_file), "common_sha256": _safe_sha(here), "python": sys.version.split()[0],
+           "started": _STARTED, "finished": time.strftime("%FT%T%z")}
+    return out
+
+
+def finish(stage, results, extra=None, script_file=None):
     counts = {k: sum(1 for r in results if r["status"] == k) for k in sorted({r["status"] for r in results})}
-    status = "PASS" if results and all(r["status"] in OK_STATUSES for r in results) and counts.get("PASS", 0) > 0 else "FAIL"
-    extra = {**(extra or {}), "check_counts": counts}
+    status = stage_status(results)
+    extra = dict(extra or {})
     try:   # Kaggle's /kaggle/working is limited to 20 GiB: the evidence directory itself must fit
         from stokastisk.limits import dir_size_bytes, LIMITS
         used = dir_size_bytes(OUT) / 1024 ** 3
-        (extra := dict(extra or {}))["output_dir_gib"] = {"used": round(used, 3), "quota": LIMITS.working_dir_gib}
+        extra["output_dir_gib"] = {"used": round(used, 3), "quota": LIMITS.working_dir_gib}
         if used > LIMITS.working_dir_gib:
             results.append({"check": "evidence directory within the 20 GiB Kaggle quota", "status": "FAIL", "detail": f"{used:.2f} GiB"}); status = "FAIL"
     except Exception:  # noqa: BLE001
         pass
-    save(f"{stage}.json", {"stage": stage, "status": status, "checks": results, **(extra or {})})
+    extra["check_counts"] = counts
+    save(f"{stage}.json", {"stage": stage, "status": status, "checks": results, "provenance": provenance(script_file or sys.argv[0]), **extra})
     print(f"\n[{stage}] OVERALL: {status}")
     if status != "PASS":
         sys.exit(1)
@@ -126,7 +179,7 @@ def run_guarded(stage, fn):
     except BaseException:  # noqa: BLE001
         tb = traceback.format_exc()
         print(tb, file=sys.stderr)
-        save(f"{stage}.json", {"stage": stage, "status": "ERROR", "checks": [], "traceback": tb})
+        save(f"{stage}.json", {"stage": stage, "status": "ERROR", "checks": [], "traceback": tb, "provenance": provenance(sys.argv[0])})
         print(f"\n[{stage}] OVERALL: ERROR")
         sys.exit(1)
 

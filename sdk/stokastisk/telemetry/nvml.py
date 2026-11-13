@@ -1,11 +1,15 @@
 """GPU sampling: NVML if present, else nvidia-smi, else an explicit 'unavailable'. Counters Kaggle does not expose stay ``None``."""
 from __future__ import annotations
 
+import logging
+
 import threading
 import time
 from typing import Any
 
 from ..topology import nvml as _n
+
+log = logging.getLogger("stokastisk")
 
 _FIELDS = "index,utilization.gpu,utilization.memory,memory.used,memory.total,clocks.sm,clocks.mem,temperature.gpu,power.draw"
 _KEYS = ("index", "gpu_util_pct", "mem_util_pct", "mem_used_mib", "mem_total_mib", "clock_sm_mhz", "clock_mem_mhz", "temp_c", "power_w")
@@ -50,7 +54,7 @@ def pcie_throughput_kib_s() -> dict[int, dict[str, int | None]] | None:
         try:
             nv.nvmlShutdown()
         except Exception:  # noqa: BLE001
-            pass
+            log.debug("ignored Exception (best-effort probe)", exc_info=True)
 
 
 class GpuSampler:

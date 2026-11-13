@@ -142,8 +142,10 @@ class ReplicaEdgeCases(unittest.TestCase):
 
     def test_worker_that_ignores_shutdown_is_terminated(self):
         p = self.pool(FAKE_HANG_ON_SHUTDOWN="1")
-        rep = p.close(timeout=3)
-        self.assertEqual(rep[1], "terminated"); self.assertEqual(rep[0], "exit 0")
+        with self.assertRaises(stokastisk.ReplicaError) as c: p.close(timeout=3)          # cleanup completes, then the failure is REPORTED (never swallowed)
+        self.assertIn("replica 1", str(c.exception)); self.assertIn("terminated", str(c.exception))
+        self.assertEqual(p.close_report[1], "terminated"); self.assertEqual(p.close_report[0], "exit 0")
+        self.assertEqual(p.close(), p.close_report)                                         # idempotent: the second call is quiet
 
     def test_start_failure_leaves_no_processes(self):
         import multiprocessing as mp

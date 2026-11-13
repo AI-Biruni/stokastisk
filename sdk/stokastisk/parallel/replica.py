@@ -36,8 +36,9 @@ class ReplicaPool:
         self._out = self._ctx.Queue(); self._in: dict[int, Any] = {}; self._procs: dict[int, Any] = {}
         self.info: dict[int, dict[str, Any]] = {}
         self.sched = Scheduler([WorkerLoad(id=i, device=d, ready=False) for i, d in enumerate(devices)], max_attempts=max_attempts)
-        self._next_id = 0; self._closed = False
-        self._lock = threading.Lock()      # generate() calls share one result queue: they are serialised, never interleaved
+        self._next_id = 0; self._next_batch = 0; self._closed = False
+        self._lock = threading.RLock()     # generate()/restart_dead() share one result queue: they are serialised, never interleaved
+        self.close_report: dict[str, Any] = {}
         self.last_stats: dict[str, Any] = {}
         self.config.apply_environment()
         try:
@@ -46,7 +47,11 @@ class ReplicaPool:
             self._await_ready(set(range(len(devices))), ready_timeout)
             self._check_isolation()
         except BaseException:
-            self.close(); raise
+            try:
+                self.close()
+            except ReplicaError:
+                log.exception("replica shutdown failed while cleaning up a failed pool start-up; the start-up error is kept")
+            raise
 
     # ------------------------------------------------------------------ lifecycle
     def _spawn(self, i: int) -> None:
@@ -83,12 +88,15 @@ class ReplicaPool:
 
     def restart_dead(self, timeout: float = 900.0) -> list[int]:
         """Restart every worker that has exited. Never called implicitly."""
-        dead = [i for i, p in self._procs.items() if not p.is_alive()]
-        for i in dead:
-            self.sched.workers[i].alive = True; self.sched.workers[i].ready = False; self._spawn(i)
-        if dead:
-            self._await_ready(set(dead), timeout); self._check_isolation()
-        return dead
+        with self._lock:
+            if self._closed:
+                raise ReplicaError("pool is closed")
+            dead = [i for i, p in self._procs.items() if not p.is_alive()]
+            for i in dead:
+                self.sched.workers[i].alive = True; self.sched.workers[i].ready = False; self._spawn(i)
+            if dead:
+                self._await_ready(set(dead), timeout); self._check_isolation()
+            return dead
 
     # ------------------------------------------------------------------ inference
     def generate(self, prompts: list[str], *, max_tokens: int = 64, temperature: float = 0.0, timeout: float = 1800.0) -> list[str]:
@@ -98,6 +106,12 @@ class ReplicaPool:
             raise TypeError("prompts must be a list/tuple of str")
         if isinstance(max_tokens, bool) or not isinstance(max_tokens, int) or max_tokens < 1:
             raise ValueError("max_tokens must be a positive int")
+        if isinstance(temperature, bool) or not isinstance(temperature, (int, float)) or temperature < 0:
+            raise ValueError("temperature must be a number >= 0")
+        if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or not timeout > 0:
+            raise ValueError("timeout must be a number of seconds > 0")
+        if any(not p.strip() for p in prompts):
+            raise ValueError("prompts must not be empty or whitespace-only")
         if not prompts:
             return []
         with self._lock:
@@ -112,14 +126,15 @@ class ReplicaPool:
         by_id = {r.id: r for r in reqs}
         results: dict[int, tuple[str, int]] = {}
         per_worker_seconds: dict[int, float] = {}
-        todo = list(reqs); batch_no = 0; outstanding: dict[int, tuple[int, list[Request]]] = {}
+        todo = list(reqs); outstanding: dict[int, tuple[int, list[Request]]] = {}
         while todo or outstanding:
             if todo:
                 plan = self.sched.assign_batch(todo); todo = []
                 for wid, rs in plan.items():
                     if wid == -1:
                         raise ReplicaError("no available replica for the pending requests")
-                    batch_no += 1; outstanding[batch_no] = (wid, rs)
+                    self._next_batch += 1; batch_no = self._next_batch       # unique for the life of the pool
+                    outstanding[batch_no] = (wid, rs)
                     self._in[wid].put(("generate", batch_no, [(r.id, r.prompt, r.max_tokens) for r in rs], temperature))
             try:
                 msg = self._out.get(timeout=1.0)
@@ -154,32 +169,58 @@ class ReplicaPool:
 
     # ------------------------------------------------------------------ shutdown
     def close(self, timeout: float = 60.0) -> dict[str, Any]:
-        if self._closed:
-            return getattr(self, "close_report", {})
-        self._closed = True
-        for i, q in self._in.items():
-            if self._procs[i].is_alive():
+        """Stop every worker. Always completes the whole cleanup (shutdown message, join, terminate, kill, queue close); then, if any worker had to be terminated, exited
+        non-zero, could not be told to shut down or reported a close error, raises :class:`ReplicaError` listing them. Idempotent: a second call returns the report."""
+        with self._lock:
+            if self._closed:
+                return self.close_report
+            self._closed = True
+            problems: list[str] = []
+            alive_at_close = {i: p.is_alive() for i, p in self._procs.items()}      # a worker that died EARLIER was already reported (ReplicaError / retry); only shutdown problems count here
+            for i, q in self._in.items():
+                if self._procs[i].is_alive():
+                    try:
+                        q.put(("shutdown",))
+                    except (ValueError, OSError) as e:
+                        problems.append(f"replica {i}: could not send the shutdown message ({e!r})")
+            end = time.time() + timeout; report: dict[int, str] = {}
+            for i, p in self._procs.items():
+                p.join(max(0.0, end - time.time()))
+                if p.is_alive():
+                    p.terminate(); p.join(10.0)
+                    if p.is_alive():
+                        p.kill(); p.join(10.0); report[i] = "killed"
+                    else:
+                        report[i] = "terminated"
+                    problems.append(f"replica {i} (GPU {self.devices[i]}) did not shut down on request and was {report[i]}")
+                else:
+                    report[i] = f"exit {p.exitcode}" + ("" if alive_at_close[i] else " (died earlier)")
+                    if alive_at_close[i] and p.exitcode not in (0, None):
+                        problems.append(f"replica {i} (GPU {self.devices[i]}) exited with code {p.exitcode} while shutting down")
+            while True:                                              # workers announce engine-close failures on the result queue; collect them
                 try:
-                    q.put(("shutdown",))
+                    msg = self._out.get_nowait()
+                except (_queue.Empty, ValueError, OSError):
+                    break
+                if msg and msg[0] == "close_error":
+                    problems.append(f"replica {msg[1]}: {msg[2]}\n{msg[3]}")
+            for q in (*self._in.values(), self._out):
+                try:
+                    q.close(); q.cancel_join_thread()
                 except (ValueError, OSError):
-                    log.exception("could not send shutdown to replica %s; it will be terminated", i)
-        end = time.time() + timeout; report = {}
-        for i, p in self._procs.items():
-            p.join(max(0.0, end - time.time()))
-            if p.is_alive():
-                p.terminate(); p.join(10.0); report[i] = "terminated"
-            else:
-                report[i] = f"exit {p.exitcode}"
-        for q in (*self._in.values(), self._out):
-            try:
-                q.close(); q.cancel_join_thread()
-            except (ValueError, OSError):
-                log.debug("queue already closed", exc_info=True)
-        self.close_report = report
-        return report
+                    log.debug("queue already closed", exc_info=True)
+            self.close_report = report
+            if problems:
+                raise ReplicaError("replica pool shut down with problems:\n  " + "\n  ".join(problems))
+            return report
 
     def __enter__(self) -> "ReplicaPool":
         return self
 
-    def __exit__(self, *exc) -> None:
-        self.close()
+    def __exit__(self, exc_type, exc, tb) -> None:
+        try:
+            self.close()
+        except ReplicaError:
+            if exc_type is None:
+                raise
+            log.exception("replica shutdown failed while another exception was propagating; the original exception is kept")

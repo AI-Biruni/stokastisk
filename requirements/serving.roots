@@ -1,0 +1,6 @@
+# `vllm serve` and the OpenAI-compatible API (the vLLM wheel's `server` extra, resolved against the Kaggle baseline).
+fastapi-cli==0.0.33
+sse-starlette==3.7.0
+pydantic-settings==2.16.2
+model-hosting-container-standards==0.1.16
+prometheus-fastapi-instrumentator==8.1.0

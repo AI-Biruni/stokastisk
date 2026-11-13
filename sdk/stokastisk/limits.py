@@ -4,10 +4,14 @@ Kaggle (GPU T4 x2 session): 4 CPU cores, ~30 GiB system RAM, /kaggle/working lim
 These are the design limits of the SDK; on other hosts the same checks report WARNING instead of pretending the limits are met."""
 from __future__ import annotations
 
+import logging
+
 import os
 import shutil
 from dataclasses import dataclass, asdict
 from typing import Any
+
+log = logging.getLogger("stokastisk")
 
 
 @dataclass(frozen=True)
@@ -54,7 +58,7 @@ def system_ram_gib() -> float | None:
             if line.startswith("MemTotal:"):
                 return int(line.split()[1]) / (1024 ** 2)
     except OSError:
-        pass
+        log.debug("ignored OSError (best-effort probe)", exc_info=True)
     return None
 
 
@@ -65,7 +69,7 @@ def dir_size_bytes(path: str | os.PathLike) -> int:
             try:
                 total += os.lstat(os.path.join(root, f)).st_size
             except OSError:
-                pass
+                log.debug("ignored OSError (best-effort probe)", exc_info=True)
     return total
 
 

@@ -1,0 +1,71 @@
+{
+ "roots": [
+  "lm-format-enforcer==0.11.3",
+  "outlines_core==0.2.14",
+  "diskcache==5.6.3",
+  "interegular==0.3.3"
+ ],
+ "new_packages": {
+  "diskcache": {
+   "version": "5.6.3",
+   "required_by": [
+    "root"
+   ],
+   "files": [
+    "diskcache-5.6.3-py3-none-any.whl"
+   ]
+  },
+  "interegular": {
+   "version": "0.3.3",
+   "required_by": [
+    "lm-format-enforcer==0.11.3"
+   ],
+   "files": [
+    "interegular-0.3.3-py37-none-any.whl"
+   ]
+  },
+  "lm-format-enforcer": {
+   "version": "0.11.3",
+   "required_by": [
+    "root"
+   ],
+   "files": [
+    "lm_format_enforcer-0.11.3-py3-none-any.whl"
+   ]
+  },
+  "outlines-core": {
+   "version": "0.2.14",
+   "required_by": [
+    "root"
+   ],
+   "files": [
+    "outlines_core-0.2.14-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+   ]
+  }
+ },
+ "satisfied_by_baseline": {
+  "packaging": {
+   "baseline": "24.0",
+   "required_by": [
+    "lm-format-enforcer==0.11.3"
+   ],
+   "spec": ""
+  },
+  "pydantic": {
+   "baseline": "2.14.1",
+   "required_by": [
+    "lm-format-enforcer==0.11.3"
+   ],
+   "spec": ">=1.10.8"
+  },
+  "pyyaml": {
+   "baseline": "6.0.3",
+   "required_by": [
+    "lm-format-enforcer==0.11.3"
+   ],
+   "spec": ""
+  }
+ },
+ "conflicts": [],
+ "unresolvable": []
+}

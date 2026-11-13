@@ -119,7 +119,7 @@ class SDKTests(unittest.TestCase):
     def test_prohibited_report_shape_and_detection(self):
         from stokastisk import diagnostics
         r = stokastisk.prohibited_report()
-        self.assertEqual(set(r), {"distributions", "modules", "binaries", "clean"})
+        self.assertEqual(set(r), {"distributions", "modules", "files", "native_hits", "binaries", "clean"})
         import importlib.util, unittest.mock as m
         real = importlib.util.find_spec
         with m.patch("importlib.util.find_spec", lambda n, *a, **k: object() if n == "flashinfer" else real(n, *a, **k)):

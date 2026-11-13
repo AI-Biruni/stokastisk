@@ -9,7 +9,10 @@ from .errors import ConfigurationError, UnsupportedParallelismError
 from .limits import LIMITS, cpu_thread_env
 
 ALLOWED_ATTENTION_BACKENDS = ("TRITON_ATTN",)
-FORBIDDEN_ATTENTION_MARKERS = ("FLASH", "FA2", "FA3", "FA4")
+FORBIDDEN_ATTENTION_MARKERS = ("FLASH", "FA2", "FA3", "FA4", "AITER")
+# Structured outputs: the backend is chosen once per ENGINE (vLLM rejects request-level overrides). vLLM's default "auto" silently falls back xgrammar -> guidance -> outlines,
+# which is exactly the hidden fallback this SDK refuses: the backend is pinned, and "auto" is an error.
+ALLOWED_STRUCTURED_OUTPUT_BACKENDS = ("xgrammar",)
 EXECUTION_STRATEGIES = ("single_gpu", "tensor_parallel", "pipeline_parallel", "replica_parallel", "auto")
 EXPERIMENTAL_STRATEGIES = ("pipeline_parallel", "replica_parallel")   # Kaggle-verified on 2xT4 (notebooks 08, 09, 13, 14) but still experimental: slower than TP=1 for models that fit one GPU
 MAX_GPUS = LIMITS.gpu_count
@@ -43,6 +46,7 @@ class StokastiskConfig:
     disable_custom_all_reduce: bool = True    # custom all-reduce requires P2P
     gpu_memory_utilization: float = 0.88
     max_model_len: int | None = 4096
+    structured_output_backend: str = "xgrammar"   # pinned (never "auto"): see ALLOWED_STRUCTURED_OUTPUT_BACKENDS
     apply_nccl_env: bool = True
     nccl_env: dict[str, str] = field(default_factory=lambda: dict(NCCL_ENV_NO_P2P))
 
@@ -66,13 +70,50 @@ class StokastiskConfig:
     def is_experimental(self) -> bool:
         return self.strategy in EXPERIMENTAL_STRATEGIES
 
+    @staticmethod
+    def _int(v: Any) -> bool:
+        """A real int. ``bool`` subclasses ``int`` in Python, so ``True`` would otherwise pass as the number 1."""
+        return isinstance(v, int) and not isinstance(v, bool)
+
+    def _validate_types(self) -> None:
+        for f in ("tensor_parallel_size", "pipeline_parallel_size"):
+            if not self._int(getattr(self, f)):
+                raise ConfigurationError(f"{f} must be an int, got {getattr(self, f)!r} ({type(getattr(self, f)).__name__})")
+        if self.max_model_len is not None and not self._int(self.max_model_len):
+            raise ConfigurationError(f"max_model_len must be None or an int, got {self.max_model_len!r} ({type(self.max_model_len).__name__})")
+        g = self.gpu_memory_utilization
+        if isinstance(g, bool) or not isinstance(g, (int, float)) or g != g:
+            raise ConfigurationError(f"gpu_memory_utilization must be a number, got {g!r} ({type(g).__name__})")
+        for f in ("enforce_eager", "disable_custom_all_reduce", "apply_nccl_env"):
+            if not isinstance(getattr(self, f), bool):
+                raise ConfigurationError(f"{f} must be a bool, got {getattr(self, f)!r} ({type(getattr(self, f)).__name__})")
+        for f in ("dtype", "kv_cache_dtype", "attention_backend", "structured_output_backend"):
+            v = getattr(self, f)
+            if not isinstance(v, str) or not v.strip():
+                raise ConfigurationError(f"{f} must be a non-empty str, got {v!r}")
+        if self.execution_strategy is not None and not isinstance(self.execution_strategy, str):
+            raise ConfigurationError(f"execution_strategy must be None or a str, got {self.execution_strategy!r}")
+        if not isinstance(self.nccl_env, dict) or not all(isinstance(k, str) and isinstance(v, str) for k, v in self.nccl_env.items()):
+            raise ConfigurationError("nccl_env must be a dict[str, str]")
+        if self.replica_devices is not None:
+            if not isinstance(self.replica_devices, (tuple, list)) or not all(self._int(d) for d in self.replica_devices):
+                raise ConfigurationError(f"replica_devices must be a tuple/list of int GPU indices (bool is not an index), got {self.replica_devices!r}")
+
     def validate(self) -> None:
+        self._validate_types()
         b = str(self.attention_backend).upper()
         if any(m in b for m in FORBIDDEN_ATTENTION_MARKERS):
-            raise ConfigurationError(f"FlashAttention backends are not supported by this release: {self.attention_backend!r}")
+            raise ConfigurationError(f"FlashAttention/FlashInfer/FlashMLA backends are not supported by this release: {self.attention_backend!r}")
         if b not in ALLOWED_ATTENTION_BACKENDS:
             raise ConfigurationError(f"attention_backend must be one of {ALLOWED_ATTENTION_BACKENDS}, got {self.attention_backend!r}")
         self.attention_backend = b
+        sb = self.structured_output_backend.strip().lower()
+        if sb == "auto":
+            raise ConfigurationError("structured_output_backend='auto' is refused: vLLM's auto mode silently falls back between xgrammar, guidance and outlines. "
+                                     f"Pin one of {ALLOWED_STRUCTURED_OUTPUT_BACKENDS}.")
+        if sb not in ALLOWED_STRUCTURED_OUTPUT_BACKENDS:
+            raise ConfigurationError(f"structured_output_backend must be one of {ALLOWED_STRUCTURED_OUTPUT_BACKENDS}, got {self.structured_output_backend!r}")
+        self.structured_output_backend = sb
         if self.tensor_parallel_size not in (1, 2):
             raise ConfigurationError("tensor_parallel_size must be 1 or 2 (two Tesla T4 target)")
         if self.pipeline_parallel_size not in (1, 2):
@@ -94,24 +135,14 @@ class StokastiskConfig:
             devs = tuple(self.replica_devices)
             if strat != "replica_parallel":
                 raise UnsupportedParallelismError("replica_devices is only valid with execution_strategy='replica_parallel'")
-            if not devs or len(set(devs)) != len(devs) or any((not isinstance(d, int)) or d < 0 or d >= MAX_GPUS for d in devs):
+            if not devs or len(set(devs)) != len(devs) or any(d < 0 or d >= MAX_GPUS for d in devs):
                 raise UnsupportedParallelismError(f"replica_devices must be distinct GPU indices in [0, {MAX_GPUS - 1}], got {devs!r}")
             self.replica_devices = devs
-        for f in ("tensor_parallel_size", "pipeline_parallel_size"):
-            v = getattr(self, f)
-            if isinstance(v, bool) or not isinstance(v, int):
-                raise ConfigurationError(f"{f} must be an int, got {v!r}")
-        if self.max_model_len is not None and (isinstance(self.max_model_len, bool) or not isinstance(self.max_model_len, int) or self.max_model_len < 16):
+        if self.max_model_len is not None and self.max_model_len < 16:
             raise ConfigurationError(f"max_model_len must be None or an int >= 16, got {self.max_model_len!r}")
-        if isinstance(self.gpu_memory_utilization, bool) or not isinstance(self.gpu_memory_utilization, (int, float)):
-            raise ConfigurationError(f"gpu_memory_utilization must be a number, got {self.gpu_memory_utilization!r}")
-        if not isinstance(self.kv_cache_dtype, str) or not self.kv_cache_dtype:
-            raise ConfigurationError("kv_cache_dtype must be a non-empty str")
         if not 0.1 <= self.gpu_memory_utilization <= 0.98:
             raise ConfigurationError("gpu_memory_utilization must be within [0.1, 0.98]")
-        if self.gpu_memory_utilization * LIMITS.gpu_vram_gib > LIMITS.gpu_vram_gib:   # pragma: no cover - guards future edits of the bounds
-            raise ConfigurationError("gpu_memory_utilization exceeds the Kaggle T4 VRAM")
-        if self.dtype in ("bfloat16", "bf16"):
+        if self.dtype.lower() in ("bfloat16", "bf16"):
             raise ConfigurationError("T4 (SM75) has no bfloat16 support; use 'half'")
 
     @classmethod
@@ -122,7 +153,7 @@ class StokastiskConfig:
             return _BOOL[x.lower()]
         cfg = cls()
         for name, ftype in (("tensor_parallel_size", int), ("pipeline_parallel_size", int), ("execution_strategy", str), ("gpu_memory_utilization", float),
-                            ("max_model_len", int), ("dtype", str), ("attention_backend", str),
+                            ("max_model_len", int), ("dtype", str), ("attention_backend", str), ("structured_output_backend", str),
                             ("enforce_eager", b), ("disable_custom_all_reduce", b)):
             raw = os.environ.get(prefix + name.upper())
             if raw is not None:
@@ -154,6 +185,7 @@ class StokastiskConfig:
             disable_custom_all_reduce=self.disable_custom_all_reduce,
             gpu_memory_utilization=self.gpu_memory_utilization,
             attention_config={"backend": self.attention_backend},
+            structured_outputs_config={"backend": self.structured_output_backend},   # pinned: no silent xgrammar -> guidance -> outlines fallback
         )
         if self.pipeline_parallel_size > 1:   # kwarg is omitted at PP=1 so the baseline engine call stays byte-for-byte identical
             kw["pipeline_parallel_size"] = self.pipeline_parallel_size

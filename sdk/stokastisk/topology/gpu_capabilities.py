@@ -1,7 +1,11 @@
 """Basic GPU properties from PyTorch (the primary provider). cuda-python is an optional, never-required refinement."""
 from __future__ import annotations
 
+import logging
+
 from .models import DeviceInfo
+
+log = logging.getLogger("stokastisk")
 
 
 def torch_devices() -> list[DeviceInfo]:
@@ -22,7 +26,7 @@ def torch_devices() -> list[DeviceInfo]:
                     free, total = torch.cuda.mem_get_info()
                 d.free_vram_mib, d.used_vram_mib = free / 2**20, (total - free) / 2**20; d.sources["free_vram_mib"] = "torch"
             except Exception:  # noqa: BLE001 - mem_get_info creates a CUDA context; leave unset if that fails
-                pass
+                log.debug("ignored Exception (best-effort probe)", exc_info=True)
             out.append(d)
         return out
     except Exception:  # noqa: BLE001

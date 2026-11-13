@@ -32,8 +32,8 @@ def fake_vllm(files: dict[str, str]) -> pathlib.Path:
 
 class FeatureMatrix(unittest.TestCase):
     def test_every_feature_uses_a_defined_status_and_evidence(self):
-        status = {"SUPPORTED", "SUPPORTED_WITH_CONDITIONS", "NEEDS_ADAPTATION", "NOT_SUPPORTED_SM75", "EXCLUDED_FLASH_DEPENDENCY", "NOT_IMPLEMENTED", "UNKNOWN_REQUIRES_EVIDENCE"}
-        ev = {"kaggle", "kaggle-kernel", "cpu-tests", "static", "implemented-not-executed"}
+        status = {"SUPPORTED", "SUPPORTED_WITH_CONDITIONS", "NEEDS_ADAPTATION", "NOT_SUPPORTED_SM75", "EXCLUDED_FLASH_DEPENDENCY", "NOT_IMPLEMENTED", "UNSUPPORTED_ENTRY_POINT", "UNKNOWN_REQUIRES_EVIDENCE"}
+        ev = {"kaggle", "kaggle-build2", "kaggle-kernel", "cpu-tests", "static", "implemented-not-executed", "implemented-cpu-tested"}
         for name, r in compat.feature_matrix().items():
             self.assertIn(r["status"], status, name); self.assertIn(r["evidence"], ev, name); self.assertTrue(r["note"], name)
 
@@ -162,7 +162,7 @@ class ServingCommand(unittest.TestCase):
     def test_start_reports_missing_server_packages_without_launching(self):
         sp = serving.ServerProcess("m", self.cfg())
         with mock.patch.object(serving, "check_server_requirements", return_value=["fastapi"]), mock.patch.object(serving.subprocess, "Popen") as popen:
-            with self.assertRaises(StokastiskCompatibilityError) as c: sp.start()
+            with self.assertRaises(stokastisk.MissingDependencyError) as c: sp.start()
         self.assertIn("fastapi", str(c.exception)); popen.assert_not_called()
 
     def test_check_server_requirements_lists_only_missing_names(self):

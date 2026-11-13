@@ -1,12 +1,16 @@
 """discover_topology(): torch -> NVML -> nvidia-smi -> sysfs, every layer optional. Nothing is hardcoded to Kaggle's PHB."""
 from __future__ import annotations
 
+import logging
+
 import os
 
 from . import nvml, pcie
 from .gpu_capabilities import torch_devices
 from .models import DeviceInfo, Topology
 from .peer_access import measure_peer_access
+
+log = logging.getLogger("stokastisk")
 
 
 def _merge_nvml(devs: list[DeviceInfo], rows: list[dict], topo: Topology) -> None:
@@ -88,7 +92,7 @@ def discover_topology(*, with_recommendation: bool = True) -> Topology:
             if line.startswith("MemAvailable:"):
                 t.system_ram_available_gib = int(line.split()[1]) / 2**20
     except OSError:
-        pass
+        log.debug("ignored OSError (best-effort probe)", exc_info=True)
     if with_recommendation:
         from ..parallel.recommender import default_recommendation
         t.recommended_parallelism = default_recommendation(t)

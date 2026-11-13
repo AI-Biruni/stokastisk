@@ -1,0 +1,135 @@
+{
+ "roots": [
+  "xgrammar==0.2.3",
+  "apache-tvm-ffi==0.1.9",
+  "llguidance==1.7.6",
+  "cbor2==6.2.0.post2",
+  "msgspec==0.22.0",
+  "openai-harmony==0.0.8",
+  "partial-json-parser==0.2.1.1.post7",
+  "pybase64==1.5.1"
+ ],
+ "new_packages": {
+  "apache-tvm-ffi": {
+   "version": "0.1.9",
+   "required_by": [
+    "xgrammar==0.2.3"
+   ],
+   "files": [
+    "apache_tvm_ffi-0.1.9-cp312-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+    "apache_tvm_ffi-0.1.9-cp312-abi3-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl"
+   ]
+  },
+  "cbor2": {
+   "version": "6.2.0.post2",
+   "required_by": [
+    "root"
+   ],
+   "files": [
+    "cbor2-6.2.0.post2-cp313-cp313-manylinux_2_28_x86_64.whl"
+   ]
+  },
+  "llguidance": {
+   "version": "1.7.6",
+   "required_by": [
+    "root"
+   ],
+   "files": [
+    "llguidance-1.7.6-cp39-abi3-manylinux_2_31_x86_64.whl"
+   ]
+  },
+  "msgspec": {
+   "version": "0.22.0",
+   "required_by": [
+    "root"
+   ],
+   "files": [
+    "msgspec-0.22.0-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
+   ]
+  },
+  "openai-harmony": {
+   "version": "0.0.8",
+   "required_by": [
+    "root"
+   ],
+   "files": [
+    "openai_harmony-0.0.8-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+   ]
+  },
+  "partial-json-parser": {
+   "version": "0.2.1.1.post7",
+   "required_by": [
+    "root"
+   ],
+   "files": [
+    "partial_json_parser-0.2.1.1.post7-py3-none-any.whl"
+   ]
+  },
+  "pybase64": {
+   "version": "1.5.1",
+   "required_by": [
+    "root"
+   ],
+   "files": [
+    "pybase64-1.5.1-cp313-cp313-manylinux1_x86_64.manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_5_x86_64.whl"
+   ]
+  },
+  "xgrammar": {
+   "version": "0.2.3",
+   "required_by": [
+    "root"
+   ],
+   "files": [
+    "xgrammar-0.2.3-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl"
+   ]
+  }
+ },
+ "satisfied_by_baseline": {
+  "numpy": {
+   "baseline": "1.26.4",
+   "required_by": [
+    "xgrammar==0.2.3"
+   ],
+   "spec": ""
+  },
+  "pydantic": {
+   "baseline": "2.14.1",
+   "required_by": [
+    "openai-harmony==0.0.8",
+    "xgrammar==0.2.3"
+   ],
+   "spec": ">=2.11.7"
+  },
+  "torch": {
+   "baseline": "2.11.0+cu130",
+   "required_by": [
+    "xgrammar==0.2.3"
+   ],
+   "spec": ">=1.10.0"
+  },
+  "transformers": {
+   "baseline": "5.20.2",
+   "required_by": [
+    "xgrammar==0.2.3"
+   ],
+   "spec": ">=4.38.0"
+  },
+  "triton": {
+   "baseline": "3.6.0",
+   "required_by": [
+    "xgrammar==0.2.3"
+   ],
+   "spec": ""
+  },
+  "typing-extensions": {
+   "baseline": "4.16.0",
+   "required_by": [
+    "apache-tvm-ffi==0.1.9",
+    "xgrammar==0.2.3"
+   ],
+   "spec": ">=4.5,>=4.9.0"
+  }
+ },
+ "conflicts": [],
+ "unresolvable": []
+}

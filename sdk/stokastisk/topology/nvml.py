@@ -1,9 +1,13 @@
 """Optional NVML (``pynvml`` / ``nvidia-ml-py``) and ``nvidia-smi`` helpers. Neither is required: every function degrades to ``None``."""
 from __future__ import annotations
 
+import logging
+
 import shutil
 import subprocess
 from typing import Any
+
+log = logging.getLogger("stokastisk")
 
 
 def _pynvml():
@@ -29,17 +33,17 @@ def nvml_devices() -> list[dict[str, Any]] | None:
             try:
                 mi = nv.nvmlDeviceGetMemoryInfo(h); d.update(total_mib=mi.total / 2**20, free_mib=mi.free / 2**20, used_mib=mi.used / 2**20)
             except Exception:  # noqa: BLE001
-                pass
+                log.debug("ignored Exception (best-effort probe)", exc_info=True)
             try:
                 d["pci_bus_id"] = dec(nv.nvmlDeviceGetPciInfo(h).busId)
             except Exception:  # noqa: BLE001
-                pass
+                log.debug("ignored Exception (best-effort probe)", exc_info=True)
             for key, fn in (("pcie_gen_current", "nvmlDeviceGetCurrPcieLinkGeneration"), ("pcie_gen_max", "nvmlDeviceGetMaxPcieLinkGeneration"),
                             ("pcie_width_current", "nvmlDeviceGetCurrPcieLinkWidth"), ("pcie_width_max", "nvmlDeviceGetMaxPcieLinkWidth")):
                 try:
                     d[key] = int(getattr(nv, fn)(h))
                 except Exception:  # noqa: BLE001
-                    pass
+                    log.debug("ignored Exception (best-effort probe)", exc_info=True)
             # NVLink: any active link means present. T4 reports none / NOT_SUPPORTED.
             active = 0
             for link in range(6):
@@ -53,7 +57,7 @@ def nvml_devices() -> list[dict[str, Any]] | None:
         try:
             out and out[0].update(driver_version=(lambda v: v.decode() if isinstance(v, bytes) else v)(nv.nvmlSystemGetDriverVersion()))
         except Exception:  # noqa: BLE001
-            pass
+            log.debug("ignored Exception (best-effort probe)", exc_info=True)
         return out
     except Exception:  # noqa: BLE001
         return None
@@ -61,7 +65,7 @@ def nvml_devices() -> list[dict[str, Any]] | None:
         try:
             nv.nvmlShutdown()
         except Exception:  # noqa: BLE001
-            pass
+            log.debug("ignored Exception (best-effort probe)", exc_info=True)
 
 
 def smi_query(fields: str) -> list[list[str]] | None:

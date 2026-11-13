@@ -3,9 +3,10 @@
 Everything here is derived from SOURCE INSPECTION of the shipped vLLM package and from the owner's executed Kaggle notebooks. Nothing imports vllm, touches a GPU or
 needs the network, so it can run (and be unit-tested) anywhere. It never claims that an unexercised feature works:
 
-  status    SUPPORTED | SUPPORTED_WITH_CONDITIONS | NEEDS_ADAPTATION | NOT_SUPPORTED_SM75 | EXCLUDED_FLASH_DEPENDENCY | NOT_IMPLEMENTED | UNKNOWN_REQUIRES_EVIDENCE
-  evidence  kaggle (executed by the owner on 2 x T4) | kaggle-kernel (Triton kernel compiled and launched, output not asserted) | cpu-tests |
-            static (source inspection only) | implemented-not-executed
+  status    SUPPORTED | SUPPORTED_WITH_CONDITIONS | NEEDS_ADAPTATION | NOT_SUPPORTED_SM75 | EXCLUDED_FLASH_DEPENDENCY | NOT_IMPLEMENTED | UNSUPPORTED_ENTRY_POINT | UNKNOWN_REQUIRES_EVIDENCE
+  evidence  kaggle (executed by the owner on 2 x T4, a verified earlier build) | kaggle-build2 (executed on Kaggle with integrated build 2, which later FAILED notebook 15 elsewhere) |
+            kaggle-kernel (Triton kernel compiled and launched, output not asserted) | cpu-tests | static (source inspection only) |
+            implemented-cpu-tested (build 3: implemented and unit-tested on CPU; Kaggle verification pending) | implemented-not-executed
 
 ``check_*`` functions raise :class:`StokastiskCompatibilityError` with the reason when something cannot work on SM75, so the user never meets an obscure ImportError.
 The matrix is the machine-readable twin of ``docs/VLLM_T4_COVERAGE.md``.
@@ -22,7 +23,7 @@ from typing import Any, Iterable
 from .errors import StokastiskCompatibilityError
 
 SM75 = (7, 5)
-BLOCKING = ("NOT_SUPPORTED_SM75", "EXCLUDED_FLASH_DEPENDENCY", "NOT_IMPLEMENTED", "NEEDS_ADAPTATION")
+BLOCKING = ("NOT_SUPPORTED_SM75", "EXCLUDED_FLASH_DEPENDENCY", "NOT_IMPLEMENTED", "NEEDS_ADAPTATION", "UNSUPPORTED_ENTRY_POINT")
 
 
 def _f(status: str, evidence: str, note: str, notebooks: str = "") -> dict[str, str]:
@@ -45,11 +46,17 @@ FEATURES: dict[str, dict[str, str]] = {
     "logprobs": _f("SUPPORTED_WITH_CONDITIONS", "kaggle-kernel", "logprob / prompt-logprob kernels compiled; output not asserted"),
     "penalties_min_p_bad_words_logit_bias": _f("SUPPORTED_WITH_CONDITIONS", "kaggle-kernel", "kernels compiled; output not asserted"),
     # --- exist in the source, never exercised ---------------------------------------------------------------------------------------------------
-    "chat_generation": _f("UNKNOWN_REQUIRES_EVIDENCE", "static", "vllm.LLM.chat exists; exposed as stokastisk.LLM.chat; chat templates and tokenizer not run on Kaggle"),
-    "openai_server": _f("UNKNOWN_REQUIRES_EVIDENCE", "implemented-not-executed", "vllm serve exists in the wheel; stokastisk.serving launches it; needs fastapi/uvicorn/openai etc. that the protected Kaggle image may not provide"),
-    "streaming": _f("UNKNOWN_REQUIRES_EVIDENCE", "implemented-not-executed", "available through the OpenAI server (stream=true); offline LLM does not stream"),
-    "prometheus_metrics": _f("UNKNOWN_REQUIRES_EVIDENCE", "static", "served at /metrics by the OpenAI server"),
-    "structured_outputs": _f("UNKNOWN_REQUIRES_EVIDENCE", "kaggle-kernel", "grammar-bitmask kernel compiled; xgrammar/llguidance runs not exercised"),
+    "chat_generation": _f("SUPPORTED_WITH_CONDITIONS", "kaggle-build2", "LLM.chat and LLM.complete returned text on 2 x T4 with integrated build 2 (notebook 15, engine stage); build 3 re-verification pending", "15 (build 2)"),
+    "openai_server": _f("UNKNOWN_REQUIRES_EVIDENCE", "implemented-cpu-tested", "build 2 FAILED on Kaggle (No module named 'model_hosting_container_standards'); build 3 installs the complete serving lock "
+                        "(requirements/serving.lock) and stokastisk.serving captures the child's log; verification pending (notebook 15, server stage)"),
+    "streaming": _f("UNKNOWN_REQUIRES_EVIDENCE", "implemented-cpu-tested", "stream_chat is CPU-tested against a local fake SSE server; needs the OpenAI server, so it shares its verification status"),
+    "prometheus_metrics": _f("UNKNOWN_REQUIRES_EVIDENCE", "implemented-cpu-tested", "served at /metrics by the OpenAI server (prometheus-fastapi-instrumentator is in the serving lock); verification pending"),
+    "structured_outputs": _f("UNKNOWN_REQUIRES_EVIDENCE", "implemented-cpu-tested", "build 2 FAILED on Kaggle (No module named 'lmformatenforcer': vLLM imports it for every structured request). Build 3 installs "
+                             "requirements/structured-output.lock, pins the xgrammar backend (no 'auto' fallback) and validates every output against its schema; vLLM's own XgrammarBackend "
+                             "was driven on CPU with xgrammar 0.2.3; GPU verification pending (notebook 15, engine stage)"),
+    "direct_upstream_vllm": _f("UNSUPPORTED_ENTRY_POINT", "static", "calling vllm.LLM or `vllm serve` directly bypasses the SDK's dtype, NCCL, structured-output and backend checks and is NOT a supported Stokastisk entry point "
+                               "(use stokastisk.LLM / ServerProcess / ReplicaPool). The Flash-free tree makes upstream auto-selection resolve to TRITON_ATTN on SM75 (CPU-evaluated), "
+                               "and FlashAttention/FlashInfer/FlashMLA are refused with ProhibitedBackendError, but only the SDK paths are verified"),
     "prefix_caching": _f("UNKNOWN_REQUIRES_EVIDENCE", "static", "no run asserts it"),
     "chunked_prefill": _f("UNKNOWN_REQUIRES_EVIDENCE", "static", "no run asserts it"),
     "cuda_graphs": _f("UNKNOWN_REQUIRES_EVIDENCE", "static", "every Kaggle run used enforce_eager=True (the SDK default); graph capture on T4 is unverified"),
@@ -186,6 +193,15 @@ def _unconditional_vllm_imports(path: pathlib.Path, root: pathlib.Path) -> tuple
     return tuple(out)
 
 
+STUB_MODULE = "vllm.utils.t4_prohibited_stubs"
+
+
+def uses_removed_backend(module_file: pathlib.Path, root: pathlib.Path) -> bool:
+    """True if the architecture's OWN module imports names from the Flash-family placeholder module at import time, i.e. the model is built on a removed backend.
+    (Core modules such as vllm._custom_ops import placeholder predicates too; those are deliberately not inspected.)"""
+    return STUB_MODULE in _unconditional_vllm_imports(module_file, root)
+
+
 def find_missing_imports(module_file: pathlib.Path, root: pathlib.Path, *, max_depth: int = 6) -> list[list[str]]:
     """Chains of unconditional vllm imports from ``module_file`` that end in a module absent from the shipped package."""
     missing: list[list[str]] = []
@@ -238,6 +254,9 @@ def check_model(model: str | None = None, *, architectures: Iterable[str] | None
             raise StokastiskCompatibilityError(
                 f"{a} is registered by vLLM 0.25.1 but its implementation module {dotted} is not part of this T4/Triton-only build "
                 "(modules with a module-level FlashAttention/FlashInfer import were removed). It cannot be loaded here.")
+        if uses_removed_backend(f, root):
+            raise StokastiskCompatibilityError(f"{a}: {dotted} is built on a FlashAttention/FlashInfer/FlashMLA implementation that this T4/Triton-only build does not ship "
+                                               "(it imports the placeholder module vllm.utils.t4_prohibited_stubs); it cannot run here.")
         gaps = find_missing_imports(f, root)
         if gaps:
             raise StokastiskCompatibilityError(f"{a}: {dotted} imports {' -> '.join(gaps[0])}, which is absent from this T4/Triton-only build; the model cannot be imported here.")
@@ -252,5 +271,5 @@ def check_model(model: str | None = None, *, architectures: Iterable[str] | None
     return report
 
 
-__all__ = ["FEATURES", "QUANT_MIN_CAPABILITY", "KAGGLE_VERIFIED_ARCHITECTURES", "feature_matrix", "get_feature", "check_feature", "check_dtype", "check_quantization",
+__all__ = ["FEATURES", "BLOCKING", "STUB_MODULE", "uses_removed_backend", "QUANT_MIN_CAPABILITY", "KAGGLE_VERIFIED_ARCHITECTURES", "feature_matrix", "get_feature", "check_feature", "check_dtype", "check_quantization",
            "read_registry", "find_missing_imports", "check_model"]
