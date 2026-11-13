@@ -1,33 +1,28 @@
-# Release status
+# Release status — Stokastisk 0.1.0
 
-> **Three integrated builds, one project version (0.1.0).** **Build 3** (`stokastisk-0.1.0-3-cp313-cp313-linux_x86_64.whl`, release `stokastisk-0.1.0-build3-kaggle-t4-sm75`) is the canonical distribution: Flash-free, with complete hash-pinned dependency locks; built, independently verified and CPU-tested; **Kaggle verification pending (notebook 15, build 3)**. **Build 2** failed Kaggle notebook 15 on 2026-11-13 (structured output, HTTP serving, inventory comparison, Flash `.pyc`) and is superseded but kept published; its evidence is in `evidence/kaggle/build-2-failed-notebook-15/`. **Build 1** was never executed on Kaggle. The **legacy two-wheel bundle** below is `KAGGLE_T4_VERIFIED`. Details: [STOKASTISK_0.1.0_BUILD3_REMEDIATION_REPORT.md](STOKASTISK_0.1.0_BUILD3_REMEDIATION_REPORT.md), [STOKASTISK_0.1.0_BUILD3_PRODUCTION_READINESS.md](STOKASTISK_0.1.0_BUILD3_PRODUCTION_READINESS.md).
+Project version **0.1.0** (locked — [VERSION_POLICY.md](VERSION_POLICY.md)). GitHub release / tag: `v0.1.0`. The single distribution is the **build‑tag‑3** integrated wheel; earlier integrated builds (1, 2) and the legacy two‑wheel release were removed (build 2 failed Kaggle notebook 15; see [CHANGELOG.md](CHANGELOG.md)).
 
-Project version: **0.1.0** (permanently locked — [VERSION_POLICY.md](VERSION_POLICY.md)). Release: `stokastisk-0.1.0-kaggle-t4-sm75`.
-Git tag / GitHub release: `v0.1.0`. Hub: <https://huggingface.co/waqasm86/stokastisk> · archive `releases/stokastisk-0.1.0-kaggle-t4-sm75/stokastisk-0.1.0-kaggle-t4-sm75-kaggle-input.zip`
-(SHA256 in `latest.json` and `releases/stokastisk-0.1.0-kaggle-t4-sm75/manifests/SHA256SUMS`).
+| Artifact | Size | SHA256 |
+|---|---|---|
+| `stokastisk-0.1.0-3-cp313-cp313-linux_x86_64.whl` | 38,056,415 | `2c25da2eadab1ebfcf781f4b63b27a972fc911f60999ee87cce5bd167cfdd316` |
+| `stokastisk-0.1.0-build3-kaggle-t4-sm75-kaggle-input.zip` (complete Kaggle input bundle) | 36,968,171 | `97a377559f5b3ec0609f0d2d526d4cbbf96991e56e07597fd494c7fdf3d9517b` |
+| bundle `manifests/SHA256SUMS` (pinned by the notebook) | | `10e9a57084fd2233508ee0706ed046f86682424751ee524bded96cfd989b938b` |
+| `vllm-0.25.1-cp38-abi3-linux_x86_64.whl` (byte‑pinned base wheel, build input only) | | `cc3bcafb6516791990ca302073ae153a08465d3df1e460d666e3ec09b4e98f5e` |
 
-## Validation status: `KAGGLE_T4_VERIFIED`
+Source commit of the build: `70acd9a`. Notebook: `15_stokastisk_candidate_sdk_integration.ipynb` (pins the wheel, ZIP and `SHA256SUMS` hashes above).
 
+## Status: verification pending
 | Item | State |
 |---|---|
-| CPU tests (existing + topology, scheduler, telemetry, transport, benchmarks, version lock) | pass; counts in `evidence/test-results.json` inside the release |
-| Wheels | vLLM 0.25.1 wheel **byte-identical** to the earlier baseline build (`cc3bcafb…98f5e`, no native rebuild); `stokastisk-0.1.0` SDK wheel is pure Python, checked file-by-file against `sdk/` (`29edaa55…ee49`) |
-| Native binaries | 6 objects, `sm_75` cubins only (no PTX), `libcudart.so.13`, no `.so.12` (`scripts/audit/native_audit.py`) |
-| Experimental C++ transport | CUDA-compiled for `sm_75` (links `libcudart.so.13` only); executed on Kaggle in notebook 10 (WARNING; experimental, not integrated into vLLM) |
-| Local GPU | one GeForce 940M (SM50, not a T4); never used for GPU claims |
-| Kaggle notebooks 01–14 | executed by the owner on 2 × T4: all PASS or WARNING, none FAIL — [docs/KAGGLE_T4_VERIFICATION.md](docs/KAGGLE_T4_VERIFICATION.md) |
-| TP=2, PP=2, replicas | **Kaggle-verified** (notebooks 13, 14); slower than TP=1 for a model that fits one T4 |
+| Wheel: tags, RECORD, byte‑equality with the pinned vLLM wheel + documented transform, 0 Flash files / markers / bindings, natives unchanged, reproducible | **verified** (`scripts/audit/verify_build3_wheel.py`) |
+| Dependency locks vs Kaggle's real inventory | 0 conflicts; all pins hash‑verified by `pip download --require-hashes` |
+| CPU test suite | passes (`CUDA_VISIBLE_DEVICES= python3.13 -m pytest tests`) |
+| Kaggle 2 × T4: input discovery, installer (32/32), static stage (79/79) | **Kaggle‑tested** (earlier bundle revisions; same installer/static logic) |
+| Kaggle 2 × T4: `engine`, `parallel`, `server` stages for **this** wheel | **Verification pending** — the first full run exposed a Flash placeholder that raised during vLLM's unconditional kernel warm‑up; fixed in this wheel, not yet re‑run on a GPU |
 
-Notebooks 13 and 14 were first run with SDK wheel `e17b99b4…` (bundle manifest `efe492a6…`) and **re-run on 2026-11-12 with the released SDK wheel `29edaa55…ee49` itself** (provenance printed by the executed notebooks); notebooks 01–12 ran the earlier SDK wheel `a6b8596b…`, with the identical vLLM wheel in all cases. The released SDK wheel predates `stokastisk.compat`, `stokastisk.serving` and `LLM.chat`, so those and the integrated wheel are not covered by any Kaggle run yet. See [docs/KAGGLE_T4_VERIFICATION.md](docs/KAGGLE_T4_VERIFICATION.md).
-
-## Historical engineering measurements (earlier internal baseline build)
-
-The vLLM wheel and native binaries are byte-identical to a baseline build that the owner ran on Kaggle (Python 3.13, torch 2.11.0+cu130, Triton 3.6.0, vLLM 0.25.1, 2 × T4, topology `PHB`).
-On that build, real inference with Qwen2.5-0.5B-Instruct worked at TP=1 and TP=2 (`TRITON_ATTN`), and Qwen2.5-1.5B-Instruct (4096 new tokens) measured TP=1 949.0 tok/s vs TP=2 521.3 tok/s (0.55×);
-prefill 9648 tokens 97.5k vs 41.0k tok/s. The SDK code around it (topology, strategies, replicas, scheduler, recommender, telemetry, transport, benchmarks) was exercised in notebooks 07–14; see the verification page.
+Do not call this release production‑verified until the executed notebook 15 and its acceptance ZIP show every stage `PASS`. Remaining limits: [docs/PRODUCTION_READINESS.md](docs/PRODUCTION_READINESS.md).
 
 ## Known facts
-* **TP=2 is slower than TP=1** for models that fit one T4: the two T4s sit behind a PCIe host bridge (peer access varies between Kaggle VMs). Use TP=2 only when a model does not fit one GPU.
-* **NCCL runtime:** Kaggle's image contains both `nvidia-nccl-cu13 2.28.9` and `nvidia-nccl-cu12 2.32.3`; both install `nvidia/nccl/lib/libnccl.so.2`, so the later one wins. This is a property of the Kaggle baseline (protected), not of our wheels.
-* **Flash-free:** no FlashAttention/FlashInfer/FlashMLA native code or distribution. The *legacy* vLLM wheel keeps upstream Python adapter modules named `flash*` (inert); the build-3 integrated wheel contains none of them. `patches/0003` guards the two default-path FlashInfer imports (sampler, TP=2 communicator).
-* **Reinstall behaviour:** the installer uses `--force-reinstall --no-deps` for the two wheels so a Kaggle session that already has another Stokastisk version ends with exactly 0.1.0; protected packages are never touched.
+* TP=2, PP=2 and replicas are **slower** than TP=1 for a model that fits one T4 (PCIe host bridge, no NVLink; peer access varies between Kaggle VMs).
+* Kaggle resolves NCCL to its cu12 build 2.32.3 (two NCCL packages share one file); our binaries do not link it.
+* Unsupported: bfloat16, Flash*, native FP8/FP4, L4/SM89, Mistral‑family models, OpenTelemetry exporters, direct `vllm.LLM`/`vllm serve`.
