@@ -1,7 +1,7 @@
 # Dependency compatibility — Stokastisk 0.1.0 build 3 (vLLM 0.25.1, Kaggle 2 × T4)
 
 Status labels used here: **Implemented**, **CPU-tested**, **Kaggle-tested**, **Verification pending**, **Unsupported**. Nothing in this page is *Kaggle-tested for build 3* until the owner has run
-notebook 15 (`docs/KAGGLE_BUILD3_VERIFICATION.md`). Build 2's Kaggle run is cited only as the evidence of what failed.
+notebook 15 (`docs/KAGGLE_ACCEPTANCE.md`). Build 2's Kaggle run is cited only as the evidence of what failed.
 
 ## 1. What failed in build 2 (the owner's executed notebook 15; the raw outputs were removed from the repository when it was slimmed down — the findings are recorded here and in `docs/REMEDIATION.md`)
 | # | Failure | Root cause (verified) | Build-3 fix |

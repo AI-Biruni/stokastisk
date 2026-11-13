@@ -1,60 +1,81 @@
 # Stokastisk 0.1.0
 
-**A Python 3.13 SDK around a bundled, Flash‑free build of vLLM 0.25.1 (CUDA 13.0, `TRITON_ATTN`) for Kaggle's 2 × Tesla T4 (SM75).**
+**A Python 3.13 SDK for Kaggle's 2 × Tesla T4 (SM75) with a built‑in vLLM 0.25.1, Triton attention (`TRITON_ATTN`) and CUDA 13.0 `sm_75` binaries — installed with one line.**
 
-Stokastisk installs next to Kaggle's own PyTorch 2.11.0+cu130 / Triton 3.6.0 without replacing them and adds validated configuration, tensor/pipeline/replica parallelism, pinned structured output (xgrammar), an OpenAI‑compatible server launcher with real failure reporting, topology discovery, telemetry and Kaggle resource limits.
+```bash
+pip install stokastisk --extra-index-url https://ai-biruni.github.io/stokastisk/simple/
+```
+
+That downloads the wheel (SDK + vLLM 0.25.1 + CUDA binaries, 38 MB) from the Hugging Face CDN, verifies its SHA256, and installs 19 small pinned dependencies next to Kaggle's own PyTorch 2.11.0+cu130 / Triton 3.6.0 — which it never touches. No dataset upload, no manual wheels.
 
 | | |
 |---|---|
-| Project version | **0.1.0** (locked — [VERSION_POLICY.md](VERSION_POLICY.md)); the wheel *build tag* distinguishes rebuilds |
-| Runtime | Python 3.13 · vLLM 0.25.1 · PyTorch 2.11.0+cu130 · Triton 3.6.0 · CUDA 13.0 · 2 × Tesla T4 (SM75) |
-| Attention | `TRITON_ATTN` only. No FlashAttention / FlashInfer / FlashMLA source or binary is shipped; requesting one raises `ProhibitedBackendError` |
-| Distribution | one wheel `stokastisk-0.1.0-3-cp313-cp313-linux_x86_64.whl` + hash‑pinned dependency locks, delivered as a Kaggle input bundle — see [RELEASE.md](RELEASE.md) |
-| Structured output | backend pinned to xgrammar 0.2.3 (never `auto`), every output validated against its schema |
+| Project version | **0.1.0** (locked — [VERSION_POLICY.md](VERSION_POLICY.md)); the wheel build tag is 3 |
+| Runtime | Python 3.13 · vLLM 0.25.1 · PyTorch 2.11.0+cu130 · Triton 3.6.0 · CUDA 13.0 · 2 × Tesla T4 |
+| Attention | `TRITON_ATTN` only — no FlashAttention / FlashInfer / FlashMLA code is shipped (requesting one raises `ProhibitedBackendError`) |
+| Structured output | xgrammar 0.2.3, pinned (never `auto`); every output validated against its schema |
 
-## Status — read this first
-* **CPU‑tested and independently verified:** the wheel (RECORD, byte‑equality with the pinned vLLM wheel plus the documented transform, strict Flash scan, reproducible build), the dependency locks (0 conflicts against Kaggle's real inventory) and the SDK (lifecycle, serving, replicas, configuration).
-* **Kaggle‑tested on 2 × T4 (the owner's and maintainer's runs of notebook 15):** input discovery, the installer (32/32 checks, protected packages untouched, no new `pip check` line) and the static stage (79/79: Flash policy, inventory, configuration, backend registry on SM7.5, dependency completeness, CPU structured‑output stack).
-* **Verification pending:** the GPU stages — `engine`, `parallel`, `server` — for the final wheel. The first full run failed in the engine because a Flash placeholder raised in vLLM's unconditional kernel warm‑up; that is fixed in the final wheel (see [docs/REMEDIATION.md](docs/REMEDIATION.md)) and must be re‑run by the owner. Until then nothing GPU‑side is claimed production‑verified. Details and every remaining limit: [docs/PRODUCTION_READINESS.md](docs/PRODUCTION_READINESS.md).
+## User guide (Kaggle)
+**1. Notebook settings:** Accelerator **GPU T4 × 2**, **Internet ON**, a Python 3.13 image.
 
-## Quick start (Kaggle: Internet ON, accelerator *GPU T4 × 2*, Python 3.13)
-Attach the bundle as a dataset and run `notebooks/kaggle-t4-sm75/notebooks/15_stokastisk_candidate_sdk_integration.ipynb` ([how](docs/KAGGLE_BUILD3_VERIFICATION.md)). Manual install of an extracted bundle:
-```bash
-python3.13 scripts/kaggle/02_install_integrated.py <bundle dir> [--dry-run] [--with-models]
+**2. Install** (one cell): `!pip install stokastisk --extra-index-url https://ai-biruni.github.io/stokastisk/simple/`
+
+**3. Run.** vLLM starts its engine in a separate process (spawn), so put engine code in a script with a `__main__` guard:
+```python
+%%writefile demo.py
+import stokastisk
+
+if __name__ == "__main__":
+    schema = {"type": "object", "required": ["city", "population"], "additionalProperties": False,
+              "properties": {"city": {"type": "string", "maxLength": 40}, "population": {"type": "integer", "minimum": 0, "maximum": 100000000}}}
+    with stokastisk.LLM("Qwen/Qwen2.5-0.5B-Instruct", config=stokastisk.StokastiskConfig(max_model_len=2048)) as llm:
+        print(llm.verify_attention_backend())                                    # TRITON_ATTN
+        print(llm.complete("The capital of France is", max_tokens=16))
+        print(llm.chat([{"role": "user", "content": "Say hello in five words."}])[0].outputs[0].text)
+        print(llm.generate_structured(["Describe Paris."], schema, max_tokens=96))   # JSON that satisfies the schema, or an error
 ```
-The installer verifies every file against `SHA256SUMS`, installs the wheel with `--no-deps --no-index` and the hash‑pinned locks (`core`, `structured-output`, `serving`) with `pip download --require-hashes --no-deps`, proves no pre‑installed package changed, and fails on any new `pip check` line. It never runs a resolver.
+then `!python demo.py`. A ready‑made notebook: [notebooks/kaggle-t4-sm75/notebooks/16_stokastisk_quickstart.ipynb](notebooks/kaggle-t4-sm75/notebooks/16_stokastisk_quickstart.ipynb).
 
+**4. OpenAI‑compatible server** (also from a script):
 ```python
 import stokastisk
-config = stokastisk.StokastiskConfig(tensor_parallel_size=1)
-llm = stokastisk.LLM("Qwen/Qwen2.5-0.5B-Instruct", config=config)
-print(llm.complete("The capital of France is"))
-print(llm.generate_structured(["Describe Paris."], {"type": "object", "properties": {"city": {"type": "string"}}, "required": ["city"]}))
-llm.close()          # raises EngineCloseError if the engine's own shutdown failed (after finishing the cleanup)
+from stokastisk import serving
+with serving.ServerProcess("Qwen/Qwen2.5-0.5B-Instruct") as srv:
+    srv.wait_ready()
+    print(serving.chat(srv.base_url, srv.served_model_name, [{"role": "user", "content": "Hi"}]))
+    print("".join(serving.stream_chat(srv.base_url, srv.served_model_name, [{"role": "user", "content": "Count to five."}])))
 ```
-Serving: `with stokastisk.serving.ServerProcess("Qwen/Qwen2.5-0.5B-Instruct") as srv: srv.wait_ready(); print(stokastisk.serving.chat(srv.base_url, srv.model, [{"role": "user", "content": "Hi"}]))`.
-Parallelism: `StokastiskConfig(tensor_parallel_size=2)`, `StokastiskConfig(pipeline_parallel_size=2, execution_strategy="pipeline_parallel")` (experimental), `stokastisk.parallel.ReplicaPool(model, devices=[0, 1])`; `stokastisk.discover_topology()` / `recommend_parallelism(...)` choose between them. For a model that fits one T4 **TP=1 is fastest** (the two T4s share a PCIe host bridge, no NVLink). Scripts that start TP/PP/replica engines need an `if __name__ == "__main__":` guard (vLLM uses `spawn`).
+If the server fails to start, `ServerStartupError` carries the exit code, the command, the log path and the last lines of the server's output.
+
+**5. Two GPUs.** `StokastiskConfig(tensor_parallel_size=2)` for a model too large for one T4, `StokastiskConfig(pipeline_parallel_size=2, execution_strategy="pipeline_parallel")` (experimental), or `stokastisk.parallel.ReplicaPool(model, devices=[0, 1])` for two independent copies. `stokastisk.discover_topology()` and `recommend_parallelism(model)` choose for you. For a model that fits one T4, **TP=1 is fastest** (the T4s share a PCIe host bridge, no NVLink).
+
+**Tips.** Bound open‑ended schema fields (`maximum`, `maxLength`, `maxItems`): a grammar keeps the model inside the schema but cannot make it stop, and an unbounded integer can run to `max_tokens`. `llm.close()` (or `with`) releases the GPUs; it raises `EngineCloseError` if the engine's own shutdown failed.
+
+| Problem | Cause / fix |
+|---|---|
+| `No matching distribution found for stokastisk` | the notebook is not Python 3.13, or Internet is OFF |
+| `pip` wants to change torch / transformers | should never happen; report it with the `pip install` log |
+| engine start fails with no GPU | accelerator is not *GPU T4 × 2* |
+| `ProhibitedBackendError` | a Flash backend was requested; only `TRITON_ATTN` exists in this build |
+
+**Security note.** `--extra-index-url` searches PyPI as well; the name `stokastisk` is not registered there today. pip verifies the wheel against the SHA256 in the index page. Uninstall: `pip uninstall stokastisk`.
 
 ## Not supported
-bfloat16 (SM75) · FlashAttention/FlashInfer/FlashMLA · native FP8/FP4 · L4/SM89 · **Mistral‑family models** (`mistral_common` is not part of any dependency profile; `check_model` refuses them) · OpenTelemetry exporters (conflict with Kaggle's protobuf 7) · calling `vllm.LLM` / `vllm serve` directly (bypasses the SDK's checks; it cannot select Flash, but it is not a supported entry point).
+bfloat16 · FlashAttention/FlashInfer/FlashMLA · native FP8/FP4 · L4/SM89 · **Mistral‑family models** (`check_model` refuses them) · OpenTelemetry exporters (conflict with Kaggle's protobuf 7) · calling `vllm.LLM` / `vllm serve` directly (it cannot select Flash, but bypasses the SDK's checks).
+
+## Verification status
+| What | State |
+|---|---|
+| Kaggle 2 × T4 acceptance (notebook 15, 2026‑11‑13): installer 32/32 · static 79/79 · engine 44/44 · parallel 23/23 · server 21/21 · summary 15/15, one wheel SHA throughout | **Kaggle‑tested** (wheel `b31588c9…`) |
+| The published wheel `d0b4b5fc…` | differs from that wheel **only** in `METADATA`/`RECORD` (two extra exact pins); all 2,580 other members — every line of code and every CUDA binary — are byte‑identical |
+| The one‑line `pip install` | resolver simulated against Kaggle's real 937‑package inventory: installs exactly `stokastisk` + 19 pinned packages, changes **nothing** in the Kaggle image. First run on Kaggle itself: notebook 16 — **pending** |
+Details and limits: [docs/PRODUCTION_READINESS.md](docs/PRODUCTION_READINESS.md), [docs/KAGGLE_ACCEPTANCE.md](docs/KAGGLE_ACCEPTANCE.md).
 
 ## Public API
-`LLM` (`generate`, `chat`, `complete`, `generate_structured`, `close`) · `StokastiskConfig` · `ReplicaPool` · `ServerProcess`/`build_serve_command` · `discover_topology` · `recommend_parallelism` · `check_model`/`check_dtype`/`check_feature`/`check_quantization` · `validate_json_output` · `prohibited_report` · `LIMITS`/`check_resources` · exceptions (`EngineClosedError`, `EngineTimeoutError`, `EngineCloseError`, `StructuredOutputError`, `ServerStartupError`, `ServerHTTPError`, `MissingDependencyError`, …).
+`LLM` (`generate`, `chat`, `complete`, `generate_structured`, `close`) · `StokastiskConfig` · `ReplicaPool` · `serving.ServerProcess` · `discover_topology` · `recommend_parallelism` · `check_model`/`check_dtype`/`check_feature` · `validate_json_output` · `prohibited_report` · `LIMITS` · exceptions (`EngineClosedError`, `EngineTimeoutError`, `EngineCloseError`, `StructuredOutputError`, `ServerStartupError`, `ServerHTTPError`, `MissingDependencyError`, …).
 
-## Repository layout
-| Path | Content |
-|---|---|
-| `sdk/stokastisk/` | the SDK |
-| `scripts/kaggle/` | installer, bundle verification, notebook‑15 stage scripts (shipped inside the bundle) |
-| `scripts/release/` | wheel builder, Flash‑free transform, lock resolver, bundle assembler, notebook generator, Kaggle runner |
-| `scripts/audit/` | wheel verifier, import sweep/closure, native audit, CPU structured‑output check |
-| `requirements/` | `*.roots` (pinned inputs), `*.lock` (hash‑pinned closure), `closure/` (audit trail), the Kaggle baseline inventory |
-| `notebooks/kaggle-t4-sm75/notebooks/` | notebook 15 (the acceptance notebook) |
-| `docs/` | architecture, dependency compatibility, Kaggle verification, remediation, production readiness |
-| `native/` | optional experimental host‑staged transport source (not packaged) |
-| `tests/` | CPU tests (`CUDA_VISIBLE_DEVICES= python3.13 -m pytest tests`) |
-
-Building from source needs the byte‑pinned vLLM base wheel (SHA256 `cc3bcafb…98f5e`, published as a GitHub release asset) at `inputs/vllm-0.25.1-cp38-abi3-linux_x86_64.whl`; see [BUILD.md](BUILD.md).
+## Repository
+`sdk/` the SDK · `scripts/release/` wheel builder, Flash‑free transform, lock resolver, index generator · `scripts/kaggle/` + `scripts/audit/` acceptance and audit tools · `requirements/` hash‑pinned locks · `notebooks/kaggle-t4-sm75/notebooks/` notebooks 15 (acceptance) and 16 (quickstart) · `docs/` · `tests/`. Build from source: [BUILD.md](BUILD.md).
 
 ## License
 Apache‑2.0. vLLM is Apache‑2.0 © the vLLM project.

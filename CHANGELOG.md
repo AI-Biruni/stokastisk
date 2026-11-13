@@ -2,6 +2,11 @@
 
 Project version is permanently **0.1.0** (VERSION_POLICY.md). Entries are distinguished by date and wheel build tag, never by version.
 
+## 2026-11-13 - production release (build tag 3, GPU stages verified)
+* **Kaggle 2 x T4 acceptance passed** (installer 32/32, static 79/79, engine 44/44, parallel 23/23, server 21/21, summary 15/15). Its findings were fixed first: a raising Flash placeholder in vLLM's unconditional kernel warm-up (now a no-op), unbounded structured-output test schemas (bounded; truncation now explained), stage resilience, a runtime fingerprint in every stage.
+* **One-line install:** `pip install stokastisk --extra-index-url https://ai-biruni.github.io/stokastisk/simple/` - a static PEP 503 index (GitHub Pages) whose link points at the wheel on the Hugging Face CDN with its SHA256. The wheel pins all 19 locked packages exactly, so pip's resolver can neither float a transitive package nor upgrade a protected Kaggle package.
+* **Lean distribution:** only the wheel (Hugging Face) and the source (GitHub); the acceptance bundle ZIP is built locally (`scripts/release/assemble_build3_release.py`), not published.
+
 ## 2026-11-13 — build tag 3 (the only distribution; GPU stages: verification pending)
 * **Wheel:** `stokastisk-0.1.0-3-cp313-cp313-linux_x86_64.whl` = SDK + the byte‑pinned vLLM 0.25.1 tree passed through `scripts/release/t4_flash_free.py` (28 Flash‑family modules removed, one explicit placeholder module, guarded backend registries and `AttentionConfig`, import guard for `flashinfer`/`flash_attn`/`flash_mla`; native objects byte‑identical). Reproducible.
 * **Dependencies:** complete hash‑pinned locks (`core`, `structured-output`, `serving`, optional `models`) resolved against Kaggle's real inventory, 0 conflicts; xgrammar **0.2.3** (no `transformers<5` cap, tvm‑ffi `>=0.1.9`; nothing patched); `pip check` must show no new line. **Removed:** `mistral_common`, `ijson` — Mistral‑family models are unsupported and `check_model` refuses them. Observability (OpenTelemetry exporters) unsupported (Kaggle protobuf 7.x).

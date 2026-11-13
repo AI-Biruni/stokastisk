@@ -13,7 +13,7 @@ class ReadmeExamples(unittest.TestCase):
     def test_blocks_parse(self):
         for d in DOCS:
             for b in python_blocks(d.read_text()):
-                ast.parse(b)
+                ast.parse(b.split("\n", 1)[1] if b.startswith("%%") else b)       # a notebook cell magic (%%writefile) is not Python; the rest of the cell must be
 
     def test_documents_state_the_locked_version_and_the_unverified_gpu_status(self):
         for d in (ROOT / "README.md", ROOT / "RELEASE.md", ROOT / "docs/HUB_README.md"):

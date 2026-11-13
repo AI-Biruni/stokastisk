@@ -52,7 +52,17 @@ def canon(s):
 
 
 core = {canon(re.split(r"[=<>!~\[]", p)[0]): p for p in roots("core") + roots("structured-output") + roots("serving")}
-hard_extra = list(core.values())
+
+
+def locked(profile):
+    """Every package of a hash-pinned lock as an exact `name==version` requirement (the lock's full closure, not only its roots)."""
+    return [f"{m.group(1)}=={m.group(2)}" for m in re.finditer(r"^([A-Za-z0-9_.\-]+)==(\S+) \\$", (ROOT / "requirements" / f"{profile}.lock").read_text(), re.M)]
+
+
+# Plain `pip install` runs the resolver. If transitive new packages (rich-toolkit, supervisor ...) were left floating, a newer release could make pip UPGRADE a protected Kaggle
+# package to satisfy it. Pinning the whole lock closure exactly makes the set pip downloads deterministic; everything else is already satisfied by the Kaggle image and kept.
+hard_extra = sorted({r for prof in ("core", "structured-output", "serving") for r in locked(prof)}, key=str.lower)
+assert {canon(r.split("==")[0]) for r in core} <= {canon(r.split("==")[0]) for r in hard_extra}, "a lock root is missing from the pinned closure"
 EXTRA_REQ = ["torch==2.11.0+cu130", "triton==3.6.0"]
 
 with tempfile.TemporaryDirectory() as td:

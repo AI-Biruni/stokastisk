@@ -43,3 +43,6 @@ Removal was done by a deterministic transform, not by hand: 54 import sites in 2
 | (same run) | stale scripts mounted | Kaggle served the previous dataset version though `datasets status` said ready | standalone notebook pins the bundle's `SHA256SUMS` hash; the runner waits for the new files |
 Mistral: `mistral_common` and `ijson` removed from every profile; `check_model` refuses Mistral‑family architectures.
 Lesson recorded: a CPU import sweep cannot prove call‑time behaviour of placeholders — only the GPU run can; the GPU stages for the final wheel remain **Verification pending** (owner to run).
+
+## 7. Second owner run (2026-11-13): engine and server structured output
+engine ERROR / server 20/21: an **unbounded** `"population": {"type": "integer"}`; greedy decoding ran `2000000000...` to `max_tokens` and left truncated JSON (xgrammar did its job; a grammar cannot make a model stop). Fixes: bounded acceptance schemas (xgrammar 0.2.3 enforces `minimum`/`maximum`/`maxLength`, checked on CPU), `generate_structured` explains a `finish_reason='length'` cut-off, stages convert an exception in one check into an `ERROR` check, every stage records the runtime versions (from metadata, no CUDA). Re-run result: **all stages PASS** (see docs/PRODUCTION_READINESS.md).

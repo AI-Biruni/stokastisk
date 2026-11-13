@@ -52,7 +52,7 @@ shutil.copy2(ROOT / "requirements/kaggle-baseline-2026-11-13.json", B / "require
 (B / "requirements/SHA256SUMS").write_text("".join(f"{sha(p)}  {p.relative_to(B / 'requirements').as_posix()}\n" for p in sorted((B / "requirements").rglob("*")) if p.is_file() and p.name != "SHA256SUMS"))
 for f in ("LICENSE", "VERSION", "README.md", "INSTALL.md", "CHANGELOG.md"):
     shutil.copy2(ROOT / f, B / f)
-for f in ("DEPENDENCY_COMPATIBILITY.md", "KAGGLE_BUILD3_VERIFICATION.md"):
+for f in ("DEPENDENCY_COMPATIBILITY.md", "KAGGLE_ACCEPTANCE.md"):
     shutil.copy2(ROOT / "docs" / f, B / "docs" / f)
 for f in ("static-verification.json", "native-audit.json"):
     shutil.copy2(WORK / f, B / "evidence" / f)
@@ -86,6 +86,8 @@ build = {"timestamp": created, "source_revision": head, "source_tree_dirty_track
 files = sorted(p for p in B.rglob("*") if p.is_file() and p != B / "manifests/SHA256SUMS")
 (B / "manifests/SHA256SUMS").write_text("".join(f"{sha(p)}  {p.relative_to(B).as_posix()}\n" for p in files))
 
+import make_pip_index
+make_pip_index.build(whl, ROOT / "dist" / "pip-index")                      # the static PEP 503 site for GitHub Pages (its link points at the Hugging Face file)
 # ------------------------------------------------------------------------------------------------------------------------------------------------ reproducible ZIP + standalone notebook
 zp = WORK / f"{NAME}-kaggle-input.zip"
 with zipfile.ZipFile(zp, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as z:
