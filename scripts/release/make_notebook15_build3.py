@@ -54,7 +54,7 @@ def build(wheel_sha256: str, bundle_zip_sha256: str | None, sums_sha256: str | N
         code("# ---- cell 8: summary (a missing stage report is NOT_RUN, never a pass) ----\nif RC['installer'] == 0:\n    RC['summary'] = run_stage('summary', 'candidate_15_integration.py', 'summary')\n"
              "else:\n    (OUT / '15c_summary.json').write_text(json.dumps({'stage': '15c_summary', 'status': 'NOT_RUN', 'detail': 'installer failed', 'rc': RC}, indent=2)); RC['summary'] = 'NOT_RUN'\n"
              "print(RC)\n"),
-        code("# ---- cell 9: ALWAYS build the acceptance archive, then fail the notebook unless every stage is PASS ----\nimport zipfile, hashlib, shutil\n"
+        code("# ---- cell 9: ALWAYS build the acceptance archive, print the results, then fail the notebook unless every stage is PASS ----\nimport zipfile, hashlib, shutil\n"
              "ZIP = pathlib.Path('/kaggle/working/15-stokastisk-build3-acceptance.zip'); ZIP.unlink(missing_ok=True)\n"
              "(OUT / 'RUN-RC.json').write_text(json.dumps({k: str(v) for k, v in RC.items()}, indent=1))\n"
              "sums = []\n"
@@ -63,8 +63,14 @@ def build(wheel_sha256: str, bundle_zip_sha256: str | None, sums_sha256: str | N
              "            z.write(p, 'stokastisk-acceptance/' + p.relative_to(OUT).as_posix()); sums.append(f'{sha256_file(p)}  stokastisk-acceptance/{p.relative_to(OUT).as_posix()}')\n"
              "    z.writestr('stokastisk-acceptance/ACCEPTANCE-SHA256SUMS', '\\n'.join(sums) + '\\n')\n"
              "print('acceptance archive:', ZIP, ZIP.stat().st_size, 'bytes, sha256', sha256_file(ZIP))\n"
+             "print(f\"\\n{'stage':<12} {'status':<8} checks\")\n"
+             "for name, f in (('installer', OUT / 'prereq-install/02_install_integrated.json'), ('static', OUT / '15c_static.json'), ('engine', OUT / '15c_engine.json'), ('parallel', OUT / '15c_parallel.json'), ('server', OUT / '15c_server.json')):\n"
+             "    if not f.is_file():\n        print(f'{name:<12} {\"NOT_RUN\":<8} (no report)'); continue\n"
+             "    d = json.loads(f.read_text()); print(f\"{name:<12} {d.get('status'):<8} {d.get('check_counts')}\")\n"
+             "    for c in d.get('checks', []):\n        if c['status'] != 'PASS': print('      ', c['status'], '-', c['check'], '|', str(c['detail'])[:300])\n"
+             "    if d.get('traceback'): print('      traceback (tail):', d['traceback'][-600:])\n"
              "summ = json.loads((OUT / '15c_summary.json').read_text()) if (OUT / '15c_summary.json').is_file() else {'status': 'NOT_RUN'}\n"
-             "modes = summ.get('modes', {}); print('stage results:', modes); print('OVERALL:', summ.get('status'))\n"
+             "modes = summ.get('modes', {}); print('\\nstage results:', modes); print('OVERALL:', summ.get('status'))\n"
              "assert summ.get('status') == 'PASS' and all(v == 'PASS' for v in modes.values()) and set(modes) >= {'static', 'engine', 'parallel', 'server', 'installer'}, f'build 3 is NOT verified: {summ.get(\"status\")} {modes}'\n"
              "print('ALL STAGES PASS for', EXPECTED_WHEEL_NAME)\n"),
     ]

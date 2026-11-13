@@ -55,3 +55,6 @@ backups/
 # local build outputs and private inputs
 dist/
 inputs/
+
+# executed Kaggle notebooks and their outputs (local analysis only)
+kaggle-notebooks-executed/

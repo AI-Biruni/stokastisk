@@ -58,6 +58,18 @@ def _safe_sha(path):
         return None
 
 
+def runtime_versions():
+    """Versions of the runtime from package METADATA only: no import of torch/vllm and no CUDA context (the server stage must keep the GPUs idle for its accounting)."""
+    import importlib.metadata as md
+    out = {"python": sys.version.split()[0]}
+    for n in ("torch", "triton", "vllm", "stokastisk", "transformers", "xgrammar", "apache-tvm-ffi", "lm-format-enforcer"):
+        try:
+            out[n] = md.version(n)
+        except md.PackageNotFoundError:
+            out[n] = None
+    return out
+
+
 def provenance(script_file=None):
     """Identity block embedded in EVERY stage report: which release/wheel/scripts/runtime produced the evidence."""
     pv = {}
@@ -73,7 +85,7 @@ def provenance(script_file=None):
     out = {"project_version": "0.1.0", "build": bun.get("build") or inst.get("build"), "wheel": bun.get("wheel") or inst.get("wheel"),
            "wheel_sha256": inst.get("wheel_sha256") or bun.get("wheel_sha256"), "bundle_zip_sha256": bun.get("bundle_zip_sha256"), "bundle_source": bun.get("source"),
            "manifest_sha256": bun.get("manifest_sha256"), "source_commit": bun.get("source_commit"), "installer_sha256": inst.get("installer_sha256"),
-           "stage_script_sha256": _safe_sha(script_file), "common_sha256": _safe_sha(here), "python": sys.version.split()[0],
+           "runtime": runtime_versions(), "stage_script_sha256": _safe_sha(script_file), "common_sha256": _safe_sha(here), "python": sys.version.split()[0],
            "started": _STARTED, "finished": time.strftime("%FT%T%z")}
     return out
 

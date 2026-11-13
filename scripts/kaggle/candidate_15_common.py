@@ -8,7 +8,10 @@ IDLE_MIB = 500
 VERSION, BUILD = "0.1.0", "3"
 WHEEL = f"stokastisk-{VERSION}-{BUILD}-cp313-cp313-linux_x86_64.whl"
 INSTALL_JSON = OUT / "prereq-install" / "02_install_integrated.json"
-ENGINE_SCHEMA = {"type": "object", "properties": {"city": {"type": "string"}, "population": {"type": "integer"}}, "required": ["city", "population"], "additionalProperties": False}
+# Open-ended fields are bounded: with an unbounded integer, greedy decoding of a 0.5B model ran "2000000000..." to max_tokens and left truncated JSON on Kaggle. A grammar can keep a model
+# inside the schema but cannot make it stop; bounds make termination a property of the grammar.
+ENGINE_SCHEMA = {"type": "object", "properties": {"city": {"type": "string", "maxLength": 40}, "population": {"type": "integer", "minimum": 0, "maximum": 100000000}},
+                 "required": ["city", "population"], "additionalProperties": False}
 # one JSON-schema feature the pinned xgrammar backend does NOT support (vllm.v1.structured_output.backend_xgrammar.has_xgrammar_unsupported_json_features):
 # with the default backend 'auto' vLLM would silently serve this through guidance/outlines; with the pinned backend it must be REJECTED.
 UNSUPPORTED_BY_XGRAMMAR = {"type": "object", "properties": {"n": {"type": "integer", "multipleOf": 3}}, "required": ["n"]}
@@ -49,6 +52,16 @@ def raises(fn, *exc):
     except BaseException:  # noqa: BLE001
         return False
     return False
+
+
+def attempt(results, name, fn):
+    """Run one check body; an exception becomes an ERROR check (with the traceback tail) instead of crashing the stage and losing every later check."""
+    import traceback
+    from _common import error
+    try:
+        return fn()
+    except BaseException:  # noqa: BLE001
+        error(results, name, traceback.format_exc()[-900:])
 
 
 def no_raise(fn):

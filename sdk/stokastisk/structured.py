@@ -4,6 +4,8 @@ Two independent defences, because "the grammar backend was asked to constrain th
 
 1. **Pinned backend.** :class:`stokastisk.StokastiskConfig` pins ``structured_outputs_config.backend='xgrammar'``. vLLM's default ``'auto'`` silently falls back from xgrammar to
    guidance to outlines; with a pinned backend an unsupported schema is *rejected* instead (``ValueError`` from vLLM, surfaced as :class:`~stokastisk.errors.EngineError`).
+   Bound open-ended fields (integer ``minimum``/``maximum``, string ``maxLength``, array ``maxItems``): a grammar cannot force a model to stop, only to stay inside the schema, so an
+   unbounded integer can run to ``max_tokens`` and leave truncated JSON (observed on Kaggle with Qwen2.5-0.5B). Bounded fields make termination a property of the grammar.
 2. **Output validation.** :func:`validate_json_output` parses the generated text and checks it against the schema with ``jsonschema``; a violation raises
    :class:`~stokastisk.errors.StructuredOutputError`. This is what detects an output that a backend failed to constrain (for example one cut off by ``max_tokens``).
 """

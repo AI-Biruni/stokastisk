@@ -47,7 +47,7 @@ def server() -> int:
         check(R, "malformed request body -> a 4xx ServerHTTPError", raises_status(lambda: post_raw(base + "/v1/chat/completions", b"{not json"), None, lo=400, hi=499))
         check(R, "missing endpoint -> 404 ServerHTTPError", raises_status(lambda: serving._get(base + "/v1/nope", 5), 404))
         # structured output over HTTP (response_format -> the pinned xgrammar backend)
-        body = {"model": MODEL, "messages": [{"role": "user", "content": "Give a JSON object describing Paris."}], "max_tokens": 64, "temperature": 0.0,
+        body = {"model": MODEL, "messages": [{"role": "user", "content": "Give a JSON object describing Paris."}], "max_tokens": 96, "temperature": 0.0,
                 "response_format": {"type": "json_schema", "json_schema": {"name": "city", "schema": ENGINE_SCHEMA, "strict": True}}}
         with serving._post_json(base + "/v1/chat/completions", body, 120) as r:
             content = json.loads(r.read())["choices"][0]["message"]["content"]

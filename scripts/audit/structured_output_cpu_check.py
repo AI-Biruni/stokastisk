@@ -17,7 +17,9 @@ import random
 import sys
 import types
 
-SCHEMA = {"type": "object", "properties": {"city": {"type": "string"}, "population": {"type": "integer"}, "tags": {"type": "array", "items": {"type": "string"}, "maxItems": 3}},
+# Open-ended fields are BOUNDED on purpose: the grammar allows any number of digits / characters, and a small model decoding greedily can keep emitting them until max_tokens cuts the
+# JSON off (seen on Kaggle: "population": 2000000000000...). Bounds make termination a property of the grammar.
+SCHEMA = {"type": "object", "properties": {"city": {"type": "string", "maxLength": 40}, "population": {"type": "integer", "minimum": 0, "maximum": 100000000}, "tags": {"type": "array", "items": {"type": "string", "maxLength": 20}, "maxItems": 3}},
           "required": ["city", "population"], "additionalProperties": False}
 
 
@@ -107,6 +109,15 @@ def main(argv: list[str]) -> int:
     acc = g2.validate_tokens(wrong_type)
     rec("validate_tokens stops at the first schema violation (city must be a string)", len(acc) < len(wrong_type), len(acc))
     rec("accept_tokens refuses a token that violates the grammar", g2.accept_tokens("cpu-check", bad[:1]) is False)
+
+    # 3b. bounds are enforced by the grammar (this is what guarantees termination)
+    g4 = backend.compile_grammar(StructuredOutputOptions.JSON, json.dumps(SCHEMA))
+    too_long = tok.encode('{"city": "P", "population": 1234567890123}', add_special_tokens=False)
+    ok_len = len(g4.validate_tokens(too_long))
+    rec("an integer above the schema maximum is rejected by the grammar (digits cannot run on forever)", ok_len < len(too_long), f"{ok_len}/{len(too_long)} tokens accepted")
+    g5 = backend.compile_grammar(StructuredOutputOptions.JSON, json.dumps(SCHEMA))
+    long_str = tok.encode('{"city": "' + "a" * 60 + '", "population": 1}', add_special_tokens=False)
+    rec("a string above maxLength is rejected by the grammar", len(g5.validate_tokens(long_str)) < len(long_str))
 
     # 4. rollback / reset
     g3 = backend.compile_grammar(StructuredOutputOptions.JSON, json.dumps(SCHEMA))

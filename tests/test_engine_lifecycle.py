@@ -16,7 +16,7 @@ class FakeCore:
         if self.fail: raise RuntimeError("core refused to stop")
 
 
-def out(text): return types.SimpleNamespace(outputs=[types.SimpleNamespace(text=text, token_ids=[1, 2])])
+def out(text, finish_reason="stop"): return types.SimpleNamespace(outputs=[types.SimpleNamespace(text=text, token_ids=[1, 2], finish_reason=finish_reason)])
 
 
 class FakeVLLM:
@@ -180,6 +180,13 @@ class Structured(Base):
     def test_valid_output_is_parsed(self):
         FakeVLLM.texts = ['{{"city": "Paris"}}']; l = self.llm()
         self.assertEqual(l.generate_structured(["x"], self.S), [{"city": "Paris"}])
+
+    def test_a_truncated_output_is_explained_not_just_rejected(self):
+        """Kaggle: an unbounded integer ran to max_tokens ('"population": 2000000000...'); the error must say why and what to do."""
+        l = self.llm()
+        with mock.patch.object(l.engine, "generate", return_value=[out('{"city": "Paris", "population": 20000000000000', "length")]):
+            with self.assertRaises(StructuredOutputError) as c: l.generate_structured(["x"], self.S, max_tokens=64)
+        for needle in ("max_tokens=64", "finish_reason='length'", "maximum", "maxLength"): self.assertIn(needle, str(c.exception))
 
     def test_invalid_outputs_are_detected(self):
         for bad in ("Paris", '{"city": 5}', "{}", '{"city": "P", "x": 1}', '{"city": "Pa'):

@@ -238,6 +238,12 @@ class LLM:
         params = structured.json_schema_params(schema, max_tokens=max_tokens, temperature=temperature)
         self.verify_structured_output_backend()
         outs = self.generate(prompts, params, timeout=timeout)
+        for i, o in enumerate(outs):
+            if getattr(o.outputs[0], "finish_reason", None) == "length":
+                raise StructuredOutputError(
+                    f"prompt {i}: the output was cut off by max_tokens={max_tokens} (finish_reason='length') before the JSON was complete: {o.outputs[0].text[:120]!r}. "
+                    "A JSON-schema grammar allows any number of digits / characters for an open-ended field and a small model decoding greedily can keep emitting them: bound the schema "
+                    "(integer minimum/maximum, string maxLength, array maxItems) and/or raise max_tokens.")
         return [structured.validate_json_output(o.outputs[0].text, schema) for o in outs]
 
     # ------------------------------------------------------------------ lifecycle

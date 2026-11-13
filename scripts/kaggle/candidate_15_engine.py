@@ -45,9 +45,11 @@ def engine() -> int:
                                ("complete(max_tokens=0)", lambda: llm.complete("hi", max_tokens=0), ValueError), ("generate(timeout=-1)", lambda: llm.generate(["hi"], timeout=-1), ValueError)):
             check(R, f"invalid input rejected before the engine: {label}", raises(fn, exc))
         # ---------------------------------------------------------------- structured output (pinned xgrammar)
-        objs = llm.generate_structured(["Give a JSON object describing Paris.", "Give a JSON object describing Tokyo."], ENGINE_SCHEMA, max_tokens=64)
-        check(R, "generate_structured: every output is JSON that satisfies the schema (validated by jsonschema)", all(isinstance(o["city"], str) and isinstance(o["population"], int) for o in objs), objs)
-        extra["structured_objects"] = objs
+        def structured_ok():
+            objs = llm.generate_structured(["Give a JSON object describing Paris.", "Give a JSON object describing Tokyo."], ENGINE_SCHEMA, max_tokens=96)
+            check(R, "generate_structured: every output is JSON that satisfies the bounded schema (validated by jsonschema)", all(isinstance(o["city"], str) and isinstance(o["population"], int) for o in objs), objs)
+            extra["structured_objects"] = objs
+        attempt(R, "generate_structured: schema-valid output", structured_ok)
         from stokastisk.structured import validate_json_output
         for label, bad_text in (("not JSON", "Paris is nice"), ("wrong type", '{"city": 5, "population": 1}'), ("missing key", '{"city": "Paris"}'), ("extra key", '{"city": "P", "population": 1, "x": 1}'), ("truncated", '{"city": "Par')):
             check(R, f"invalid structured output is detected: {label}", raises(lambda t=bad_text: validate_json_output(t, ENGINE_SCHEMA), stokastisk.StructuredOutputError))

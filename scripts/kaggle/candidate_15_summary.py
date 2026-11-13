@@ -30,9 +30,8 @@ def summary() -> int:
     shas = {m: p.get("wheel_sha256") for m, p in provs.items()}
     check(R, "all stages and the installer report the SAME wheel SHA256, equal to the attached bundle's", len({*shas.values()}) == 1 and None not in shas.values() and set(shas.values()) == {bundle.get("wheel_sha256")}, {**shas, "bundle": bundle.get("wheel_sha256")})
     check(R, f"all stages verified build {BUILD} ({WHEEL})", all(p.get("wheel") == WHEEL for p in provs.values()) and bundle.get("wheel") == WHEEL, {m: p.get("wheel") for m, p in provs.items()})
-    ver = {m: (r.get("versions") or {}) for m, r in recs.items()}
-    keyv = {m: (v.get("python"), v.get("torch"), v.get("triton"), v.get("vllm"), v.get("stokastisk"), v.get("transformers")) for m, v in ver.items() if v}
-    check(R, "all stages ran on the same Python / torch / Triton / vLLM / Stokastisk / transformers", len(set(keyv.values())) == 1 and len(keyv) >= 2, keyv)
+    keyv = {m: json.dumps((p.get("runtime") or {}), sort_keys=True) for m, p in provs.items() if p.get("runtime")}
+    check(R, "all stages (and the installer) ran on the same Python / torch / Triton / vLLM / Stokastisk / transformers / xgrammar", len(set(keyv.values())) == 1 and len(keyv) == len(provs) and len(keyv) >= 2, {m: (json.loads(v) if len(set(keyv.values())) > 1 else "identical") for m, v in keyv.items()})
     check(R, "the release came from the attached input (no remote fallback)", str(bundle.get("source", "")).startswith("attached"), bundle.get("source"))
     # kernel-level backend evidence from the captured stage logs
     for m, need in (("engine", True), ("parallel", True), ("server", True)):
