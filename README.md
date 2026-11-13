@@ -67,7 +67,7 @@ bfloat16 · FlashAttention/FlashInfer/FlashMLA · native FP8/FP4 · L4/SM89 · *
 | What | State |
 |---|---|
 | Kaggle 2 × T4 acceptance (notebook 15, 2026‑11‑13): installer 32/32 · static 79/79 · engine 44/44 · parallel 23/23 · server 21/21 · summary 15/15, one wheel SHA throughout | **Kaggle‑tested** (wheel `b31588c9…`) |
-| The published wheel `d0b4b5fc…` | differs from that wheel **only** in `METADATA`/`RECORD` (two extra exact pins); all 2,580 other members — every line of code and every CUDA binary — are byte‑identical |
+| The published wheel (hash: [RELEASE.md](RELEASE.md)) | differs from that wheel **only** in `METADATA`/`RECORD` (two extra exact pins and this README as description); all 2,580 other members — every line of code and every CUDA binary — are byte‑identical |
 | The one‑line `pip install` | resolver simulated against Kaggle's real 937‑package inventory: installs exactly `stokastisk` + 19 pinned packages, changes **nothing** in the Kaggle image. First run on Kaggle itself: notebook 16 — **pending** |
 Details and limits: [docs/PRODUCTION_READINESS.md](docs/PRODUCTION_READINESS.md), [docs/KAGGLE_ACCEPTANCE.md](docs/KAGGLE_ACCEPTANCE.md).
 
