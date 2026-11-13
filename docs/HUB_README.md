@@ -11,7 +11,7 @@ Source, docs and tooling: <https://github.com/AI-Biruni/stokastisk>
 | | |
 |---|---|
 | Project / version | Stokastisk **0.1.0** (permanently locked — `VERSION_POLICY.md` on GitHub) |
-| **Canonical distribution** | **integrated wheel** `stokastisk-0.1.0-2-cp313-cp313-linux_x86_64.whl` · release `stokastisk-0.1.0-integrated-kaggle-t4-sm75` · sha256 `7e4b700929ec7f3489570e93252ef5a49da2d1682c111c5feefb55efead84369` · **GPU verification pending (notebook 15)** |
+| **Canonical distribution** | **integrated Flash-free wheel, build 3** `stokastisk-0.1.0-3-cp313-cp313-linux_x86_64.whl` · release `stokastisk-0.1.0-build3-kaggle-t4-sm75` · sha256 `1d43089a85187469913719e52771387087821695efbc7c0132b0732f09877ad3` · **Kaggle verification pending (notebook 15, build 3)**. Build 2 (`7e4b7009…`) *failed* notebook 15 and is superseded; build 1 (`815f9783…`) was never executed |
 | Legacy distribution | two wheels, release `stokastisk-0.1.0-kaggle-t4-sm75` — `KAGGLE_T4_VERIFIED` |
 | Python / PyTorch / Triton | 3.13 / 2.11.0+cu130 (Kaggle's) / 3.6.0 (Kaggle's) |
 | CUDA | Toolkit 13.0 only — binaries link `libcudart.so.13`; `sm_75` cubins, no PTX |
@@ -29,26 +29,26 @@ Notebooks 13 and 14 were run twice: first with SDK wheel `e17b99b4…` (2026-11-
 Implemented in the SDK: GPU topology and peer-access detection, PCIe reporting, TP/PP strategies, independent dual-GPU replicas with a token-aware scheduler and failure recovery, a parallelism recommender, GPU telemetry, CUDA streams/events, pinned-memory transport vs NCCL, and a benchmark framework.
 Kaggle's own image resolves NCCL to the cu12 build 2.32.3 (two NCCL packages share one file); our binaries do not link it. Details in the GitHub `RELEASE.md`.
 
-## Integrated wheel (canonical) — `BUILT, STATICALLY INSPECTED, CPU-TESTED — KAGGLE VERIFICATION PENDING`
-One file — `releases/stokastisk-0.1.0-integrated-kaggle-t4-sm75/wheels/stokastisk-0.1.0-2-cp313-cp313-linux_x86_64.whl` (38,151,399 bytes, sha256 `7e4b700929ec7f3489570e93252ef5a49da2d1682c111c5feefb55efead84369`) — contains the complete SDK (`stokastisk.compat`, `stokastisk.serving`, `LLM.chat`, the explicit-bfloat16 pre-check, topology, parallel, telemetry, CUDA, communication, benchmarks) **and** the bundled vLLM 0.25.1 tree (every file byte-identical to the Kaggle-verified vLLM wheel `cc3bcafb…`) with its six native objects (`sm_75` cubins only, no PTX, `libcudart.so.13`, no Flash code). Project version is exactly 0.1.0; build tag `2` is the only thing that distinguishes it from the earlier build-tag-1 candidate (`sdk-candidate/`, superseded, kept) and from the legacy wheels. Requires Python `>=3.13,<3.14`; pins `torch==2.11.0+cu130`, `triton==3.6.0`, `transformers>=5.5.3,<6`.
+## Integrated wheel, build 3 (canonical) — `BUILT, INDEPENDENTLY VERIFIED, CPU-TESTED — KAGGLE VERIFICATION PENDING`
+* `releases/stokastisk-0.1.0-build3-kaggle-t4-sm75/wheels/stokastisk-0.1.0-3-cp313-cp313-linux_x86_64.whl` — 38,060,994 bytes, sha256 `1d43089a85187469913719e52771387087821695efbc7c0132b0732f09877ad3`.
+* `releases/stokastisk-0.1.0-build3-kaggle-t4-sm75/stokastisk-0.1.0-build3-kaggle-t4-sm75-kaggle-input.zip` — 36,977,553 bytes, sha256 `5a223beff26d28095369e17ed078d2ed8413bd7974e6062a840794c67a1e4f3a` (the **complete** bundle: wheel, installer, stage scripts, hash-pinned locks, manifests, docs, notebook 15).
+* `releases/stokastisk-0.1.0-build3-kaggle-t4-sm75/15_stokastisk_candidate_sdk_integration.ipynb` — the standalone notebook (pins both hashes above). Instructions: `docs/KAGGLE_BUILD3_VERIFICATION.md`.
 
-**Install (Kaggle, Internet ON, GPU T4 × 2):** the installer verifies the SDK/torch/triton/CUDA/GPU preconditions and the wheel hash, installs the wheel `--no-deps --no-index`, hash-verifies and installs the eight missing pins, proves no preinstalled package changed, and prints every check as PASS / FAIL / WARNING / SKIPPED.
-```python
-import urllib.request, runpy, subprocess, sys
-open("/tmp/fetch_release.py", "wb").write(urllib.request.urlopen("https://huggingface.co/waqasm86/stokastisk/resolve/main/scripts/fetch_release.py").read())
-bundle = runpy.run_path("/tmp/fetch_release.py")["fetch_release"]("stokastisk-0.1.0-integrated-kaggle-t4-sm75")
-subprocess.run([sys.executable, f"{bundle}/scripts/kaggle/02_install_integrated.py", str(bundle)], check=True)
-```
-Direct wheel: `https://huggingface.co/waqasm86/stokastisk/resolve/main/releases/stokastisk-0.1.0-integrated-kaggle-t4-sm75/wheels/stokastisk-0.1.0-2-cp313-cp313-linux_x86_64.whl`. Never install it together with the separate `vllm` wheel (both own `vllm/`); the installer removes a legacy two-wheel install first.
+Why a new build: **build 2 failed Kaggle notebook 15** (structured output: `No module named 'lmformatenforcer'`; HTTP serving: `No module named 'model_hosting_container_standards'`; a package-inventory comparison with two name normalisers; Flash `.pyc` files; and the notebook silently downloaded build 2 instead of the uploaded wheel). Basic FP16 inference, chat, complete and cleanup had passed. Build 3 removes the 28 Flash-family modules from the vLLM tree, ships complete hash-pinned locks (`core`, `structured-output`, `serving`, optional `models`), pins the xgrammar backend (xgrammar 0.2.3, metadata-compatible, nothing patched), and requires an attached, verified bundle (no silent download). Project version stays **0.1.0**.
+
+Use it on Kaggle by attaching the ZIP as a dataset and running the standalone notebook; there is deliberately no one-line download install for build 3 yet (`fetch_release.py` serves the legacy and build-2 releases).
 
 | Feature | Label |
 |---|---|
-| Core SDK, TP=1 / TP=2 / PP=2 engine paths, replicas, topology, recommender, telemetry | Implemented, CPU-tested; **Kaggle-tested on the legacy bundle** (notebooks 13, 14 and earlier); integrated install **pending** |
-| `LLM.chat`, `stokastisk.compat`, `stokastisk.serving` (OpenAI-compatible server, SSE streaming, metrics), bfloat16 pre-check, hardening of `LLM`/`ReplicaPool` lifecycle | Implemented, CPU-tested, **not Kaggle-tested** |
-| Host-staged CUDA transport | CUDA-compiled, Experimental (notebook 10 WARNING), not integrated into vLLM |
-| bfloat16, FlashAttention / FlashInfer / FlashMLA, native FP8/FP4, L4 / SM89 | Unsupported — rejected with a clear error |
+| Core SDK, TP=1 / TP=2 / PP=2 engine paths, replicas, topology, recommender, telemetry | Implemented, CPU-tested; **Kaggle-tested on the legacy bundle** (notebooks 13, 14 and earlier); build-3 install **verification pending** |
+| FP16 `generate` / `chat` / `complete`, `TRITON_ATTN`, cleanup | **Kaggle-tested on build 2** (same code path); build 3 re-run pending |
+| Structured output (pinned xgrammar) | Implemented, CPU-tested (vLLM's own `XgrammarBackend` on CPU); **Verification pending** (failed on build 2 for a missing package) |
+| OpenAI-compatible server, SSE streaming, metrics, restart | Implemented, CPU-tested against fake servers; **Verification pending** (failed on build 2 for a missing package) |
+| Flash-free tree (28 modules removed, byte-equal re-derivation, 0 import regressions in a 1,783-module CPU sweep) | Implemented, independently verified; GPU run **pending** |
+| `ReplicaPool` worker-failure recovery | CPU-tested with fake workers only |
+| Observability (OpenTelemetry exporters), direct `vllm.LLM`/`vllm serve`, bfloat16, FlashAttention / FlashInfer / FlashMLA, native FP8/FP4, L4 / SM89 | Unsupported |
 
-**Known limitations.** `pip check` is not clean: `xgrammar 0.2.5.post1` declares `transformers<5` (documented, CPU-functionally verified, GPU structured decoding unverified — `docs/DEPENDENCY_COMPATIBILITY.md`). TP=2, PP=2 and two replicas are **slower** than TP=1 for a model that fits one T4. Peer access varies between Kaggle VMs. Calling `vllm.LLM` directly (without the SDK) bypasses the SDK's explicit `TRITON_ATTN` selection; multimodal vision towers use `TORCH_SDPA` on SM75. Details: `docs/INTEGRATED_RELEASE.md`, `docs/SDK_CANDIDATE.md` (history of the build-tag-1 candidate).
+Remaining limitations: `STOKASTISK_0.1.0_BUILD3_PRODUCTION_READINESS.md` on GitHub.
 
 ## Kaggle hard limits the SDK is built for (`stokastisk.LIMITS`)
 4 CPU cores (thread budget split across TP workers) · ~30 GiB RAM · 20 GiB `/kaggle/working` · 2 × T4 (SM75, ~15 GiB VRAM each).

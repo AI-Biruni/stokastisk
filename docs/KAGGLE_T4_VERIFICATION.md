@@ -60,3 +60,7 @@ Replica pool relative to one TP=1 engine (notebook 14), batch 1/8/16/32/64: 0.96
 
 ## Dependency finding from the 2026-11-12 installer report
 The legacy installer printed `PASS` for "no conflicts involving vllm/stokastisk" while its recorded `pip check` output contained `xgrammar 0.2.5.post1 has requirement transformers<5,>=4.38.0, but you have transformers 5.20.2.` (the check only looked at lines beginning with `vllm`/`stokastisk`). Analysis and resolution: [DEPENDENCY_COMPATIBILITY.md](DEPENDENCY_COMPATIBILITY.md). The integrated installer reports this as a WARNING and fails on any other new conflict.
+
+
+## Integrated wheel — build 2 FAILED, build 3 pending (added 2026-11-13)
+Notebook 15 was executed on build 2 and failed in `static`, `engine` (structured output) and `server`; the installer passed and basic FP16 inference/chat/complete/cleanup passed. Raw evidence: `evidence/kaggle/build-2-failed-notebook-15/`. Build 3 (`docs/KAGGLE_BUILD3_VERIFICATION.md`) has **not** run on Kaggle; nothing on this page is evidence for it.

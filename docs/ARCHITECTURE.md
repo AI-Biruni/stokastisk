@@ -132,3 +132,9 @@ Benchmarks record provenance, model revision, every repeat (min/median/p95/max),
 * No native rebuild: nothing in 0.1.0 needs a new vLLM kernel. The only new native source is an optional, separately built CUDA-Runtime-only transport.
 * NCCL is never replaced; protected packages are never touched; `TRITON_ATTN`, fp16 and SM75 stay the only supported combination.
 * New features are opt-in and default off; the baseline call `StokastiskConfig(tensor_parallel_size=1)` is unchanged.
+
+
+## Build 3 additions (2026-11-13)
+* `vllm/` in the integrated wheel is the byte-pinned vLLM tree passed through `scripts/release/t4_flash_free.py` (Flash-family modules removed, one placeholder module, backend registries/`AttentionConfig` guarded, import guard in `vllm/t4_backend_policy.py`). Native objects are untouched.
+* `stokastisk.prohibited` is the single Flash policy (builder, installer, static stage, tests). `stokastisk.dependencies` is the single feature -> import-name registry matching `requirements/*.lock`. `stokastisk.structured` validates structured output independently of the backend.
+* `LLM` serialises engine calls (`timeout=`), reports shutdown failures (`EngineCloseError`) after finishing cleanup; `serving.ServerProcess` keeps a persistent log and raises `ServerStartupError` with exit code, command, log path and excerpt.
