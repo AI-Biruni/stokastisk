@@ -28,7 +28,7 @@ then `!python demo.py` (vLLM starts its engine in a separate process, so keep en
 ## File
 | File | SHA256 |
 |---|---|
-| `wheels/stokastisk-0.1.0-3-cp313-cp313-linux_x86_64.whl` (38,056,869 B) | `d0b4b5fcfde3bb0af1ef1431b9508cf1a7fb44392f964b733f15f77e90c62fbc` |
+| `wheels/stokastisk-0.1.0-3-cp313-cp313-linux_x86_64.whl` (38,056,944 B) | `72039ca4044e48fdf5edca8051dcb48b42fe61a69e07715fa8803e029581fe12` |
 
 ## Status
 Project version **0.1.0** (locked; the wheel build tag is 3). Kaggle 2 × T4 acceptance (installer 32/32, static 79/79, engine 44/44, parallel 23/23, server 21/21) passed on a wheel that differs from this one only in `METADATA`/`RECORD` (two extra exact dependency pins); every code and CUDA‑binary member is byte‑identical. The one‑line install itself has been verified by a resolver simulation against Kaggle's real package inventory (installs exactly `stokastisk` + 19 pinned packages, changes nothing else); its first run on Kaggle is pending. Unsupported: bfloat16, Flash*, FP8/FP4, L4/SM89, Mistral‑family models, OpenTelemetry exporters.
