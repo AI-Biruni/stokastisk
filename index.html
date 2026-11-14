@@ -2,7 +2,9 @@
 <html><head><meta charset="utf-8"><meta name="pypi:repository-version" content="1.0"><title>Stokastisk package index</title></head>
 <body>
 <h1>Stokastisk 0.1.0 package index</h1>
-<p>Kaggle (2 x Tesla T4, Python 3.13): <code>pip install stokastisk --extra-index-url https://stokastisk-ai.github.io/stokastisk/simple/</code></p>
+<p>Recommended (pins the file and its SHA256; PyPI is the only index):</p>
+<pre>python -m pip install --index-url https://pypi.org/simple "stokastisk @ https://huggingface.co/waqasm86/stokastisk/resolve/main/wheels/stokastisk-0.1.0-4-cp313-cp313-linux_x86_64.whl#sha256=052156d71adc6ad9966901565f86dbded9ff41c620c782db4ff377a1a2b4f62e"</pre>
+<p>Convenience (this index): <code>pip install stokastisk --extra-index-url https://stokastisk-ai.github.io/stokastisk/simple/</code>. <b>Security trade-off:</b> <code>--extra-index-url</code> makes pip consider PyPI as well, so a different project named <code>stokastisk</code> published there could be chosen; the name is unregistered on PyPI today. Prefer the pinned command.</p>
 <p>Project: <a href="https://github.com/stokastisk-ai/stokastisk">github.com/stokastisk-ai/stokastisk</a> · binaries: <a href="https://huggingface.co/waqasm86/stokastisk">huggingface.co/waqasm86/stokastisk</a></p>
 <p><a href="docs/">User guide</a></p>
 </body></html>
