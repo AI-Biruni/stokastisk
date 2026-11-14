@@ -1,11 +1,12 @@
 #!/usr/bin/env python3.13
 """Member-by-member delta between two integrated Stokastisk wheels (e.g. the published build 3 and a new build).
-usage: wheel_delta.py OLD_WHEEL NEW_WHEEL OUT.json [--allow-sdk stokastisk/compat.py ...] [--docstring-only stokastisk/serving.py ...] [--ast-identical stokastisk/compat.py:check_dtype,check_feature ...]
+usage: wheel_delta.py OLD_WHEEL NEW_WHEEL OUT.json [--allow-sdk stokastisk/compat.py ...] [--docstring-only stokastisk/serving.py ...] [--ast-identical stokastisk/compat.py:check_dtype,check_feature ...] [--literals-only stokastisk/serving.py ...]
 
 Classifies every member (vllm/**, native binaries, stokastisk/**, dist-info, data) and reports identical / changed / added / removed with sha256 values. The result is PASS only when:
 all vllm/** members and all native objects are byte-identical, no Flash-family path or binary exists in the new wheel, METADATA differs only in its description and the build/WHEEL tag
 (the Requires-Dist set, i.e. every dependency pin, is identical), and the only changed stokastisk/** files are those named with --allow-sdk; every --docstring-only file differs from the old one in docstrings only (identical AST once docstrings are
-removed - so no executable line changed); and every name listed with --ast-identical (the functions/constants the runtime imports) has an identical AST in both versions. Exit 1 otherwise."""
+removed - so no executable line changed); every --literals-only file differs from the old one in string constants only (identical AST once every string constant is blanked - so no code,
+name or control flow changed; the changed literals are listed in the report); and every name listed with --ast-identical (the functions/constants the runtime imports) has an identical AST in both versions. Exit 1 otherwise."""
 import ast, hashlib, json, pathlib, re, sys, zipfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
@@ -41,7 +42,18 @@ def _top_level(tree):
     return out
 
 
-def delta(old_path, new_path, allow_sdk, docstring_only=(), ast_identical=()):
+def _blank_strings(tree):
+    for n in ast.walk(tree):
+        if isinstance(n, ast.Constant) and isinstance(n.value, str):
+            n.value = ""
+    return tree
+
+
+def _strings(tree):
+    return sorted({n.value for n in ast.walk(tree) if isinstance(n, ast.Constant) and isinstance(n.value, str)})
+
+
+def delta(old_path, new_path, allow_sdk, docstring_only=(), ast_identical=(), literals_only=()):
     a, b = zipfile.ZipFile(old_path), zipfile.ZipFile(new_path)
     an, bn = set(a.namelist()), set(b.namelist())
     changed = sorted(n for n in an & bn if a.read(n) != b.read(n))
@@ -78,6 +90,13 @@ def delta(old_path, new_path, allow_sdk, docstring_only=(), ast_identical=()):
         same = ast.dump(_strip_docstrings(ast.parse(a.read(f)))) == ast.dump(_strip_docstrings(ast.parse(b.read(f))))
         ast_report[f] = {"docstring_only_change": same}
         chk(f"{f}: the change is confined to docstrings (identical AST once docstrings are removed)", same and a.read(f) != b.read(f))
+    for f in literals_only:
+        ta, tb = ast.parse(a.read(f)), ast.parse(b.read(f))
+        same = ast.dump(_blank_strings(ast.parse(a.read(f)))) == ast.dump(_blank_strings(ast.parse(b.read(f))))
+        sa, sb = set(_strings(ta)), set(_strings(tb))
+        ast_report.setdefault(f, {})["string_literals_only_change"] = same
+        ast_report[f]["string_literals_removed"] = sorted(sa - sb); ast_report[f]["string_literals_added"] = sorted(sb - sa)
+        chk(f"{f}: the change is confined to string constants (identical AST once every string is blanked)", same and a.read(f) != b.read(f))
     for spec in ast_identical:
         f, names = spec.split(":"); oa, ob = _top_level(_strip_docstrings(ast.parse(a.read(f)))), _top_level(_strip_docstrings(ast.parse(b.read(f))))
         for n in names.split(","):
@@ -93,11 +112,11 @@ def delta(old_path, new_path, allow_sdk, docstring_only=(), ast_identical=()):
 
 
 def main(argv):
-    opts = {"--allow-sdk": [], "--docstring-only": [], "--ast-identical": []}
+    opts = {"--allow-sdk": [], "--docstring-only": [], "--ast-identical": [], "--literals-only": []}
     for k in opts:
         while k in argv:
             i = argv.index(k); opts[k].append(argv[i + 1]); del argv[i:i + 2]
-    rep = delta(argv[0], argv[1], opts["--allow-sdk"], opts["--docstring-only"], opts["--ast-identical"])
+    rep = delta(argv[0], argv[1], opts["--allow-sdk"], opts["--docstring-only"], opts["--ast-identical"], opts["--literals-only"])
     pathlib.Path(argv[2]).write_text(json.dumps(rep, indent=1, sort_keys=True) + "\n")
     print("OVERALL:", rep["status"])
     return 0 if rep["status"] == "PASS" else 1

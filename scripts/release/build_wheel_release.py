@@ -1,7 +1,7 @@
 #!/usr/bin/env python3.13
 """Build, audit and describe one integrated Stokastisk wheel (build tag N >= 3) WITHOUT any GPU, Kaggle or network access.
 usage: build_wheel_release.py --build-tag N --out DIR [--reference-wheel OLD.whl] [--allow-sdk stokastisk/x.py ...] [--docstring-only stokastisk/x.py ...]
-                              [--ast-identical stokastisk/x.py:name,name ...] [--reproduce] [--cpu-tests "<command>=<result>"]
+                              [--ast-identical stokastisk/x.py:name,name ...] [--literals-only stokastisk/x.py ...] [--reproduce] [--cpu-tests "<command>=<result>"]
 
 DIR must not exist and nothing is ever overwritten. Steps: build (scripts/release/build_integrated_wheel.py, from the byte-pinned vLLM wheel in inputs/), independent verification
 (scripts/audit/verify_integrated_wheel.py), member-by-member delta against a previous wheel when --reference-wheel is given (scripts/audit/wheel_delta.py), optional second build to prove reproducibility, and
@@ -28,7 +28,7 @@ def opt(argv, flag, many=False):
 
 def main(argv):
     tag, out, ref = opt(argv, "--build-tag"), opt(argv, "--out"), opt(argv, "--reference-wheel")
-    allow, docs, asts = opt(argv, "--allow-sdk", True), opt(argv, "--docstring-only", True), opt(argv, "--ast-identical", True)
+    allow, docs, asts, lits = opt(argv, "--allow-sdk", True), opt(argv, "--docstring-only", True), opt(argv, "--ast-identical", True), opt(argv, "--literals-only", True)
     cpu = opt(argv, "--cpu-tests", True)
     reproduce = "--reproduce" in argv
     assert tag and tag.isdigit() and int(tag) >= 3 and out, __doc__
@@ -48,6 +48,7 @@ def main(argv):
         for a in allow: cmd += ["--allow-sdk", a]
         for a in docs: cmd += ["--docstring-only", a]
         for a in asts: cmd += ["--ast-identical", a]
+        for a in lits: cmd += ["--literals-only", a]
         run(cmd); delta = json.loads((out / "reports/delta-vs-reference.json").read_text())
     repro = None
     if reproduce:
@@ -70,7 +71,7 @@ def main(argv):
                       "native_binary_comparison_with_pinned_vllm": [c["status"] for c in verify["checks"] if "native object" in c["check"]],
                       "delta_vs_reference": None if delta is None else {"status": delta["status"], "reference": delta["old_wheel"], "summary": delta["summary"], "report": "reports/delta-vs-reference.json"},
                       "reproducible_build": repro},
-           "sdk_file_delta_against_reference": None if delta is None else {"changed": delta["summary"]["by_category_changed"]["sdk"], "allowed": sorted(allow), "docstring_only": sorted(docs), "ast_analysis": delta["ast_analysis"]},
+           "sdk_file_delta_against_reference": None if delta is None else {"changed": delta["summary"]["by_category_changed"]["sdk"], "allowed": sorted(allow), "docstring_only": sorted(docs), "literals_only": sorted(lits), "ast_analysis": delta["ast_analysis"]},
            "verification": {
                "build3_kaggle_acceptance": {"executed_on_kaggle": True, "on_wheel": ev["notebook_15_acceptance"]["acceptance_wheel_sha256"], "stages": {k: f'{v["passed"]}/{v["checks"]}' for k, v in ev["notebook_15_acceptance"]["stages"].items()},
                                             "raw_evidence": "evidence/kaggle/evidence-manifest.json"},

@@ -202,8 +202,8 @@ class ServerProcess:
         check_feature("openai_server")            # returns the feature record; raises only if the feature became blocking
         missing = check_server_requirements()
         if missing:
-            raise MissingDependencyError("the OpenAI server", missing, "Re-run the bundle installer (scripts/kaggle/02_install_integrated.py), which installs the serving and "
-                                         "structured-output locks; Stokastisk never installs packages on its own (protected Kaggle baseline).")
+            raise MissingDependencyError("the OpenAI server", missing, "Reinstall Stokastisk with the SHA256-pinned command in INSTALL.md (it installs the serving and "
+                                         "structured-output dependencies from PyPI); Stokastisk never installs packages on its own (protected Kaggle baseline).")
         if self._proc is not None:
             raise EngineError("server already started")
         if not port_is_free(self.host, self.port):

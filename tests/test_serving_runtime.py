@@ -83,6 +83,15 @@ class Startup(Fake):
         with mock.patch.object(serving, "check_server_requirements", return_value=["model_hosting_container_standards"]), mock.patch.object(serving.subprocess, "Popen") as popen:
             with self.assertRaises(MissingDependencyError) as c: serving.ServerProcess("m", self.cfg).start()
         self.assertEqual(c.exception.missing, ("model_hosting_container_standards",)); popen.assert_not_called()
+        msg = str(c.exception)                                                       # the remedy must name something that exists today, not the retired bundle installer
+        self.assertIn("INSTALL.md", msg); self.assertIn("never installs packages on its own", msg)
+        for gone in ("scripts/kaggle", "02_install_integrated", "bundle installer"):
+            self.assertNotIn(gone, msg)
+
+    def test_no_shipped_error_message_names_a_removed_script(self):
+        for f in (pathlib.Path(serving.__file__).parent).glob("*.py"):
+            for gone in ("scripts/kaggle", "02_install_integrated", "bundle installer"):
+                self.assertNotIn(gone, f.read_text(), f"{f.name} still mentions {gone}")
 
     def test_unlaunchable_command(self):
         s = serving.ServerProcess("m", self.cfg, python="/nonexistent/python", log_path=str(self.td / "x.log"), port=serving.find_free_port())
