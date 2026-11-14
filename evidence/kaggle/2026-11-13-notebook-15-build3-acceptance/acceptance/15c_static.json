@@ -1,0 +1,1140 @@
+{
+  "stage": "15c_static",
+  "status": "PASS",
+  "checks": [
+    {
+      "check": "Python 3.13",
+      "status": "PASS",
+      "detail": "3.13.16"
+    },
+    {
+      "check": "PyTorch 2.11.0+cu130",
+      "status": "PASS",
+      "detail": "2.11.0+cu130"
+    },
+    {
+      "check": "Triton 3.6.0",
+      "status": "PASS",
+      "detail": "3.6.0"
+    },
+    {
+      "check": "CUDA 13.0 (torch build)",
+      "status": "PASS",
+      "detail": "13.0"
+    },
+    {
+      "check": "two Tesla T4 GPUs, SM75",
+      "status": "PASS",
+      "detail": "[{'name': 'Tesla T4', 'capability': [7, 5]}, {'name': 'Tesla T4', 'capability': [7, 5]}]"
+    },
+    {
+      "check": "bundle provenance record exists (notebook cell 1)",
+      "status": "PASS",
+      "detail": "provenance.json"
+    },
+    {
+      "check": "installer report exists and its status is PASS",
+      "status": "PASS",
+      "detail": "PASS"
+    },
+    {
+      "check": "installed wheel SHA256 == attached bundle's wheel SHA256",
+      "status": "PASS",
+      "detail": "('b31588c9b5f0d5ae103903283c7cfc25a9d7ef6c00112c3d46bb7b9ee84b023a', 'b31588c9b5f0d5ae103903283c7cfc25a9d7ef6c00112c3d46bb7b9ee84b023a')"
+    },
+    {
+      "check": "wheel is stokastisk-0.1.0-3-cp313-cp313-linux_x86_64.whl (build 3)",
+      "status": "PASS",
+      "detail": "('stokastisk-0.1.0-3-cp313-cp313-linux_x86_64.whl', 'stokastisk-0.1.0-3-cp313-cp313-linux_x86_64.whl')"
+    },
+    {
+      "check": "the bundle came from the attached input (no remote fallback)",
+      "status": "PASS",
+      "detail": "attached-directory"
+    },
+    {
+      "check": "installer: protected Kaggle packages unchanged and only planned packages added",
+      "status": "PASS",
+      "detail": "{'changed': {}, 'removed': [], 'unexpected_added': [], 'expected_but_absent': []}"
+    },
+    {
+      "check": "live inventory == the installer's AFTER inventory (same method, PEP 503 names)",
+      "status": "PASS",
+      "detail": "958 packages identical"
+    },
+    {
+      "check": "live inventory vs BEFORE: no pre-installed package changed or removed (incl. dotted names such as jaraco.*, lazr.*, ruamel.yaml)",
+      "status": "PASS",
+      "detail": "identical"
+    },
+    {
+      "check": "the 8 distributions build 2 misreported as removed are present",
+      "status": "PASS",
+      "detail": "{'jaraco-classes': '3.4.0', 'jaraco-context': '6.1.2', 'jaraco-functools': '4.6.0', 'keyrings-google-artifactregistry-auth': '1.1.2', 'lazr-restfulclient': '0.14.6', 'lazr-uri': '1.0.6', 'path-py': '12.5.0', 'ruamel-yaml': '0.19.1'}"
+    },
+    {
+      "check": "Stokastisk version 0.1.0 (module + distribution)",
+      "status": "PASS",
+      "detail": "('0.1.0', '0.1.0')"
+    },
+    {
+      "check": "vLLM version 0.25.1 (module + distribution)",
+      "status": "PASS",
+      "detail": "('0.25.1', '0.25.1')"
+    },
+    {
+      "check": "stokastisk imported from site-packages (not a source tree)",
+      "status": "PASS",
+      "detail": "/usr/local/lib/python3.13/dist-packages/stokastisk/__init__.py"
+    },
+    {
+      "check": "a single vLLM package tree",
+      "status": "PASS",
+      "detail": "['/usr/local/lib/python3.13/dist-packages/vllm']"
+    },
+    {
+      "check": "every name in stokastisk.__all__ resolves",
+      "status": "PASS",
+      "detail": "50 names"
+    },
+    {
+      "check": "import stokastisk.compat",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "import stokastisk.serving",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "import stokastisk.engine",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "import stokastisk.structured",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "import stokastisk.dependencies",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "import stokastisk.prohibited",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "import stokastisk.parallel",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "import stokastisk.parallel.replica",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "import stokastisk.topology",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "import stokastisk.telemetry",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "import stokastisk.communication",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "import stokastisk.cuda",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "import stokastisk.limits",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "import stokastisk.diagnostics",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "import stokastisk.benchmarks",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "import stokastisk.nccl",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "LLM.chat / complete / generate_structured are defined",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "bfloat16 is rejected on SM75 (not silently accepted)",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "float16 ('half') is accepted",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "LLM(dtype='bfloat16') fails before any engine starts",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "LLM(attention_backend='FLASH_ATTN') fails before any engine starts",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "LLM(structured_outputs_config backend 'auto') fails before any engine starts",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "no engine process was started by the pre-flight checks (GPU memory idle)",
+      "status": "PASS",
+      "detail": "[3, 3]"
+    },
+    {
+      "check": "invalid configuration rejected: bool as int",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "invalid configuration rejected: TP=3",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "invalid configuration rejected: TP2 x PP2 on two GPUs",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "invalid configuration rejected: hidden fallback",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "invalid configuration rejected: bool as number",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "check_feature('flash_attention') is reported unsupported",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "check_feature('flashinfer') is reported unsupported",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "check_feature('flashmla') is reported unsupported",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "check_feature('direct_upstream_vllm') is reported unsupported",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "feature matrix is non-empty and every entry has status/evidence",
+      "status": "PASS",
+      "detail": "37"
+    },
+    {
+      "check": "check_model(Qwen/Qwen2.5-0.5B-Instruct) does not raise",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "serve command pins TRITON_ATTN, fp16 and the xgrammar structured-output backend",
+      "status": "PASS",
+      "detail": "['Qwen/Qwen2.5-0.5B-Instruct', '--host', '127.0.0.1', '--port', '8000', '--dtype', 'half', '--kv-cache-dtype', 'auto', '--tensor-parallel-size', '1', '--attention-backend', 'TRITON_ATTN', '--structured-outputs-config', '{\"backend\": \"xgrammar\"}', '--gpu-memory-utilization', '0.88', '--enforce-eager', '--disable-custom-all-reduce', '--max-model-len', '2048']"
+    },
+    {
+      "check": "serve refuses the override --attention-backend",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "serve refuses the override --structured-outputs-config",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "serve refuses {'host': 'bad host'}",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "serve refuses {'port': 0}",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "serve refuses {'port': 70000}",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "serve refuses {'port': True}",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "serve refuses a model id that looks like an option",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "vLLM's real argument parser accepts the exact serve command",
+      "status": "PASS",
+      "detail": "TRITON_ATTN"
+    },
+    {
+      "check": "every package `vllm serve` needs is importable (baseline + serving + structured-output locks)",
+      "status": "PASS",
+      "detail": "58 import names"
+    },
+    {
+      "check": "TRITON_ATTN backend class resolves",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "AttentionBackendEnum.FLASH_ATTN.get_class() raises ProhibitedBackendError",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "AttentionBackendEnum.FLASHINFER.get_class() raises ProhibitedBackendError",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "AttentionBackendEnum.FLASHMLA.get_class() raises ProhibitedBackendError",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "AttentionBackendEnum.FLASH_ATTN_MLA.get_class() raises ProhibitedBackendError",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "CUDA platform auto-selection on SM7.5 puts TRITON_ATTN first and never a Flash backend",
+      "status": "PASS",
+      "detail": "['TRITON_ATTN', 'FLEX_ATTENTION']"
+    },
+    {
+      "check": "AttentionConfig(backend='FLASH_ATTN') is rejected at construction",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "Flash import guard: import flashinfer / flash_attn / flash_mla fails explicitly",
+      "status": "PASS",
+      "detail": "blocked"
+    },
+    {
+      "check": "installed vllm tree: 0 Flash-family files (source, bytecode, native), 0 native markers, 0 bindings",
+      "status": "PASS",
+      "detail": "4442 files: 1925 .py, 1925 .pyc, 6 native"
+    },
+    {
+      "check": "prohibited_report is clean",
+      "status": "PASS",
+      "detail": "{'distributions': [], 'modules': [], 'files': [], 'native_hits': {}, 'binaries': [], 'clean': True}"
+    },
+    {
+      "check": "no Flash library mapped in this process",
+      "status": "PASS",
+      "detail": "none"
+    },
+    {
+      "check": "pip check: no conflict introduced by the installation (none tolerated)",
+      "status": "PASS",
+      "detail": "8 pre-existing Kaggle lines unchanged"
+    },
+    {
+      "check": "pip check: no line mentions xgrammar, stokastisk, vllm, lm-format-enforcer or model-hosting-container-standards",
+      "status": "PASS",
+      "detail": "clean"
+    },
+    {
+      "check": "xgrammar 0.2.3 + apache-tvm-ffi 0.1.9 + transformers 5.x (metadata-compatible; no patched distribution)",
+      "status": "PASS",
+      "detail": "('0.2.3', '0.1.9', '5.20.2')"
+    },
+    {
+      "check": "dependency lock completeness: every import name of core + structured-output + serving is importable",
+      "status": "PASS",
+      "detail": "complete"
+    },
+    {
+      "check": "vLLM XgrammarBackend + xgrammar + transformers: constrained decode yields schema-valid JSON, rejects invalid tokens (CPU; NOT the GPU proof)",
+      "status": "PASS",
+      "detail": "PASS"
+    }
+  ],
+  "provenance": {
+    "project_version": "0.1.0",
+    "build": "3",
+    "wheel": "stokastisk-0.1.0-3-cp313-cp313-linux_x86_64.whl",
+    "wheel_sha256": "b31588c9b5f0d5ae103903283c7cfc25a9d7ef6c00112c3d46bb7b9ee84b023a",
+    "bundle_zip_sha256": null,
+    "bundle_source": "attached-directory",
+    "manifest_sha256": "0b5faa33585f5a617a505d8c4ac4fa6b1213890776ee6d5df5b5532c10baf6b3",
+    "source_commit": "c08956fdb93c7904d3942e5b92ed403f6c316c2e",
+    "installer_sha256": "463670047f463209d441bb6c6b7822b70252bc0e1ef6b5ffe1b84ed6332633ba",
+    "runtime": {
+      "python": "3.13.16",
+      "torch": "2.11.0+cu130",
+      "triton": "3.6.0",
+      "vllm": "0.25.1",
+      "stokastisk": "0.1.0",
+      "transformers": "5.20.2",
+      "xgrammar": "0.2.3",
+      "apache-tvm-ffi": "0.1.9",
+      "lm-format-enforcer": "0.11.3"
+    },
+    "stage_script_sha256": "ad4d333faf2c6d0170c6349cf75a7256248cc203b3c344334c2540f4cce3a339",
+    "common_sha256": "93dddcd4bf5b5cb7d1e1e15a36230b86bb76de9580a5505201069bdc7197c08c",
+    "python": "3.13.16",
+    "started": "2026-11-13T15:52:54+0000",
+    "finished": "2026-11-13T15:53:35+0000"
+  },
+  "versions": {
+    "python": "3.13.16",
+    "torch": "2.11.0+cu130",
+    "triton": "3.6.0",
+    "vllm": "0.25.1",
+    "transformers": "5.20.2",
+    "stokastisk": "0.1.0",
+    "torch_cuda": "13.0",
+    "nccl_compiled": "2.28.9",
+    "gpus": [
+      {
+        "name": "Tesla T4",
+        "capability": [
+          7,
+          5
+        ]
+      },
+      {
+        "name": "Tesla T4",
+        "capability": [
+          7,
+          5
+        ]
+      }
+    ],
+    "cuda_toolkit": {
+      "nvcc": "Build cuda_13.0.r13.0/compiler.36424714_0",
+      "nvidia_packages": {
+        "nvidia-cuda-nvcc-cu12": "12.9.86",
+        "nvidia-cuda-runtime": "13.0.96",
+        "nvidia-nccl-cu12": "2.32.3",
+        "nvidia-nccl-cu13": "2.28.9",
+        "nvidia-cuda-runtime-cu12": "12.9.79",
+        "nvidia-cuda-nvcc": "13.0.88"
+      }
+    }
+  },
+  "install": {
+    "wheel_sha256": "b31588c9b5f0d5ae103903283c7cfc25a9d7ef6c00112c3d46bb7b9ee84b023a",
+    "build": "3",
+    "plan": {
+      "install": {
+        "apache-tvm-ffi": "0.1.9",
+        "cbor2": "6.2.0.post2",
+        "llguidance": "1.7.6",
+        "msgspec": "0.22.0",
+        "openai-harmony": "0.0.8",
+        "partial-json-parser": "0.2.1.1.post7",
+        "pybase64": "1.5.1",
+        "xgrammar": "0.2.3",
+        "diskcache": "5.6.3",
+        "interegular": "0.3.3",
+        "lm-format-enforcer": "0.11.3",
+        "outlines-core": "0.2.14",
+        "fastapi-cli": "0.0.33",
+        "model-hosting-container-standards": "0.1.16",
+        "prometheus-fastapi-instrumentator": "8.1.0",
+        "pydantic-settings": "2.16.2",
+        "rich-toolkit": "0.20.6",
+        "sse-starlette": "3.7.0",
+        "supervisor": "4.3.0"
+      },
+      "keep": {},
+      "conflicts": [],
+      "by_profile": {
+        "core": [
+          "apache-tvm-ffi",
+          "cbor2",
+          "llguidance",
+          "msgspec",
+          "openai-harmony",
+          "partial-json-parser",
+          "pybase64",
+          "xgrammar"
+        ],
+        "structured-output": [
+          "diskcache",
+          "interegular",
+          "lm-format-enforcer",
+          "outlines-core"
+        ],
+        "serving": [
+          "fastapi-cli",
+          "model-hosting-container-standards",
+          "prometheus-fastapi-instrumentator",
+          "pydantic-settings",
+          "rich-toolkit",
+          "sse-starlette",
+          "supervisor"
+        ]
+      }
+    },
+    "diff": {
+      "changed": {},
+      "removed": [],
+      "added": [
+        "apache-tvm-ffi",
+        "cbor2",
+        "diskcache",
+        "fastapi-cli",
+        "interegular",
+        "llguidance",
+        "lm-format-enforcer",
+        "model-hosting-container-standards",
+        "msgspec",
+        "openai-harmony",
+        "outlines-core",
+        "partial-json-parser",
+        "prometheus-fastapi-instrumentator",
+        "pybase64",
+        "pydantic-settings",
+        "rich-toolkit",
+        "sse-starlette",
+        "stokastisk",
+        "supervisor",
+        "vllm",
+        "xgrammar"
+      ],
+      "unexpected_added": [],
+      "expected_but_absent": [],
+      "ok": true
+    },
+    "pip_check_new": {
+      "new": [],
+      "own": [],
+      "other": [],
+      "preexisting_unchanged": [
+        "bigframes 2.51.0 requires google-cloud-bigquery-storage, which is not installed.",
+        "dopamine-rl 4.1.2 has requirement gym<=0.25.2, but you have gym 0.26.2.",
+        "google-colab 1.0.0 has requirement jupyter-server==2.20.0, but you have jupyter-server 2.12.5.",
+        "google-colab 1.0.0 has requirement pandas==2.2.3, but you have pandas 2.3.3.",
+        "google-colab 1.0.0 has requirement requests==2.32.4, but you have requests 2.34.2.",
+        "gradio 6.30.0 has requirement pillow<13.0,>=8.0, but you have pillow 13.0.0.",
+        "moviepy 1.0.3 has requirement decorator<5.0,>=4.0.2, but you have decorator 5.3.1.",
+        "ydf 0.15.0 has requirement protobuf<7.0.0,>=5.29.1, but you have protobuf 7.36.2."
+      ]
+    },
+    "installer_sha256": "463670047f463209d441bb6c6b7822b70252bc0e1ef6b5ffe1b84ed6332633ba",
+    "downloaded_bytes": 57040495
+  },
+  "inventory": {
+    "method": "python -m pip list --format=json",
+    "count": 958,
+    "duplicates": {
+      "setuptools": [
+        {
+          "version": "68.1.2",
+          "location": "/usr/lib/python3/dist-packages/setuptools-68.1.2.egg-info"
+        },
+        {
+          "version": "81.0.0",
+          "location": "/usr/local/lib/python3.13/dist-packages/setuptools-81.0.0.dist-info"
+        }
+      ],
+      "mako": [
+        {
+          "version": "1.3.2.dev0",
+          "location": "/usr/lib/python3/dist-packages/Mako-1.3.2.dev0.egg-info"
+        },
+        {
+          "version": "1.4.3",
+          "location": "/usr/local/lib/python3.13/dist-packages/mako-1.4.3.dist-info"
+        }
+      ],
+      "oauthlib": [
+        {
+          "version": "3.2.2",
+          "location": "/usr/lib/python3/dist-packages/oauthlib-3.2.2.egg-info"
+        },
+        {
+          "version": "3.3.1",
+          "location": "/usr/local/lib/python3.13/dist-packages/oauthlib-3.3.1.dist-info"
+        }
+      ],
+      "cryptography": [
+        {
+          "version": "41.0.7",
+          "location": "/usr/lib/python3/dist-packages/cryptography-41.0.7.dist-info"
+        },
+        {
+          "version": "41.0.7",
+          "location": "/usr/lib/python3/dist-packages/cryptography.egg-info"
+        },
+        {
+          "version": "50.0.2",
+          "location": "/usr/local/lib/python3.13/dist-packages/cryptography-50.0.2.dist-info"
+        }
+      ],
+      "markdown": [
+        {
+          "version": "3.11.2",
+          "location": "/usr/local/lib/python3.13/dist-packages/markdown-3.11.2.dist-info"
+        },
+        {
+          "version": "3.5.2",
+          "location": "/usr/lib/python3/dist-packages/Markdown-3.5.2.dist-info"
+        }
+      ],
+      "packaging": [
+        {
+          "version": "24.0",
+          "location": "/usr/lib/python3/dist-packages/packaging-24.0.dist-info"
+        },
+        {
+          "version": "26.3",
+          "location": "/usr/local/lib/python3.13/dist-packages/packaging-26.3.dist-info"
+        }
+      ],
+      "numpy": [
+        {
+          "version": "1.26.4",
+          "location": "/usr/lib/python3/dist-packages/numpy-1.26.4.dist-info"
+        },
+        {
+          "version": "2.1.3",
+          "location": "/usr/local/lib/python3.13/dist-packages/numpy-2.1.3.dist-info"
+        }
+      ],
+      "pyjwt": [
+        {
+          "version": "2.15.1",
+          "location": "/usr/local/lib/python3.13/dist-packages/pyjwt-2.15.1.dist-info"
+        },
+        {
+          "version": "2.7.0",
+          "location": "/usr/lib/python3/dist-packages/PyJWT-2.7.0.dist-info"
+        }
+      ],
+      "gdal": [
+        {
+          "version": "3.8.4",
+          "location": "/usr/lib/python3/dist-packages/GDAL-3.8.4.egg-info"
+        },
+        {
+          "version": "3.8.4",
+          "location": "/usr/local/lib/python3.13/dist-packages/gdal-3.8.4.dist-info"
+        }
+      ],
+      "blinker": [
+        {
+          "version": "1.7.0",
+          "location": "/usr/lib/python3/dist-packages/blinker-1.7.0.dist-info"
+        },
+        {
+          "version": "1.9.0",
+          "location": "/usr/local/lib/python3.13/dist-packages/blinker-1.9.0.dist-info"
+        }
+      ],
+      "distro": [
+        {
+          "version": "1.9.0",
+          "location": "/usr/lib/python3/dist-packages/distro-1.9.0.dist-info"
+        },
+        {
+          "version": "1.9.0",
+          "location": "/usr/local/lib/python3.13/dist-packages/distro-1.9.0.dist-info"
+        }
+      ],
+      "six": [
+        {
+          "version": "1.16.0",
+          "location": "/usr/lib/python3/dist-packages/six-1.16.0.egg-info"
+        },
+        {
+          "version": "1.17.0",
+          "location": "/usr/local/lib/python3.13/dist-packages/six-1.17.0.dist-info"
+        }
+      ],
+      "httplib2": [
+        {
+          "version": "0.20.4",
+          "location": "/usr/lib/python3/dist-packages/httplib2-0.20.4.dist-info"
+        },
+        {
+          "version": "0.32.0",
+          "location": "/usr/local/lib/python3.13/dist-packages/httplib2-0.32.0.dist-info"
+        }
+      ],
+      "pygobject": [
+        {
+          "version": "3.48.2",
+          "location": "/usr/lib/python3/dist-packages/PyGObject-3.48.2.egg-info"
+        },
+        {
+          "version": "3.48.2",
+          "location": "/usr/local/lib/python3.13/dist-packages/pygobject-3.48.2.dist-info"
+        }
+      ],
+      "pyparsing": [
+        {
+          "version": "3.1.1",
+          "location": "/usr/lib/python3/dist-packages/pyparsing-3.1.1.dist-info"
+        },
+        {
+          "version": "3.3.3",
+          "location": "/usr/local/lib/python3.13/dist-packages/pyparsing-3.3.3.dist-info"
+        }
+      ],
+      "markupsafe": [
+        {
+          "version": "2.1.5",
+          "location": "/usr/lib/python3/dist-packages/MarkupSafe-2.1.5.egg-info"
+        },
+        {
+          "version": "3.0.4",
+          "location": "/usr/local/lib/python3.13/dist-packages/markupsafe-3.0.4.dist-info"
+        }
+      ],
+      "python-apt": [
+        {
+          "version": "0.0.0",
+          "location": "/usr/local/lib/python3.13/dist-packages/python_apt-0.0.0-py3.13.egg-info"
+        },
+        {
+          "version": "2.7.7+ubuntu5.3",
+          "location": "/usr/lib/python3/dist-packages/python_apt-2.7.7+ubuntu5.3.egg-info"
+        }
+      ]
+    }
+  },
+  "server_requirements_missing": [],
+  "sm75_backend_selection": {
+    "valid": [
+      "TRITON_ATTN",
+      "FLEX_ATTENTION"
+    ],
+    "invalid": {
+      "FLASH_ATTN": "[\"ProhibitedBackendError: attention backend 'FLASH_ATTN' is not available: it is a FlashAttention/FlashInfer/FlashMLA im",
+      "FLASHINFER": "[\"ProhibitedBackendError: attention backend 'FLASHINFER' is not available: it is a FlashAttention/FlashInfer/FlashMLA im",
+      "TURBOQUANT": "['kv_cache_dtype not supported']"
+    }
+  },
+  "installed_tree_scan": {
+    "files": 4442,
+    "py": 1925,
+    "pyc": 1925,
+    "native": 6,
+    "pycache_dirs": [
+      "__pycache__",
+      "assets/__pycache__",
+      "benchmarks/__pycache__",
+      "benchmarks/datasets/__pycache__",
+      "benchmarks/lib/__pycache__",
+      "benchmarks/sweep/__pycache__",
+      "compilation/__pycache__",
+      "compilation/passes/__pycache__",
+      "compilation/passes/fusion/__pycache__",
+      "compilation/passes/ir/__pycache__",
+      "compilation/passes/utility/__pycache__",
+      "config/__pycache__",
+      "cute_utils/__pycache__",
+      "device_allocator/__pycache__",
+      "distributed/__pycache__",
+      "distributed/device_communicators/__pycache__",
+      "distributed/ec_transfer/__pycache__",
+      "distributed/ec_transfer/ec_connector/__pycache__",
+      "distributed/elastic_ep/__pycache__",
+      "distributed/eplb/__pycache__",
+      "distributed/eplb/policy/__pycache__",
+      "distributed/kv_transfer/__pycache__",
+      "distributed/kv_transfer/kv_connector/__pycache__",
+      "distributed/kv_transfer/kv_connector/v1/__pycache__",
+      "distributed/kv_transfer/kv_connector/v1/hf3fs/__pycache__",
+      "distributed/kv_transfer/kv_connector/v1/hf3fs/utils/__pycache__",
+      "distributed/kv_transfer/kv_connector/v1/lmcache_integration/__pycache__",
+      "distributed/kv_transfer/kv_connector/v1/mooncake/__pycache__",
+      "distributed/kv_transfer/kv_connector/v1/mooncake/store/__pycache__",
+      "distributed/kv_transfer/kv_connector/v1/moriio/__pycache__",
+      "distributed/kv_transfer/kv_connector/v1/nixl/__pycache__",
+      "distributed/kv_transfer/kv_connector/v1/offloading/__pycache__",
+      "distributed/weight_transfer/__pycache__",
+      "engine/__pycache__",
+      "entrypoints/__pycache__",
+      "entrypoints/anthropic/__pycache__",
+      "entrypoints/cli/__pycache__",
+      "entrypoints/cli/benchmark/__pycache__",
+      "entrypoints/generate/__pycache__",
+      "entrypoints/generate/base/__pycache__",
+      "entrypoints/generate/beam_search/__pycache__",
+      "entrypoints/generate/generative_scoring/__pycache__",
+      "entrypoints/mcp/__pycache__",
+      "entrypoints/openai/__pycache__",
+      "entrypoints/openai/chat_completion/__pycache__",
+      "entrypoints/openai/completion/__pycache__",
+      "entrypoints/openai/engine/__pycache__",
+      "entrypoints/openai/models/__pycache__",
+      "entrypoints/openai/parser/__pycache__",
+      "entrypoints/openai/responses/__pycache__",
+      "entrypoints/pooling/__pycache__",
+      "entrypoints/pooling/base/__pycache__",
+      "entrypoints/pooling/classify/__pycache__",
+      "entrypoints/pooling/embed/__pycache__",
+      "entrypoints/pooling/pooling/__pycache__",
+      "entrypoints/pooling/scoring/__pycache__",
+      "entrypoints/scale_out/__pycache__",
+      "entrypoints/scale_out/derender/__pycache__",
+      "entrypoints/scale_out/render/__pycache__",
+      "entrypoints/scale_out/token_in_token_out/__pycache__",
+      "entrypoints/serve/__pycache__",
+      "entrypoints/serve/dev/__pycache__",
+      "entrypoints/serve/dev/cache/__pycache__",
+      "entrypoints/serve/dev/rlhf/__pycache__",
+      "entrypoints/serve/dev/rpc/__pycache__",
+      "entrypoints/serve/dev/server_info/__pycache__",
+      "entrypoints/serve/dev/sleep/__pycache__",
+      "entrypoints/serve/elastic_ep/__pycache__",
+      "entrypoints/serve/engine/__pycache__",
+      "entrypoints/serve/instrumentator/__pycache__",
+      "entrypoints/serve/lora/__pycache__",
+      "entrypoints/serve/profile/__pycache__",
+      "entrypoints/serve/sagemaker/__pycache__",
+      "entrypoints/serve/tokenize/__pycache__",
+      "entrypoints/serve/utils/__pycache__",
+      "entrypoints/speech_to_text/__pycache__",
+      "entrypoints/speech_to_text/base/__pycache__",
+      "entrypoints/speech_to_text/realtime/__pycache__",
+      "entrypoints/speech_to_text/transcription/__pycache__",
+      "entrypoints/speech_to_text/translation/__pycache__",
+      "inputs/__pycache__",
+      "ir/__pycache__",
+      "ir/ops/__pycache__",
+      "kernels/__pycache__",
+      "kernels/helion/__pycache__",
+      "kernels/helion/ops/__pycache__",
+      "kernels/triton/__pycache__",
+      "logging_utils/__pycache__",
+      "lora/__pycache__",
+      "lora/layers/__pycache__",
+      "lora/ops/__pycache__",
+      "lora/ops/torch_ops/__pycache__",
+      "lora/ops/triton_ops/__pycache__",
+      "lora/ops/xpu_ops/__pycache__",
+      "lora/punica_wrapper/__pycache__",
+      "model_executor/__pycache__",
+      "model_executor/kernels/__pycache__",
+      "model_executor/kernels/attention/__pycache__",
+      "model_executor/kernels/attention/dsa/__pycache__",
+      "model_executor/kernels/linear/__pycache__",
+      "model_executor/kernels/linear/mixed_precision/__pycache__",
+      "model_executor/kernels/linear/mxfp4/__pycache__",
+      "model_executor/kernels/linear/mxfp8/__pycache__",
+      "model_executor/kernels/linear/nvfp4/__pycache__",
+      "model_executor/kernels/linear/scaled_mm/__pycache__",
+      "model_executor/kernels/mhc/__pycache__",
+      "model_executor/layers/__pycache__",
+      "model_executor/layers/attention/__pycache__",
+      "model_executor/layers/fla/__pycache__",
+      "model_executor/layers/fla/ops/__pycache__",
+      "model_executor/layers/fused_moe/__pycache__",
+      "model_executor/layers/fused_moe/experts/__pycache__",
+      "model_executor/layers/fused_moe/oracle/__pycache__",
+      "model_executor/layers/fused_moe/prepare_finalize/__pycache__",
+      "model_executor/layers/fused_moe/router/__pycache__",
+      "model_executor/layers/fused_moe/runner/__pycache__",
+      "model_executor/layers/fusion/__pycache__",
+      "model_executor/layers/hpc/__pycache__",
+      "model_executor/layers/mamba/__pycache__",
+      "model_executor/layers/mamba/gdn/__pycache__",
+      "model_executor/layers/mamba/linear/__pycache__",
+      "model_executor/layers/mamba/ops/__pycache__",
+      "model_executor/layers/mamba/ops/cpu/__pycache__",
+      "model_executor/layers/mamba/ops/gdn_chunk_cutedsl/__pycache__",
+      "model_executor/layers/minimax_rms_norm/__pycache__",
+      "model_executor/layers/pooler/__pycache__",
+      "model_executor/layers/pooler/seqwise/__pycache__",
+      "model_executor/layers/pooler/tokwise/__pycache__",
+      "model_executor/layers/quantization/__pycache__",
+      "model_executor/layers/quantization/compressed_tensors/__pycache__",
+      "model_executor/layers/quantization/compressed_tensors/compressed_tensors_moe/__pycache__",
+      "model_executor/layers/quantization/compressed_tensors/schemes/__pycache__",
+      "model_executor/layers/quantization/compressed_tensors/transform/__pycache__",
+      "model_executor/layers/quantization/compressed_tensors/transform/schemes/__pycache__",
+      "model_executor/layers/quantization/inc/__pycache__",
+      "model_executor/layers/quantization/inc/schemes/__pycache__",
+      "model_executor/layers/quantization/online/__pycache__",
+      "model_executor/layers/quantization/quark/__pycache__",
+      "model_executor/layers/quantization/quark/schemes/__pycache__",
+      "model_executor/layers/quantization/turboquant/__pycache__",
+      "model_executor/layers/quantization/utils/__pycache__",
+      "model_executor/layers/rotary_embedding/__pycache__",
+      "model_executor/model_loader/__pycache__",
+      "model_executor/model_loader/reload/__pycache__",
+      "model_executor/models/__pycache__",
+      "model_executor/models/transformers/__pycache__",
+      "model_executor/models/transformers/fusers/__pycache__",
+      "model_executor/offloader/__pycache__",
+      "model_executor/warmup/__pycache__",
+      "models/__pycache__",
+      "models/deepseek_v32/__pycache__",
+      "models/deepseek_v32/nvidia/__pycache__",
+      "models/deepseek_v4/__pycache__",
+      "models/deepseek_v4/amd/__pycache__",
+      "models/deepseek_v4/common/__pycache__",
+      "models/deepseek_v4/common/ops/__pycache__",
+      "models/deepseek_v4/nvidia/__pycache__",
+      "models/deepseek_v4/nvidia/ops/__pycache__",
+      "models/deepseek_v4/xpu/__pycache__",
+      "models/minimax_m3/__pycache__",
+      "models/minimax_m3/amd/__pycache__",
+      "models/minimax_m3/amd/ops/__pycache__",
+      "models/minimax_m3/common/__pycache__",
+      "models/minimax_m3/common/ops/__pycache__",
+      "models/minimax_m3/nvidia/__pycache__",
+      "multimodal/__pycache__",
+      "multimodal/media/__pycache__",
+      "multimodal/processing/__pycache__",
+      "parser/__pycache__",
+      "parser/engine/__pycache__",
+      "platforms/__pycache__",
+      "plugins/__pycache__",
+      "plugins/io_processors/__pycache__",
+      "plugins/lora_resolvers/__pycache__",
+      "profiler/__pycache__",
+      "ray/__pycache__",
+      "reasoning/__pycache__",
+      "renderers/__pycache__",
+      "renderers/inputs/__pycache__",
+      "third_party/__pycache__",
+      "tokenizers/__pycache__",
+      "tool_parsers/__pycache__",
+      "tracing/__pycache__",
+      "transformers_utils/__pycache__",
+      "transformers_utils/chat_templates/__pycache__",
+      "transformers_utils/configs/__pycache__",
+      "transformers_utils/configs/speculators/__pycache__",
+      "transformers_utils/processors/__pycache__",
+      "triton_utils/__pycache__",
+      "usage/__pycache__",
+      "utils/__pycache__",
+      "v1/__pycache__",
+      "v1/attention/__pycache__",
+      "v1/attention/backends/__pycache__",
+      "v1/attention/backends/mla/__pycache__",
+      "v1/attention/backends/mla/prefill/__pycache__",
+      "v1/attention/ops/__pycache__",
+      "v1/core/__pycache__",
+      "v1/core/sched/__pycache__",
+      "v1/engine/__pycache__",
+      "v1/executor/__pycache__",
+      "v1/kv_offload/__pycache__",
+      "v1/kv_offload/cpu/__pycache__",
+      "v1/kv_offload/cpu/policies/__pycache__",
+      "v1/kv_offload/tiering/__pycache__",
+      "v1/kv_offload/tiering/example/__pycache__",
+      "v1/kv_offload/tiering/fs/__pycache__",
+      "v1/kv_offload/tiering/obj/__pycache__",
+      "v1/kv_offload/tiering/p2p/__pycache__",
+      "v1/kv_offload/tiering/p2p/control/__pycache__",
+      "v1/kv_offload/tiering/p2p/data/__pycache__",
+      "v1/kv_offload/tiering/p2p/session/__pycache__",
+      "v1/metrics/__pycache__",
+      "v1/pool/__pycache__",
+      "v1/sample/__pycache__",
+      "v1/sample/logits_processor/__pycache__",
+      "v1/sample/ops/__pycache__",
+      "v1/simple_kv_offload/__pycache__",
+      "v1/spec_decode/__pycache__",
+      "v1/spec_decode/dynamic/__pycache__",
+      "v1/structured_output/__pycache__",
+      "v1/worker/__pycache__",
+      "v1/worker/cpu/__pycache__",
+      "v1/worker/gpu/__pycache__",
+      "v1/worker/gpu/metrics/__pycache__",
+      "v1/worker/gpu/mm/__pycache__",
+      "v1/worker/gpu/model_states/__pycache__",
+      "v1/worker/gpu/pool/__pycache__",
+      "v1/worker/gpu/sample/__pycache__",
+      "v1/worker/gpu/spec_decode/__pycache__",
+      "v1/worker/gpu/spec_decode/autoregressive/__pycache__",
+      "v1/worker/gpu/spec_decode/dflash/__pycache__",
+      "v1/worker/gpu/spec_decode/dspark/__pycache__",
+      "v1/worker/gpu/spec_decode/eagle/__pycache__",
+      "v1/worker/gpu/spec_decode/gemma4/__pycache__",
+      "v1/worker/gpu/spec_decode/mtp/__pycache__"
+    ],
+    "path_hits": [],
+    "native_hits": {},
+    "binding_hits": [],
+    "prohibited_file_count": 0,
+    "clean": true
+  },
+  "flash_named_but_allowed": [
+    "model_executor/models/__pycache__/laguna_dflash.cpython-313.pyc",
+    "model_executor/models/__pycache__/longcat_flash.cpython-313.pyc",
+    "model_executor/models/__pycache__/longcat_flash_mtp.cpython-313.pyc",
+    "model_executor/models/__pycache__/qwen3_dflash.cpython-313.pyc",
+    "model_executor/models/laguna_dflash.py",
+    "model_executor/models/longcat_flash.py",
+    "model_executor/models/longcat_flash_mtp.py",
+    "model_executor/models/qwen3_dflash.py",
+    "v1/attention/ops/__pycache__/triton_reshape_and_cache_flash.cpython-313.pyc",
+    "v1/attention/ops/triton_reshape_and_cache_flash.py",
+    "v1/spec_decode/__pycache__/dflash.cpython-313.pyc",
+    "v1/spec_decode/dflash.py"
+  ],
+  "pip_check": {
+    "returncode": 1,
+    "lines": [
+      "bigframes 2.51.0 requires google-cloud-bigquery-storage, which is not installed.",
+      "google-colab 1.0.0 has requirement jupyter-server==2.20.0, but you have jupyter-server 2.12.5.",
+      "google-colab 1.0.0 has requirement pandas==2.2.3, but you have pandas 2.3.3.",
+      "google-colab 1.0.0 has requirement requests==2.32.4, but you have requests 2.34.2.",
+      "dopamine-rl 4.1.2 has requirement gym<=0.25.2, but you have gym 0.26.2.",
+      "moviepy 1.0.3 has requirement decorator<5.0,>=4.0.2, but you have decorator 5.3.1.",
+      "ydf 0.15.0 has requirement protobuf<7.0.0,>=5.29.1, but you have protobuf 7.36.2.",
+      "gradio 6.30.0 has requirement pillow<13.0,>=8.0, but you have pillow 13.0.0."
+    ]
+  },
+  "structured_cpu": {
+    "status": "PASS",
+    "versions": {
+      "xgrammar": "0.2.3",
+      "apache-tvm-ffi": "0.1.9",
+      "transformers": "5.20.2",
+      "torch": "2.11.0+cu130"
+    },
+    "model": "Qwen/Qwen2.5-0.5B-Instruct",
+    "checks": [
+      {
+        "check": "vllm.v1.structured_output.backend_lm_format_enforcer imports (lmformatenforcer is installed)",
+        "status": "PASS",
+        "detail": "0.11.3"
+      },
+      {
+        "check": "XgrammarBackend constructs",
+        "status": "PASS",
+        "detail": "vocab_size=151936"
+      },
+      {
+        "check": "schema has no xgrammar-unsupported feature",
+        "status": "PASS",
+        "detail": ""
+      },
+      {
+        "check": "allocate_token_bitmask shape",
+        "status": "PASS",
+        "detail": "(1, 4748)"
+      },
+      {
+        "check": "constrained decode produced valid JSON",
+        "status": "PASS",
+        "detail": "{\"city\": \"Paris\", \"population\": 2102650, \"tags\": [\"capital\", \"france\"]}"
+      },
+      {
+        "check": "decoded JSON satisfies the schema",
+        "status": "PASS",
+        "detail": "{'city': 'Paris', 'population': 2102650, 'tags': ['capital', 'france']}"
+      },
+      {
+        "check": "grammar terminated after the closing brace",
+        "status": "PASS",
+        "detail": ""
+      },
+      {
+        "check": "bitmask excludes a prose token at the start of the object",
+        "status": "PASS",
+        "detail": "59604"
+      },
+      {
+        "check": "bitmask allows '{' at the start of the object",
+        "status": "PASS",
+        "detail": "90"
+      },
+      {
+        "check": "validate_tokens rejects non-JSON text",
+        "status": "PASS",
+        "detail": "[]"
+      },
+      {
+        "check": "validate_tokens accepts schema-valid JSON in full",
+        "status": "PASS",
+        "detail": ""
+      },
+      {
+        "check": "validate_tokens stops at the first schema violation (city must be a string)",
+        "status": "PASS",
+        "detail": "4"
+      },
+      {
+        "check": "accept_tokens refuses a token that violates the grammar",
+        "status": "PASS",
+        "detail": ""
+      },
+      {
+        "check": "an integer above the schema maximum is rejected by the grammar (digits cannot run on forever)",
+        "status": "PASS",
+        "detail": "18/24 tokens accepted"
+      },
+      {
+        "check": "a string above maxLength is rejected by the grammar",
+        "status": "PASS",
+        "detail": ""
+      },
+      {
+        "check": "rollback reduces processed token count",
+        "status": "PASS",
+        "detail": "(3, 2)"
+      },
+      {
+        "check": "reset clears processed token count",
+        "status": "PASS",
+        "detail": ""
+      }
+    ]
+  },
+  "output_dir_gib": {
+    "used": 0.0,
+    "quota": 20.0
+  },
+  "check_counts": {
+    "PASS": 79
+  }
+}

@@ -14,7 +14,7 @@ Install: `pip install stokastisk --extra-index-url https://stokastisk-ai.github.
 |---|---|
 | Kaggle 2 x T4, notebook 15 (2026-11-13): installer 32/32, static 79/79, **engine 44/44**, parallel 23/23, **server 21/21**, summary 15/15; one wheel SHA, `TRITON_ATTN` in config and as compiled `kernel_unified_attention`, no Flash library or backend in any log, xgrammar's native library mapped, graceful server shutdown, GPU memory released | **Kaggle-tested** on wheel `b31588c9b5f0...` |
 | The published wheel vs that wheel | identical except `METADATA`/`RECORD` (adds exact pins `rich-toolkit==0.20.6`, `supervisor==4.3.0`; `outlines_core` becomes `outlines-core`); 2,580 of 2,582 members byte-identical, including all code and CUDA binaries |
-| Wheel integrity (`scripts/audit/verify_build3_wheel.py`): RECORD, byte-equality with the pinned vLLM wheel + documented transform, 0 Flash files/markers/bindings, natives unchanged, all 19 locked packages pinned exactly | **verified** |
+| Wheel integrity (`scripts/audit/verify_integrated_wheel.py`): RECORD, byte-equality with the pinned vLLM wheel + documented transform, 0 Flash files/markers/bindings, natives unchanged, all 19 locked packages pinned exactly | **verified** |
 | `pip install` resolver simulation against Kaggle's real 937-package inventory | installs exactly `stokastisk` + 19 pinned packages; **no** change to the Kaggle image |
 | One-line install and inference on Kaggle 2 x T4 (notebooks 16, 18, 19; 2026-11-13/14): quickstart script; Qwen2.5-0.5B TP=1; Qwen2.5-3B TP=2 and PP=2; Qwen2.5-Coder-7B-Instruct TP=2 and PP=2; `TRITON_ATTN` verified, GPUs released after every engine | **Kaggle-tested** |
 | CPU test suite (`CUDA_VISIBLE_DEVICES= python3.13 -m pytest tests`) | passes |

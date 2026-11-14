@@ -1,0 +1,201 @@
+{
+  "stage": "15c_server",
+  "status": "PASS",
+  "checks": [
+    {
+      "check": "both GPUs idle before the server starts",
+      "status": "PASS",
+      "detail": "[0, 0]"
+    },
+    {
+      "check": "server requirements are importable (installed by the bundle's locks)",
+      "status": "PASS",
+      "detail": "complete"
+    },
+    {
+      "check": "ServerStartupError carries exit code, command, persistent log path and a log excerpt",
+      "status": "PASS",
+      "detail": "{'exit_code': 1, 'log': '/kaggle/working/stokastisk-acceptance/15c_server_startfail.log', 'excerpt_chars': 3022}"
+    },
+    {
+      "check": "a port that is already in use is refused before launching",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "server became healthy (GET /health 200)",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "GET /v1/models lists the served model",
+      "status": "PASS",
+      "detail": "['Qwen/Qwen2.5-0.5B-Instruct']"
+    },
+    {
+      "check": "POST /v1/chat/completions returns non-empty text",
+      "status": "PASS",
+      "detail": "Hello! How can I assist you today?"
+    },
+    {
+      "check": "streaming (SSE) yields several non-empty deltas and ends with [DONE]",
+      "status": "PASS",
+      "detail": "{'n': 32, 'text': \"Sure! Here's the count from 1 to 5:\\n\\n1, 2, 3, 4, 5\\n\\nEach number represents a uni\"}"
+    },
+    {
+      "check": "unknown model -> ServerHTTPError with status 404",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "malformed request body -> a 4xx ServerHTTPError",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "missing endpoint -> 404 ServerHTTPError",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "structured output over HTTP is schema-valid JSON",
+      "status": "PASS",
+      "detail": "{\n  \"city\": \"Paris\",\n  \"population\": 21850000\n}"
+    },
+    {
+      "check": "/metrics exposes vllm: samples",
+      "status": "PASS",
+      "detail": "418"
+    },
+    {
+      "check": "exactly one GPU holds the model while serving",
+      "status": "PASS",
+      "detail": "[13513, 3]"
+    },
+    {
+      "check": "no Flash library mapped in the server process tree",
+      "status": "PASS",
+      "detail": "3 processes inspected"
+    },
+    {
+      "check": "Triton cache holds compiled kernel_unified_attention (server)",
+      "status": "PASS",
+      "detail": "['__grp__kernel_unified_attention.json', 'kernel_unified_attention.cubin', 'kernel_unified_attention.json']"
+    },
+    {
+      "check": "server log shows TRITON_ATTN and no Flash backend selection",
+      "status": "PASS",
+      "detail": "True"
+    },
+    {
+      "check": "restart: a fresh server becomes healthy on the same port and answers",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "server stopped gracefully (SIGINT only) and no process of its group survived",
+      "status": "PASS",
+      "detail": "{'signals': ['SIGINT'], 'graceful': True, 'exit_code': 0, 'children_survived_leader': False, 'group_gone': True}"
+    },
+    {
+      "check": "no live engine process after stop",
+      "status": "PASS",
+      "detail": "[]"
+    },
+    {
+      "check": "GPU memory released after stop (<500 MiB each)",
+      "status": "PASS",
+      "detail": "[0, 0]"
+    }
+  ],
+  "provenance": {
+    "project_version": "0.1.0",
+    "build": "3",
+    "wheel": "stokastisk-0.1.0-3-cp313-cp313-linux_x86_64.whl",
+    "wheel_sha256": "b31588c9b5f0d5ae103903283c7cfc25a9d7ef6c00112c3d46bb7b9ee84b023a",
+    "bundle_zip_sha256": null,
+    "bundle_source": "attached-directory",
+    "manifest_sha256": "0b5faa33585f5a617a505d8c4ac4fa6b1213890776ee6d5df5b5532c10baf6b3",
+    "source_commit": "c08956fdb93c7904d3942e5b92ed403f6c316c2e",
+    "installer_sha256": "463670047f463209d441bb6c6b7822b70252bc0e1ef6b5ffe1b84ed6332633ba",
+    "runtime": {
+      "python": "3.13.16",
+      "torch": "2.11.0+cu130",
+      "triton": "3.6.0",
+      "vllm": "0.25.1",
+      "stokastisk": "0.1.0",
+      "transformers": "5.20.2",
+      "xgrammar": "0.2.3",
+      "apache-tvm-ffi": "0.1.9",
+      "lm-format-enforcer": "0.11.3"
+    },
+    "stage_script_sha256": "ffae053ba480b711650a2dcbb044b7a57cd78bd7fa3613fff098fe2113e6a02a",
+    "common_sha256": "93dddcd4bf5b5cb7d1e1e15a36230b86bb76de9580a5505201069bdc7197c08c",
+    "python": "3.13.16",
+    "started": "2026-11-13T15:59:22+0000",
+    "finished": "2026-11-13T16:01:53+0000"
+  },
+  "model": "Qwen/Qwen2.5-0.5B-Instruct",
+  "server_requirements_missing": [],
+  "command": [
+    "/usr/bin/python3",
+    "-c",
+    "from vllm.entrypoints.cli.main import main; main()",
+    "serve",
+    "Qwen/Qwen2.5-0.5B-Instruct",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "52905",
+    "--dtype",
+    "half",
+    "--kv-cache-dtype",
+    "auto",
+    "--tensor-parallel-size",
+    "1",
+    "--attention-backend",
+    "TRITON_ATTN",
+    "--structured-outputs-config",
+    "{\"backend\": \"xgrammar\"}",
+    "--gpu-memory-utilization",
+    "0.88",
+    "--enforce-eager",
+    "--disable-custom-all-reduce",
+    "--max-model-len",
+    "2048",
+    "--served-model-name",
+    "Qwen/Qwen2.5-0.5B-Instruct"
+  ],
+  "chat_text": "Hello! How can I assist you today?",
+  "gpu_used_MiB": {
+    "before": [
+      0,
+      0
+    ],
+    "peak": [
+      13513,
+      3
+    ]
+  },
+  "server_exit_code": 0,
+  "shutdown_report": {
+    "signals": [
+      "SIGINT"
+    ],
+    "graceful": true,
+    "exit_code": 0,
+    "children_survived_leader": false,
+    "group_gone": true
+  },
+  "gpu_after_close": [
+    0,
+    0
+  ],
+  "output_dir_gib": {
+    "used": 0.042,
+    "quota": 20.0
+  },
+  "check_counts": {
+    "PASS": 21
+  }
+}

@@ -1,0 +1,147 @@
+# stokastisk server start 2026-11-13T15:59:22+0000
+# command: /usr/bin/python3 -c from vllm.entrypoints.cli.main import main; main() serve stokastisk-test/this-model-does-not-exist --host 127.0.0.1 --port 56969 --dtype half --kv-cache-dtype auto --tensor-parallel-size 1 --attention-backend TRITON_ATTN --structured-outputs-config {"backend": "xgrammar"} --gpu-memory-utilization 0.88 --enforce-eager --disable-custom-all-reduce --max-model-len 2048 --served-model-name stokastisk-test/this-model-does-not-exist
+(APIServer pid=1752) INFO 11-13 15:59:36 [api_utils.py:339] 
+(APIServer pid=1752) INFO 11-13 15:59:36 [api_utils.py:339]        █     █     █▄   ▄█
+(APIServer pid=1752) INFO 11-13 15:59:36 [api_utils.py:339]  ▄▄ ▄█ █     █     █ ▀▄▀ █  version 0.25.1
+(APIServer pid=1752) INFO 11-13 15:59:36 [api_utils.py:339]   █▄█▀ █     █     █     █  model   stokastisk-test/this-model-does-not-exist
+(APIServer pid=1752) INFO 11-13 15:59:36 [api_utils.py:339]    ▀▀  ▀▀▀▀▀ ▀▀▀▀▀ ▀     ▀
+(APIServer pid=1752) INFO 11-13 15:59:36 [api_utils.py:339] 
+(APIServer pid=1752) INFO 11-13 15:59:36 [api_utils.py:273] non-default args: {'model_tag': 'stokastisk-test/this-model-does-not-exist', 'host': '127.0.0.1', 'port': 56969, 'model': 'stokastisk-test/this-model-does-not-exist', 'dtype': 'half', 'max_model_len': 2048, 'enforce_eager': True, 'served_model_name': ['stokastisk-test/this-model-does-not-exist'], 'attention_backend': 'TRITON_ATTN', 'disable_custom_all_reduce': True, 'gpu_memory_utilization': 0.88, 'structured_outputs_config': StructuredOutputsConfig(backend='xgrammar', disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='', reasoning_parser_plugin='', enable_in_reasoning=False)}
+(APIServer pid=1752) httpx.HTTPStatusError: Client error '401 Unauthorized' for url 'https://huggingface.co/stokastisk-test/this-model-does-not-exist/resolve/main/config.json'
+(APIServer pid=1752) For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/401
+(APIServer pid=1752) 
+(APIServer pid=1752) The above exception was the direct cause of the following exception:
+(APIServer pid=1752) 
+(APIServer pid=1752) Traceback (most recent call last):
+(APIServer pid=1752)   File "/usr/local/lib/python3.13/dist-packages/transformers/utils/hub.py", line 537, in cached_files
+(APIServer pid=1752)     hf_hub_download(
+(APIServer pid=1752)     ~~~~~~~~~~~~~~~^
+(APIServer pid=1752)         path_or_repo_id,
+(APIServer pid=1752)         ^^^^^^^^^^^^^^^^
+(APIServer pid=1752)     ...<10 lines>...
+(APIServer pid=1752)         tqdm_class=tqdm_class,
+(APIServer pid=1752)         ^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1752)     )
+(APIServer pid=1752)     ^
+(APIServer pid=1752)   File "/usr/local/lib/python3.13/dist-packages/huggingface_hub/utils/_validators.py", line 89, in _inner_fn
+(APIServer pid=1752)     return fn(*args, **kwargs)
+(APIServer pid=1752)   File "/usr/local/lib/python3.13/dist-packages/huggingface_hub/utils/_http.py", line 266, in _inner
+(APIServer pid=1752)     return fn(*args, **kwargs)
+(APIServer pid=1752)   File "/usr/local/lib/python3.13/dist-packages/huggingface_hub/file_download.py", line 1047, in hf_hub_download
+(APIServer pid=1752)     return _hf_hub_download_to_cache_dir(
+(APIServer pid=1752)         # Destination
+(APIServer pid=1752)     ...<15 lines>...
+(APIServer pid=1752)         dry_run=dry_run,
+(APIServer pid=1752)     )
+(APIServer pid=1752)   File "/usr/local/lib/python3.13/dist-packages/huggingface_hub/file_download.py", line 1194, in _hf_hub_download_to_cache_dir
+(APIServer pid=1752)     _raise_on_head_call_error(head_call_error, force_download, local_files_only)
+(APIServer pid=1752)     ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1752)   File "/usr/local/lib/python3.13/dist-packages/huggingface_hub/file_download.py", line 1953, in _raise_on_head_call_error
+(APIServer pid=1752)     raise head_call_error
+(APIServer pid=1752) huggingface_hub.errors.RepositoryNotFoundError: 401 Client Error. (Request ID: Root=1-6af733e9-4117a4082d967b4040409a16;490e749b-d3e7-44c3-9eb0-9bc728c007fa)
+(APIServer pid=1752) 
+(APIServer pid=1752) Repository Not Found for url: https://huggingface.co/stokastisk-test/this-model-does-not-exist/resolve/main/config.json.
+(APIServer pid=1752) Please make sure you specified the correct `repo_id` and `repo_type`.
+(APIServer pid=1752) If you are trying to access a private or gated repo, make sure you are authenticated and your token has the required permissions.
+(APIServer pid=1752) For more details, see https://huggingface.co/docs/huggingface_hub/authentication
+(APIServer pid=1752) Invalid username or password.
+(APIServer pid=1752) 
+(APIServer pid=1752) The above exception was the direct cause of the following exception:
+(APIServer pid=1752) 
+(APIServer pid=1752) Traceback (most recent call last):
+(APIServer pid=1752)   File "<string>", line 1, in <module>
+(APIServer pid=1752)     from vllm.entrypoints.cli.main import main; main()
+(APIServer pid=1752)                                                 ~~~~^^
+(APIServer pid=1752)   File "/usr/local/lib/python3.13/dist-packages/vllm/entrypoints/cli/main.py", line 95, in main
+(APIServer pid=1752)     args.dispatch_function(args)
+(APIServer pid=1752)     ~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+(APIServer pid=1752)   File "/usr/local/lib/python3.13/dist-packages/vllm/entrypoints/cli/serve.py", line 148, in cmd
+(APIServer pid=1752)     uvloop.run(run_server(args))
+(APIServer pid=1752)     ~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+(APIServer pid=1752)   File "/usr/local/lib/python3.13/dist-packages/uvloop/__init__.py", line 96, in run
+(APIServer pid=1752)     return __asyncio.run(
+(APIServer pid=1752)            ~~~~~~~~~~~~~^
+(APIServer pid=1752)         wrapper(),
+(APIServer pid=1752)         ^^^^^^^^^^
+(APIServer pid=1752)     ...<2 lines>...
+(APIServer pid=1752)         **run_kwargs
+(APIServer pid=1752)         ^^^^^^^^^^^^
+(APIServer pid=1752)     )
+(APIServer pid=1752)     ^
+(APIServer pid=1752)   File "/usr/lib/python3.13/asyncio/runners.py", line 196, in run
+(APIServer pid=1752)     return runner.run(main)
+(APIServer pid=1752)            ~~~~~~~~~~^^^^^^
+(APIServer pid=1752)   File "/usr/lib/python3.13/asyncio/runners.py", line 119, in run
+(APIServer pid=1752)     return self._loop.run_until_complete(task)
+(APIServer pid=1752)            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+(APIServer pid=1752)   File "uvloop/loop.pyx", line 1515, in uvloop.loop.Loop.run_until_complete
+(APIServer pid=1752)   File "/usr/local/lib/python3.13/dist-packages/uvloop/__init__.py", line 48, in wrapper
+(APIServer pid=1752)     return await main
+(APIServer pid=1752)            ^^^^^^^^^^
+(APIServer pid=1752)   File "/usr/local/lib/python3.13/dist-packages/vllm/entrypoints/openai/api_server.py", line 698, in run_server
+(APIServer pid=1752)     await run_server_worker(listen_address, sock, args, **uvicorn_kwargs)
+(APIServer pid=1752)   File "/usr/local/lib/python3.13/dist-packages/vllm/entrypoints/openai/api_server.py", line 712, in run_server_worker
+(APIServer pid=1752)     async with build_async_engine_client(
+(APIServer pid=1752)                ~~~~~~~~~~~~~~~~~~~~~~~~~^
+(APIServer pid=1752)         args,
+(APIServer pid=1752)         ^^^^^
+(APIServer pid=1752)         client_config=client_config,
+(APIServer pid=1752)         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1752)     ) as engine_client:
+(APIServer pid=1752)     ^
+(APIServer pid=1752)   File "/usr/lib/python3.13/contextlib.py", line 214, in __aenter__
+(APIServer pid=1752)     return await anext(self.gen)
+(APIServer pid=1752)            ^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1752)   File "/usr/local/lib/python3.13/dist-packages/vllm/entrypoints/openai/api_server.py", line 100, in build_async_engine_client
+(APIServer pid=1752)     async with build_async_engine_client_from_engine_args(
+(APIServer pid=1752)                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+(APIServer pid=1752)         engine_args,
+(APIServer pid=1752)         ^^^^^^^^^^^^
+(APIServer pid=1752)         usage_context=usage_context,
+(APIServer pid=1752)         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1752)         client_config=client_config,
+(APIServer pid=1752)         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1752)     ) as engine:
+(APIServer pid=1752)     ^
+(APIServer pid=1752)   File "/usr/lib/python3.13/contextlib.py", line 214, in __aenter__
+(APIServer pid=1752)     return await anext(self.gen)
+(APIServer pid=1752)            ^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1752)   File "/usr/local/lib/python3.13/dist-packages/vllm/entrypoints/openai/api_server.py", line 124, in build_async_engine_client_from_engine_args
+(APIServer pid=1752)     vllm_config = engine_args.create_engine_config(usage_context=usage_context)
+(APIServer pid=1752)   File "/usr/local/lib/python3.13/dist-packages/vllm/engine/arg_utils.py", line 1841, in create_engine_config
+(APIServer pid=1752)     maybe_override_with_speculators(
+(APIServer pid=1752)     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+(APIServer pid=1752)         model=self.model,
+(APIServer pid=1752)         ^^^^^^^^^^^^^^^^^
+(APIServer pid=1752)     ...<4 lines>...
+(APIServer pid=1752)         hf_token=self.hf_token,
+(APIServer pid=1752)         ^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1752)     )
+(APIServer pid=1752)     ^
+(APIServer pid=1752)   File "/usr/local/lib/python3.13/dist-packages/vllm/transformers_utils/config.py", line 625, in maybe_override_with_speculators
+(APIServer pid=1752)     config_dict, _ = PretrainedConfig.get_config_dict(
+(APIServer pid=1752)                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+(APIServer pid=1752)         model,
+(APIServer pid=1752)         ^^^^^^
+(APIServer pid=1752)     ...<2 lines>...
+(APIServer pid=1752)         **without_trust_remote_code(kwargs),
+(APIServer pid=1752)         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1752)     )
+(APIServer pid=1752)     ^
+(APIServer pid=1752)   File "/usr/local/lib/python3.13/dist-packages/transformers/configuration_utils.py", line 919, in get_config_dict
+(APIServer pid=1752)     config_dict, kwargs = cls._get_config_dict(pretrained_model_name_or_path, **kwargs)
+(APIServer pid=1752)                           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(APIServer pid=1752)   File "/usr/local/lib/python3.13/dist-packages/transformers/configuration_utils.py", line 971, in _get_config_dict
+(APIServer pid=1752)     resolved_config_file = cached_file(
+(APIServer pid=1752)         pretrained_model_name_or_path,
+(APIServer pid=1752)     ...<8 lines>...
+(APIServer pid=1752)         subfolder=subfolder,
+(APIServer pid=1752)     )
+(APIServer pid=1752)   File "/usr/local/lib/python3.13/dist-packages/transformers/utils/hub.py", line 370, in cached_file
+(APIServer pid=1752)     file = cached_files(path_or_repo_id=path_or_repo_id, filenames=[filename], **kwargs)
+(APIServer pid=1752)   File "/usr/local/lib/python3.13/dist-packages/transformers/utils/hub.py", line 569, in cached_files
+(APIServer pid=1752)     raise OSError(
+(APIServer pid=1752)     ...<4 lines>...
+(APIServer pid=1752)     ) from e
+(APIServer pid=1752) OSError: stokastisk-test/this-model-does-not-exist is not a local folder and is not a valid model identifier listed on 'https://huggingface.co/models'
+(APIServer pid=1752) If this is a private repository, make sure to pass a token having permission to this repo either by logging in with `hf auth login` or by passing `token=<your_token>`

@@ -1,0 +1,97 @@
+{
+ "status": "PASS",
+ "versions": {
+  "xgrammar": "0.2.3",
+  "apache-tvm-ffi": "0.1.9",
+  "transformers": "5.20.2",
+  "torch": "2.11.0+cu130"
+ },
+ "model": "Qwen/Qwen2.5-0.5B-Instruct",
+ "checks": [
+  {
+   "check": "vllm.v1.structured_output.backend_lm_format_enforcer imports (lmformatenforcer is installed)",
+   "status": "PASS",
+   "detail": "0.11.3"
+  },
+  {
+   "check": "XgrammarBackend constructs",
+   "status": "PASS",
+   "detail": "vocab_size=151936"
+  },
+  {
+   "check": "schema has no xgrammar-unsupported feature",
+   "status": "PASS",
+   "detail": ""
+  },
+  {
+   "check": "allocate_token_bitmask shape",
+   "status": "PASS",
+   "detail": "(1, 4748)"
+  },
+  {
+   "check": "constrained decode produced valid JSON",
+   "status": "PASS",
+   "detail": "{\"city\": \"Paris\", \"population\": 2102650, \"tags\": [\"capital\", \"france\"]}"
+  },
+  {
+   "check": "decoded JSON satisfies the schema",
+   "status": "PASS",
+   "detail": "{'city': 'Paris', 'population': 2102650, 'tags': ['capital', 'france']}"
+  },
+  {
+   "check": "grammar terminated after the closing brace",
+   "status": "PASS",
+   "detail": ""
+  },
+  {
+   "check": "bitmask excludes a prose token at the start of the object",
+   "status": "PASS",
+   "detail": "59604"
+  },
+  {
+   "check": "bitmask allows '{' at the start of the object",
+   "status": "PASS",
+   "detail": "90"
+  },
+  {
+   "check": "validate_tokens rejects non-JSON text",
+   "status": "PASS",
+   "detail": "[]"
+  },
+  {
+   "check": "validate_tokens accepts schema-valid JSON in full",
+   "status": "PASS",
+   "detail": ""
+  },
+  {
+   "check": "validate_tokens stops at the first schema violation (city must be a string)",
+   "status": "PASS",
+   "detail": "4"
+  },
+  {
+   "check": "accept_tokens refuses a token that violates the grammar",
+   "status": "PASS",
+   "detail": ""
+  },
+  {
+   "check": "an integer above the schema maximum is rejected by the grammar (digits cannot run on forever)",
+   "status": "PASS",
+   "detail": "18/24 tokens accepted"
+  },
+  {
+   "check": "a string above maxLength is rejected by the grammar",
+   "status": "PASS",
+   "detail": ""
+  },
+  {
+   "check": "rollback reduces processed token count",
+   "status": "PASS",
+   "detail": "(3, 2)"
+  },
+  {
+   "check": "reset clears processed token count",
+   "status": "PASS",
+   "detail": ""
+  }
+ ]
+}

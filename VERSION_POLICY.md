@@ -30,7 +30,7 @@ Only a direct, explicit instruction from the project owner to change the project
 
 * No release script, CI job or packaging tool may increment, derive or guess a project version.
 * Version derivation from Git tags (setuptools-scm, versioneer, `git describe`, bump-version tools, semantic-release) is forbidden.
-* `scripts/release/assemble_build3_release.py` asserts that `VERSION` says `0.1.0` before building, names every artifact `0.1.0`, and verifies the built wheel (`scripts/audit/verify_build3_wheel.py`).
+* `scripts/release/assemble_build3_release.py` asserts that `VERSION` says `0.1.0` before building, names every artifact `0.1.0`, and verifies the built wheel (`scripts/audit/verify_integrated_wheel.py`).
 * `scripts/release/verify_project_version.py` carries its own `LOCKED_VERSION` constant, so editing only `VERSION` makes it fail. CI (`.github/workflows/version-lock.yml`) and `tests/test_version_policy.py` run it on every push and pull request.
 * The Kaggle installer (`scripts/kaggle/02_install_integrated.py`) installs the Stokastisk wheel with `--force-reinstall --no-deps --no-index`, so an already-installed distribution with a different version is replaced, and it fails unless the installed version is exactly `0.1.0`.
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3.13
-"""Independent verification of the build-3 integrated wheel (does not trust the builder).
-usage: verify_build3_wheel.py WHEEL VLLM_PINNED_WHEEL OUT.json
+"""Independent verification of an integrated Stokastisk wheel of any build tag >= 3 (does not trust the builder).
+usage: verify_integrated_wheel.py WHEEL VLLM_PINNED_WHEEL OUT.json
 Checks: tags/version/build, top-level packages, RECORD hashes of every member, the strict Flash policy (path, native, binding, bytecode), every native object byte-identical to the
 byte-pinned vLLM wheel, every vllm/** file equal to the pinned original EXCEPT exactly the files the transform removes/patches/adds (the transform is re-run here and its output
 compared byte for byte), METADATA requirements equal to the lock roots, and no __pycache__. Exit 1 on any failure."""

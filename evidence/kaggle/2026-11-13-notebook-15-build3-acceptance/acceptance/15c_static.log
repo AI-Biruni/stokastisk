@@ -1,0 +1,81 @@
+PASS Python 3.13 -- 3.13.16
+PASS PyTorch 2.11.0+cu130 -- 2.11.0+cu130
+PASS Triton 3.6.0 -- 3.6.0
+PASS CUDA 13.0 (torch build) -- 13.0
+PASS two Tesla T4 GPUs, SM75 -- [{'name': 'Tesla T4', 'capability': [7, 5]}, {'name': 'Tesla T4', 'capability': [7, 5]}]
+PASS bundle provenance record exists (notebook cell 1) -- provenance.json
+PASS installer report exists and its status is PASS -- PASS
+PASS installed wheel SHA256 == attached bundle's wheel SHA256 -- ('b31588c9b5f0d5ae103903283c7cfc25a9d7ef6c00112c3d46bb7b9ee84b023a', 'b31588c9b5f0d5ae103903283c7cfc25a9d7ef6c00112c3d46bb7b9ee84b023a')
+PASS wheel is stokastisk-0.1.0-3-cp313-cp313-linux_x86_64.whl (build 3) -- ('stokastisk-0.1.0-3-cp313-cp313-linux_x86_64.whl', 'stokastisk-0.1.0-3-cp313-cp313-linux_x86_64.whl')
+PASS the bundle came from the attached input (no remote fallback) -- attached-directory
+PASS installer: protected Kaggle packages unchanged and only planned packages added -- {'changed': {}, 'removed': [], 'unexpected_added': [], 'expected_but_absent': []}
+PASS live inventory == the installer's AFTER inventory (same method, PEP 503 names) -- 958 packages identical
+PASS live inventory vs BEFORE: no pre-installed package changed or removed (incl. dotted names such as jaraco.*, lazr.*, ruamel.yaml) -- identical
+PASS the 8 distributions build 2 misreported as removed are present -- {'jaraco-classes': '3.4.0', 'jaraco-context': '6.1.2', 'jaraco-functools': '4.6.0', 'keyrings-google-artifactregistry-auth': '1.1.2', 'lazr-restfulclient': '0.14.6', 'lazr-uri': '1.0.6', 'path-py': '12.5.0', 'ruamel-yaml': '0.19.1'}
+PASS Stokastisk version 0.1.0 (module + distribution) -- ('0.1.0', '0.1.0')
+PASS vLLM version 0.25.1 (module + distribution) -- ('0.25.1', '0.25.1')
+PASS stokastisk imported from site-packages (not a source tree) -- /usr/local/lib/python3.13/dist-packages/stokastisk/__init__.py
+PASS a single vLLM package tree -- ['/usr/local/lib/python3.13/dist-packages/vllm']
+PASS every name in stokastisk.__all__ resolves -- 50 names
+PASS import stokastisk.compat
+PASS import stokastisk.serving
+PASS import stokastisk.engine
+PASS import stokastisk.structured
+PASS import stokastisk.dependencies
+PASS import stokastisk.prohibited
+PASS import stokastisk.parallel
+PASS import stokastisk.parallel.replica
+PASS import stokastisk.topology
+PASS import stokastisk.telemetry
+PASS import stokastisk.communication
+PASS import stokastisk.cuda
+PASS import stokastisk.limits
+PASS import stokastisk.diagnostics
+PASS import stokastisk.benchmarks
+PASS import stokastisk.nccl
+PASS LLM.chat / complete / generate_structured are defined
+PASS bfloat16 is rejected on SM75 (not silently accepted)
+PASS float16 ('half') is accepted
+PASS LLM(dtype='bfloat16') fails before any engine starts
+PASS LLM(attention_backend='FLASH_ATTN') fails before any engine starts
+PASS LLM(structured_outputs_config backend 'auto') fails before any engine starts
+PASS no engine process was started by the pre-flight checks (GPU memory idle) -- [3, 3]
+PASS invalid configuration rejected: bool as int
+PASS invalid configuration rejected: TP=3
+PASS invalid configuration rejected: TP2 x PP2 on two GPUs
+PASS invalid configuration rejected: hidden fallback
+PASS invalid configuration rejected: bool as number
+PASS check_feature('flash_attention') is reported unsupported
+PASS check_feature('flashinfer') is reported unsupported
+PASS check_feature('flashmla') is reported unsupported
+PASS check_feature('direct_upstream_vllm') is reported unsupported
+PASS feature matrix is non-empty and every entry has status/evidence -- 37
+PASS check_model(Qwen/Qwen2.5-0.5B-Instruct) does not raise
+PASS serve command pins TRITON_ATTN, fp16 and the xgrammar structured-output backend -- ['Qwen/Qwen2.5-0.5B-Instruct', '--host', '127.0.0.1', '--port', '8000', '--dtype', 'half', '--kv-cache-dtype', 'auto', '--tensor-parallel-size', '1', '--attention-backend', 'TRITON_ATTN', '--structured-outputs-config', '{"backend": "xgrammar"}', '--gpu-memory-utilization', '0.88', '--enforce-eager', '--disable-custom-all-reduce', '--max-model-len', '2048']
+PASS serve refuses the override --attention-backend
+PASS serve refuses the override --structured-outputs-config
+PASS serve refuses {'host': 'bad host'}
+PASS serve refuses {'port': 0}
+PASS serve refuses {'port': 70000}
+PASS serve refuses {'port': True}
+PASS serve refuses a model id that looks like an option
+PASS vLLM's real argument parser accepts the exact serve command -- TRITON_ATTN
+PASS every package `vllm serve` needs is importable (baseline + serving + structured-output locks) -- 58 import names
+PASS TRITON_ATTN backend class resolves
+PASS AttentionBackendEnum.FLASH_ATTN.get_class() raises ProhibitedBackendError
+PASS AttentionBackendEnum.FLASHINFER.get_class() raises ProhibitedBackendError
+PASS AttentionBackendEnum.FLASHMLA.get_class() raises ProhibitedBackendError
+PASS AttentionBackendEnum.FLASH_ATTN_MLA.get_class() raises ProhibitedBackendError
+PASS CUDA platform auto-selection on SM7.5 puts TRITON_ATTN first and never a Flash backend -- ['TRITON_ATTN', 'FLEX_ATTENTION']
+PASS AttentionConfig(backend='FLASH_ATTN') is rejected at construction
+PASS Flash import guard: import flashinfer / flash_attn / flash_mla fails explicitly -- blocked
+PASS installed vllm tree: 0 Flash-family files (source, bytecode, native), 0 native markers, 0 bindings -- 4442 files: 1925 .py, 1925 .pyc, 6 native
+PASS prohibited_report is clean -- {'distributions': [], 'modules': [], 'files': [], 'native_hits': {}, 'binaries': [], 'clean': True}
+PASS no Flash library mapped in this process -- none
+PASS pip check: no conflict introduced by the installation (none tolerated) -- 8 pre-existing Kaggle lines unchanged
+PASS pip check: no line mentions xgrammar, stokastisk, vllm, lm-format-enforcer or model-hosting-container-standards -- clean
+PASS xgrammar 0.2.3 + apache-tvm-ffi 0.1.9 + transformers 5.x (metadata-compatible; no patched distribution) -- ('0.2.3', '0.1.9', '5.20.2')
+PASS dependency lock completeness: every import name of core + structured-output + serving is importable -- complete
+PASS vLLM XgrammarBackend + xgrammar + transformers: constrained decode yields schema-valid JSON, rejects invalid tokens (CPU; NOT the GPU proof) -- PASS
+
+[15c_static] OVERALL: PASS

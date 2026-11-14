@@ -1,0 +1,193 @@
+{
+  "stage": "15c_parallel",
+  "status": "PASS",
+  "checks": [
+    {
+      "check": "both GPUs idle before the stage",
+      "status": "PASS",
+      "detail": "[0, 0]"
+    },
+    {
+      "check": "TP=2: backend TRITON_ATTN (live config)",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "TP=2: generate returns non-empty text for every prompt",
+      "status": "PASS",
+      "detail": "[' Paris. It is the largest city', '\\nAnswer Choices: (A) 3 (B) 4 (', ' a place of endless possibilit', ', there was a young man named ']"
+    },
+    {
+      "check": "TP=2: 2 GPU(s) hold model memory",
+      "status": "PASS",
+      "detail": "[13885, 13885]"
+    },
+    {
+      "check": "TP=2: no Flash library mapped in the process tree",
+      "status": "PASS",
+      "detail": "none"
+    },
+    {
+      "check": "TP=2: close() completed without an engine shutdown error",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "TP=2: no live engine process and GPU memory released (<500 MiB each)",
+      "status": "PASS",
+      "detail": "([], [0, 0])"
+    },
+    {
+      "check": "PP=2 (experimental): backend TRITON_ATTN (live config)",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "PP=2 (experimental): generate returns non-empty text for every prompt",
+      "status": "PASS",
+      "detail": "[' Paris. It is the largest city', '\\nAnswer Choices: (A) 3 (B) 4 (', ' a place of endless possibilit', ', there was a young man named ']"
+    },
+    {
+      "check": "PP=2 (experimental): 2 GPU(s) hold model memory",
+      "status": "PASS",
+      "detail": "[13103, 13569]"
+    },
+    {
+      "check": "PP=2 (experimental): no Flash library mapped in the process tree",
+      "status": "PASS",
+      "detail": "none"
+    },
+    {
+      "check": "PP=2 (experimental): close() completed without an engine shutdown error",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "PP=2 (experimental): no live engine process and GPU memory released (<500 MiB each)",
+      "status": "PASS",
+      "detail": "([], [0, 0])"
+    },
+    {
+      "check": "replicas: two workers on two distinct GPUs (distinct UUIDs) and distinct processes",
+      "status": "PASS",
+      "detail": "[(0, 'GPU-0f078719-f2f7-61a1-4456-dd92d235b301'), (1, 'GPU-efd5eee9-37d0-e04c-65de-151ad06b722d')]"
+    },
+    {
+      "check": "replicas: every worker reports TRITON_ATTN",
+      "status": "PASS",
+      "detail": "['TRITON_ATTN', 'TRITON_ATTN']"
+    },
+    {
+      "check": "replicas: one non-empty result per prompt, in order",
+      "status": "PASS",
+      "detail": "16"
+    },
+    {
+      "check": "replicas: both GPUs received work",
+      "status": "PASS",
+      "detail": "{0: 8, 1: 8}"
+    },
+    {
+      "check": "replicas: both GPUs hold a copy of the model",
+      "status": "PASS",
+      "detail": "[13465, 13465]"
+    },
+    {
+      "check": "replicas: no Flash library mapped in the process tree",
+      "status": "PASS",
+      "detail": "none"
+    },
+    {
+      "check": "replicas: close() completed with every worker exiting 0",
+      "status": "PASS",
+      "detail": "{0: 'exit 0', 1: 'exit 0'}"
+    },
+    {
+      "check": "replicas: no live engine process and GPU memory released (<500 MiB each)",
+      "status": "PASS",
+      "detail": "([], [0, 0])"
+    },
+    {
+      "check": "topology: two Tesla T4 devices, SM75",
+      "status": "PASS",
+      "detail": "['Tesla T4', 'Tesla T4']"
+    },
+    {
+      "check": "recommender: a model that fits one T4 is recommended single_gpu (TP=1)",
+      "status": "PASS",
+      "detail": "('single_gpu', 'the model fits on one GPU: TP=1 has no inter-GPU communication')"
+    }
+  ],
+  "provenance": {
+    "project_version": "0.1.0",
+    "build": "3",
+    "wheel": "stokastisk-0.1.0-3-cp313-cp313-linux_x86_64.whl",
+    "wheel_sha256": "b31588c9b5f0d5ae103903283c7cfc25a9d7ef6c00112c3d46bb7b9ee84b023a",
+    "bundle_zip_sha256": null,
+    "bundle_source": "attached-directory",
+    "manifest_sha256": "0b5faa33585f5a617a505d8c4ac4fa6b1213890776ee6d5df5b5532c10baf6b3",
+    "source_commit": "c08956fdb93c7904d3942e5b92ed403f6c316c2e",
+    "installer_sha256": "463670047f463209d441bb6c6b7822b70252bc0e1ef6b5ffe1b84ed6332633ba",
+    "runtime": {
+      "python": "3.13.16",
+      "torch": "2.11.0+cu130",
+      "triton": "3.6.0",
+      "vllm": "0.25.1",
+      "stokastisk": "0.1.0",
+      "transformers": "5.20.2",
+      "xgrammar": "0.2.3",
+      "apache-tvm-ffi": "0.1.9",
+      "lm-format-enforcer": "0.11.3"
+    },
+    "stage_script_sha256": "a2a2a3a93ef304bb63b27fdc6387f03978b15de78cd2f32c5919386bbdc35d7f",
+    "common_sha256": "93dddcd4bf5b5cb7d1e1e15a36230b86bb76de9580a5505201069bdc7197c08c",
+    "python": "3.13.16",
+    "started": "2026-11-13T15:56:47+0000",
+    "finished": "2026-11-13T15:59:04+0000"
+  },
+  "replica_info": {
+    "0": {
+      "device": 0,
+      "pid": 1548,
+      "cuda_visible_devices": "0",
+      "load_seconds": 31.578524112701416,
+      "backend": "TRITON_ATTN",
+      "uuid": "GPU-0f078719-f2f7-61a1-4456-dd92d235b301",
+      "memory_used_mib": 13463.0,
+      "memory_total_mib": 15360.0
+    },
+    "1": {
+      "device": 1,
+      "pid": 1549,
+      "cuda_visible_devices": "1",
+      "load_seconds": 32.207834005355835,
+      "backend": "TRITON_ATTN",
+      "uuid": "GPU-efd5eee9-37d0-e04c-65de-151ad06b722d",
+      "memory_used_mib": 13463.0,
+      "memory_total_mib": 15360.0
+    }
+  },
+  "replica_assignment": {
+    "0": 8,
+    "1": 8
+  },
+  "replica_close_report": {
+    "0": "exit 0",
+    "1": "exit 0"
+  },
+  "topology": {
+    "link_class": {
+      "0-1": "PHB"
+    },
+    "peer_access_all_pairs": true,
+    "nvlink": false,
+    "recommended": "single_gpu (TP=1) if the model fits one GPU; tensor_parallel (TP=2) is viable beyond one GPU's memory (fast interconnect measured)"
+  },
+  "output_dir_gib": {
+    "used": 0.033,
+    "quota": 20.0
+  },
+  "check_counts": {
+    "PASS": 23
+  }
+}

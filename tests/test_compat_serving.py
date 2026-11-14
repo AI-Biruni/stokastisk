@@ -1,6 +1,6 @@
 #!/usr/bin/env python3.13
 """CPU-only tests for stokastisk.compat and stokastisk.serving. They use a synthetic vllm package tree on disk and never import vllm, torch or a GPU.
-These tests were written for future runs; they were NOT executed when they were added (no new test runs were requested)."""
+Model-specific evidence (MODEL_EVIDENCE, check_model semantics) is covered in tests/test_compat_evidence.py."""
 import json, pathlib, sys, tempfile, textwrap, unittest
 from unittest import mock
 
@@ -33,7 +33,7 @@ def fake_vllm(files: dict[str, str]) -> pathlib.Path:
 class FeatureMatrix(unittest.TestCase):
     def test_every_feature_uses_a_defined_status_and_evidence(self):
         status = {"SUPPORTED", "SUPPORTED_WITH_CONDITIONS", "NEEDS_ADAPTATION", "NOT_SUPPORTED_SM75", "EXCLUDED_FLASH_DEPENDENCY", "NOT_IMPLEMENTED", "UNSUPPORTED_ENTRY_POINT", "UNKNOWN_REQUIRES_EVIDENCE"}
-        ev = {"kaggle", "kaggle-build2", "kaggle-kernel", "cpu-tests", "static", "implemented-not-executed", "implemented-cpu-tested"}
+        ev = {"kaggle", "kaggle-kernel", "cpu-tests", "static", "implemented-not-executed"}
         for name, r in compat.feature_matrix().items():
             self.assertIn(r["status"], status, name); self.assertIn(r["evidence"], ev, name); self.assertTrue(r["note"], name)
 
@@ -48,7 +48,7 @@ class FeatureMatrix(unittest.TestCase):
                 compat.check_feature(name)
 
     def test_untested_features_are_returned_not_raised(self):
-        self.assertEqual(compat.check_feature("openai_server")["status"], "UNKNOWN_REQUIRES_EVIDENCE")
+        self.assertEqual(compat.check_feature("prefix_caching")["status"], "UNKNOWN_REQUIRES_EVIDENCE")
         self.assertEqual(compat.check_feature("offline_generation")["status"], "SUPPORTED")
 
     def test_unknown_feature_name_is_an_error(self):
@@ -94,9 +94,10 @@ class ModelCheck(unittest.TestCase):
         reg = compat.read_registry(self.root)
         self.assertEqual(reg["Qwen2ForCausalLM"], ("qwen2", "Qwen2ForCausalLM")); self.assertIn("BertModel", reg); self.assertNotIn("X", reg)
 
-    def test_qwen2_is_supported_with_kaggle_evidence(self):
+    def test_qwen2_architecture_alone_is_not_a_supported_model(self):
         r = compat.check_model(architectures=["Qwen2ForCausalLM"], package_root=self.root)
-        self.assertEqual(r["status"], "SUPPORTED"); self.assertEqual(r["architectures"][0]["evidence"], "kaggle")
+        self.assertEqual(r["status"], "UNKNOWN_REQUIRES_EVIDENCE"); self.assertEqual(r["architectures"][0]["evidence"], "kaggle")
+        self.assertEqual(r["architectures"][0]["status"], "SUPPORTED_WITH_CONDITIONS")
 
     def test_registered_but_module_removed_raises_a_clear_error(self):
         with self.assertRaises(StokastiskCompatibilityError) as c: compat.check_model(architectures=["OmniForCausalLM"], package_root=self.root)
@@ -120,6 +121,8 @@ class ModelCheck(unittest.TestCase):
         d = pathlib.Path(tempfile.mkdtemp()); (d / "config.json").write_text(json.dumps({"architectures": ["Qwen2ForCausalLM"], "quantization_config": {"quant_method": "mxfp4"}}))
         with self.assertRaises(StokastiskCompatibilityError): compat.check_model(str(d), package_root=self.root)
         (d / "config.json").write_text(json.dumps({"architectures": ["Qwen2ForCausalLM"]}))
+        self.assertEqual(compat.check_model(str(d), package_root=self.root)["status"], "UNKNOWN_REQUIRES_EVIDENCE")       # an unidentified Qwen2 checkpoint
+        (d / "config.json").write_text(json.dumps({"architectures": ["Qwen2ForCausalLM"], "_name_or_path": "Qwen/Qwen2.5-3B-Instruct"}))
         self.assertEqual(compat.check_model(str(d), package_root=self.root)["status"], "SUPPORTED")
 
     def test_missing_architecture_information_is_reported_not_guessed(self):

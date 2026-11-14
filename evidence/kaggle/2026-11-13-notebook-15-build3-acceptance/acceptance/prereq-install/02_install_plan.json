@@ -1,0 +1,52 @@
+{
+ "install": {
+  "apache-tvm-ffi": "0.1.9",
+  "cbor2": "6.2.0.post2",
+  "llguidance": "1.7.6",
+  "msgspec": "0.22.0",
+  "openai-harmony": "0.0.8",
+  "partial-json-parser": "0.2.1.1.post7",
+  "pybase64": "1.5.1",
+  "xgrammar": "0.2.3",
+  "diskcache": "5.6.3",
+  "interegular": "0.3.3",
+  "lm-format-enforcer": "0.11.3",
+  "outlines-core": "0.2.14",
+  "fastapi-cli": "0.0.33",
+  "model-hosting-container-standards": "0.1.16",
+  "prometheus-fastapi-instrumentator": "8.1.0",
+  "pydantic-settings": "2.16.2",
+  "rich-toolkit": "0.20.6",
+  "sse-starlette": "3.7.0",
+  "supervisor": "4.3.0"
+ },
+ "keep": {},
+ "conflicts": [],
+ "by_profile": {
+  "core": [
+   "apache-tvm-ffi",
+   "cbor2",
+   "llguidance",
+   "msgspec",
+   "openai-harmony",
+   "partial-json-parser",
+   "pybase64",
+   "xgrammar"
+  ],
+  "structured-output": [
+   "diskcache",
+   "interegular",
+   "lm-format-enforcer",
+   "outlines-core"
+  ],
+  "serving": [
+   "fastapi-cli",
+   "model-hosting-container-standards",
+   "prometheus-fastapi-instrumentator",
+   "pydantic-settings",
+   "rich-toolkit",
+   "sse-starlette",
+   "supervisor"
+  ]
+ }
+}

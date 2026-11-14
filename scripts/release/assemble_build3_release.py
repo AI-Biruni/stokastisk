@@ -3,7 +3,7 @@
 usage: assemble_build3_release.py [--build-tag 3]
 
  1. builds the integrated, Flash-free wheel (scripts/release/build_integrated_wheel.py) into dist/wheel-build3/
- 2. verifies it independently (scripts/audit/verify_build3_wheel.py) and audits its native objects (scripts/audit/native_audit.py)
+ 2. verifies it independently (scripts/audit/verify_integrated_wheel.py) and audits its native objects (scripts/audit/native_audit.py)
  3. writes dist/stokastisk-0.1.0-build3-kaggle-t4-sm75/ : wheel, installer + stage scripts, hash-pinned locks, manifests, docs, notebook 15
  4. builds the reproducible ZIP + .sha256, plus a STANDALONE notebook that also carries the ZIP's SHA256 (the ZIP cannot contain its own hash)
  5. re-verifies from a fresh extraction: SHA256SUMS, the notebook's own discovery code against a simulated /kaggle/input, a pip --target install of the wheel and the strict
@@ -32,7 +32,7 @@ r = run(sys.executable, "scripts/release/build_integrated_wheel.py", str(WORK), 
 assert r.returncode == 0, r.stderr[-2000:]
 whl = next(WORK.glob("*.whl")); print(r.stdout.strip().splitlines()[-1])
 assert sha(whl) not in hist.values()
-r = run(sys.executable, "scripts/audit/verify_build3_wheel.py", str(whl), str(VLLM_PIN), str(WORK / "static-verification.json"))
+r = run(sys.executable, "scripts/audit/verify_integrated_wheel.py", str(whl), str(VLLM_PIN), str(WORK / "static-verification.json"))
 assert r.returncode == 0, "independent wheel verification failed:\n" + r.stdout[-2500:]
 r = run(sys.executable, "scripts/audit/native_audit.py", str(whl), str(WORK / "native-audit.json")); assert r.returncode == 0, r.stderr[-800:]
 

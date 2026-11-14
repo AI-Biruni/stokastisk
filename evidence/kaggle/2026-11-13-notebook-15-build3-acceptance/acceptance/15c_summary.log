@@ -1,0 +1,16 @@
+PASS static status is PASS -- PASS
+PASS engine status is PASS -- PASS
+PASS parallel status is PASS -- PASS
+PASS server status is PASS -- PASS
+PASS all stages and the installer report the SAME wheel SHA256, equal to the attached bundle's -- {'static': 'b31588c9b5f0d5ae103903283c7cfc25a9d7ef6c00112c3d46bb7b9ee84b023a', 'engine': 'b31588c9b5f0d5ae103903283c7cfc25a9d7ef6c00112c3d46bb7b9ee84b023a', 'parallel': 'b31588c9b5f0d5ae103903283c7cfc25a9d7ef6c00112c3d46bb7b9ee84b023a', 'server': 'b31588c9b5f0d5ae103903283c7cfc25a9d7ef6c00112c3d46bb7b9ee84b023a', 'installer': 'b31588c9b5f0d5ae103903283c7cfc25a9d7ef6c00112c3d46bb7b9ee84b023a', 'bundle': 'b31588c9b5f0d5ae103903283c7cfc25a9d7ef6c00112c3d46bb7b9ee84b023a'}
+PASS all stages verified build 3 (stokastisk-0.1.0-3-cp313-cp313-linux_x86_64.whl) -- {'static': 'stokastisk-0.1.0-3-cp313-cp313-linux_x86_64.whl', 'engine': 'stokastisk-0.1.0-3-cp313-cp313-linux_x86_64.whl', 'parallel': 'stokastisk-0.1.0-3-cp313-cp313-linux_x86_64.whl', 'server': 'stokastisk-0.1.0-3-cp313-cp313-linux_x86_64.whl', 'installer': 'stokastisk-0.1.0-3-cp313-cp313-linux_x86_64.whl'}
+PASS all stages (and the installer) ran on the same Python / torch / Triton / vLLM / Stokastisk / transformers / xgrammar -- {'static': 'identical', 'engine': 'identical', 'parallel': 'identical', 'server': 'identical', 'installer': 'identical'}
+PASS the release came from the attached input (no remote fallback) -- attached-directory
+PASS engine log: the worker selected AttentionBackendEnum.TRITON_ATTN -- found
+PASS engine log: no Flash backend was selected -- none
+PASS parallel log: the worker selected AttentionBackendEnum.TRITON_ATTN -- found
+PASS parallel log: no Flash backend was selected -- none
+PASS server log: the worker selected AttentionBackendEnum.TRITON_ATTN -- found
+PASS server log: no Flash backend was selected -- none
+
+[15c_summary] OVERALL: PASS

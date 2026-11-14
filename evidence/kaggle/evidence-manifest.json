@@ -1,0 +1,439 @@
+{
+ "missing": [
+  "The original Kaggle output archives are not in the repository (about 17 MB, mostly Triton caches); only their reports/logs are, and the archives' SHA256 values are listed under original_archives."
+ ],
+ "notebook_15_acceptance": {
+  "acceptance_wheel": "stokastisk-0.1.0-3-cp313-cp313-linux_x86_64.whl",
+  "acceptance_wheel_sha256": "b31588c9b5f0d5ae103903283c7cfc25a9d7ef6c00112c3d46bb7b9ee84b023a",
+  "build": "3",
+  "date": "2026-11-13",
+  "models": {
+   "engine": "Qwen/Qwen2.5-0.5B-Instruct",
+   "parallel": "Qwen/Qwen2.5-0.5B-Instruct",
+   "server": "Qwen/Qwen2.5-0.5B-Instruct"
+  },
+  "note": "Run on the acceptance wheel; the published build-3 wheel (72039ca4...) differs from it only in METADATA/RECORD.",
+  "python": "3.13.16",
+  "stages": {
+   "engine": {
+    "checks": 44,
+    "passed": 44,
+    "status": "PASS"
+   },
+   "installer": {
+    "checks": 32,
+    "passed": 32,
+    "status": "PASS"
+   },
+   "parallel": {
+    "checks": 23,
+    "passed": 23,
+    "status": "PASS"
+   },
+   "server": {
+    "checks": 21,
+    "passed": 21,
+    "status": "PASS"
+   },
+   "static": {
+    "checks": 79,
+    "passed": 79,
+    "status": "PASS"
+   },
+   "summary": {
+    "checks": 15,
+    "passed": 15,
+    "status": "PASS"
+   }
+  }
+ },
+ "original_archives": [
+  {
+   "name": "15-stokastisk-build3-acceptance.zip",
+   "sha256": "cfe98b05033711270297e5ec2847932ff4ae1233d4610c7204b5d72f54e9d956",
+   "size": 8448691
+  },
+  {
+   "name": "stokastisk-acceptance.zip",
+   "sha256": "61fd4be1b519f009eeec6c819d3a43d597c18d12a08c72254ae0924af83df229",
+   "size": 8571158
+  }
+ ],
+ "project_version": "0.1.0",
+ "raw_artifacts": [
+  {
+   "path": "2026-11-13-notebook-15-build3-acceptance/15-stokastisk-candidate-sdk-integration.ipynb",
+   "sha256": "d9c822a529f0bb3a707a8cfc5e3077efc5e9aa36985d53c84a74eb3e438e653e",
+   "size": 132622
+  },
+  {
+   "path": "2026-11-13-notebook-15-build3-acceptance/acceptance/02_install_integrated.log",
+   "sha256": "cd832fc77089dbf9522df7e03228c57cdc47c99464b433ebdba2815aa08a454f",
+   "size": 4170
+  },
+  {
+   "path": "2026-11-13-notebook-15-build3-acceptance/acceptance/15c_engine.json",
+   "sha256": "5477ecdbe09e809b585c7838c350b95132c26c9b13b5c294d730d6d4289fd71b",
+   "size": 11234
+  },
+  {
+   "path": "2026-11-13-notebook-15-build3-acceptance/acceptance/15c_engine.log",
+   "sha256": "b8cb16542df75fb458ce36782196f86d69bb354f3023a065ad6e9d3978c8c3a8",
+   "size": 33034
+  },
+  {
+   "path": "2026-11-13-notebook-15-build3-acceptance/acceptance/15c_package_inventory.txt",
+   "sha256": "153f6c666e973499b2e87fe2bdba8923d312f70af2a8b53a943569c0405fb7b9",
+   "size": 18101
+  },
+  {
+   "path": "2026-11-13-notebook-15-build3-acceptance/acceptance/15c_parallel.json",
+   "sha256": "2c73ba903b0705671599f5b0807ba949cbdbdd7e8e33225dd030522c6efbf8dd",
+   "size": 5931
+  },
+  {
+   "path": "2026-11-13-notebook-15-build3-acceptance/acceptance/15c_parallel.log",
+   "sha256": "2e176de8d3115bfa04a7d7e1f12704f0aa9b2f0d257db6ee578db245e6863e47",
+   "size": 49528
+  },
+  {
+   "path": "2026-11-13-notebook-15-build3-acceptance/acceptance/15c_server.json",
+   "sha256": "98b56ee4ef0c4ce95b15a3c9c1d0574e8fab6faed0baa728854789ca1bb11391",
+   "size": 5693
+  },
+  {
+   "path": "2026-11-13-notebook-15-build3-acceptance/acceptance/15c_server.log",
+   "sha256": "cbb3703df3b7f863581b08fc1221a7240dde40e139516926bcaa1e41535bd6eb",
+   "size": 29414
+  },
+  {
+   "path": "2026-11-13-notebook-15-build3-acceptance/acceptance/15c_server_startfail.log",
+   "sha256": "1c1d6faed9dfd26c9fd10dca41169b64d17821acaa7f89510a6c8b464cdb05fa",
+   "size": 11594
+  },
+  {
+   "path": "2026-11-13-notebook-15-build3-acceptance/acceptance/15c_static.json",
+   "sha256": "0dc1922b772256c185dfbfc91b2322e956d2c1fade45a5f3e6dfaecb86d1935f",
+   "size": 38400
+  },
+  {
+   "path": "2026-11-13-notebook-15-build3-acceptance/acceptance/15c_static.log",
+   "sha256": "a90477cedf8cd5cea7a1a07d728573369892051b92dbdd5da93ab22a8183fe4a",
+   "size": 6242
+  },
+  {
+   "path": "2026-11-13-notebook-15-build3-acceptance/acceptance/15c_structured_cpu.json",
+   "sha256": "c00f0b87ee37cf9c57a029aff0cf807a9fb603ca3b2962f61efb87ee1f568a0a",
+   "size": 2314
+  },
+  {
+   "path": "2026-11-13-notebook-15-build3-acceptance/acceptance/15c_summary.json",
+   "sha256": "c764cf3af3504f32ba15d57daaf0317a026ad68b51d2c6142a60e9ce6ab36664",
+   "size": 5639
+  },
+  {
+   "path": "2026-11-13-notebook-15-build3-acceptance/acceptance/15c_summary.log",
+   "sha256": "979ae55f7b13aed4c4f0f2bad9280854b2c9945c886916030b7cfaecbfb3c07b",
+   "size": 1881
+  },
+  {
+   "path": "2026-11-13-notebook-15-build3-acceptance/acceptance/ACCEPTANCE-SHA256SUMS",
+   "sha256": "5c5d270fc5f74f27867352601e0fb28a0ff53cc63ff55c701d10509c27a76fae",
+   "size": 240970
+  },
+  {
+   "path": "2026-11-13-notebook-15-build3-acceptance/acceptance/RUN-RC.json",
+   "sha256": "6db1f703635dfecd57c46c9703daac6d796daf2da6aeb7d946199b5b53bcdf56",
+   "size": 104
+  },
+  {
+   "path": "2026-11-13-notebook-15-build3-acceptance/acceptance/prereq-install/02_install_integrated.json",
+   "sha256": "c6a2c3d3b267fff753153866fa25dca49b56de67a7eb3bdb6f8aea4523ad9743",
+   "size": 24760
+  },
+  {
+   "path": "2026-11-13-notebook-15-build3-acceptance/acceptance/prereq-install/02_install_plan.json",
+   "sha256": "0b6aaf9a85fda23142a8f601831e7f83179f7b4f594638247287b9e8408daa7d",
+   "size": 1103
+  },
+  {
+   "path": "2026-11-13-notebook-15-build3-acceptance/acceptance/prereq-install/02_packages_after.json",
+   "sha256": "47db9dd531001acae3111000296dba546ce1492de2236a0f02f09ffc4dd27b31",
+   "size": 22893
+  },
+  {
+   "path": "2026-11-13-notebook-15-build3-acceptance/acceptance/prereq-install/02_packages_before.json",
+   "sha256": "c4d7104285b68a21837d8b85f5ed97232a830c4036e846c9f71c21329a7b4277",
+   "size": 22319
+  },
+  {
+   "path": "2026-11-13-notebook-15-build3-acceptance/acceptance/prereq-install/02_pip_list_after.json",
+   "sha256": "026849a53c70adeefddb3b5cf94f32b91b5f4fcfec770c2232ecd62c20e9efd8",
+   "size": 29260
+  },
+  {
+   "path": "2026-11-13-notebook-15-build3-acceptance/acceptance/prereq-install/02_pip_list_before.json",
+   "sha256": "815f9abf035b40ddcc6af3e3245b5254bed3629c56ae7d9b843d46edc87c9cd0",
+   "size": 28644
+  },
+  {
+   "path": "2026-11-13-notebook-15-build3-acceptance/acceptance/provenance.json",
+   "sha256": "94c8b593882ac654660b0aa4e128b590cbf34e1fe825ec1821e77062431947c0",
+   "size": 1194
+  },
+  {
+   "path": "2026-11-13-notebook-16-quickstart/16-stokastisk-quickstart.ipynb",
+   "sha256": "72c61e3a95d3dddf09f9580a12238737b6615a03abcae910b609d76f89eef507",
+   "size": 42433
+  },
+  {
+   "path": "2026-11-14/18-stokastisk-0-1-0-qwen25-t4-direct-cells.ipynb",
+   "sha256": "3b571245f0f011b6b70c4ed9f768adf6020f8602cd603df3ccfc2031413f9065",
+   "size": 99712
+  },
+  {
+   "path": "2026-11-14/19-stokastisk-0-1-0-qwen2-5-coder-7b-dual-t4.ipynb",
+   "sha256": "015e6295fc8dce7eadc150566df25c17fece25d06649adac0a78fc356c1d6d50",
+   "size": 74988
+  }
+ ],
+ "runs": [
+  {
+   "attention_backend": "TRITON_ATTN",
+   "cuda": "13.0",
+   "date": "2026-11-14",
+   "dtype": "half",
+   "enforce_eager": true,
+   "free_gib_after_close": [
+    14.46,
+    14.46
+   ],
+   "free_gib_during_inference": null,
+   "generation_completed": true,
+   "gpu_memory_recovered": true,
+   "gpus": [
+    {
+     "compute_capability": "7.5",
+     "model": "Tesla T4"
+    },
+    {
+     "compute_capability": "7.5",
+     "model": "Tesla T4"
+    }
+   ],
+   "install": {
+    "command": "!pip install stokastisk --extra-index-url https://ai-biruni.github.io/stokastisk/simple/",
+    "succeeded": true
+   },
+   "max_model_len": 2048,
+   "model": "Qwen/Qwen2.5-0.5B-Instruct",
+   "notebook": "18",
+   "parallelism": "TP=1",
+   "pipeline_parallel_size": 1,
+   "process_manager_forced_cleanup_warning": false,
+   "python": "3.13.16",
+   "quantization": null,
+   "run": "nb18-qwen2.5-0.5b-tp1",
+   "tensor_parallel_size": 1,
+   "torch": "2.11.0+cu130",
+   "triton": "3.6.0"
+  },
+  {
+   "attention_backend": "TRITON_ATTN",
+   "cuda": "13.0",
+   "date": "2026-11-14",
+   "dtype": "half",
+   "enforce_eager": true,
+   "free_gib_after_close": [
+    14.46,
+    14.46
+   ],
+   "free_gib_during_inference": [
+    1.09,
+    1.09
+   ],
+   "generation_completed": true,
+   "gpu_memory_recovered": true,
+   "gpus": [
+    {
+     "compute_capability": "7.5",
+     "model": "Tesla T4"
+    },
+    {
+     "compute_capability": "7.5",
+     "model": "Tesla T4"
+    }
+   ],
+   "install": {
+    "command": "!pip install stokastisk --extra-index-url https://ai-biruni.github.io/stokastisk/simple/",
+    "succeeded": true
+   },
+   "max_model_len": 2048,
+   "model": "Qwen/Qwen2.5-3B-Instruct",
+   "notebook": "18",
+   "parallelism": "TP=2",
+   "pipeline_parallel_size": 1,
+   "process_manager_forced_cleanup_warning": true,
+   "python": "3.13.16",
+   "quantization": null,
+   "run": "nb18-qwen2.5-3b-tp2",
+   "tensor_parallel_size": 2,
+   "torch": "2.11.0+cu130",
+   "triton": "3.6.0"
+  },
+  {
+   "attention_backend": "TRITON_ATTN",
+   "cuda": "13.0",
+   "date": "2026-11-14",
+   "dtype": "half",
+   "enforce_eager": true,
+   "free_gib_after_close": [
+    14.46,
+    14.46
+   ],
+   "free_gib_during_inference": [
+    1.96,
+    1.48
+   ],
+   "generation_completed": true,
+   "gpu_memory_recovered": true,
+   "gpus": [
+    {
+     "compute_capability": "7.5",
+     "model": "Tesla T4"
+    },
+    {
+     "compute_capability": "7.5",
+     "model": "Tesla T4"
+    }
+   ],
+   "install": {
+    "command": "!pip install stokastisk --extra-index-url https://ai-biruni.github.io/stokastisk/simple/",
+    "succeeded": true
+   },
+   "max_model_len": 2048,
+   "model": "Qwen/Qwen2.5-3B-Instruct",
+   "notebook": "18",
+   "parallelism": "PP=2",
+   "pipeline_parallel_size": 2,
+   "process_manager_forced_cleanup_warning": true,
+   "python": "3.13.16",
+   "quantization": null,
+   "run": "nb18-qwen2.5-3b-pp2",
+   "tensor_parallel_size": 1,
+   "torch": "2.11.0+cu130",
+   "triton": "3.6.0"
+  },
+  {
+   "attention_backend": "TRITON_ATTN",
+   "cuda": "13.0",
+   "date": "2026-11-14",
+   "dtype": "half",
+   "enforce_eager": true,
+   "free_gib_after_close": [
+    14.46,
+    14.46
+   ],
+   "free_gib_during_inference": [
+    1.34,
+    1.34
+   ],
+   "generation_completed": true,
+   "gpu_memory_recovered": true,
+   "gpus": [
+    {
+     "compute_capability": "7.5",
+     "model": "Tesla T4"
+    },
+    {
+     "compute_capability": "7.5",
+     "model": "Tesla T4"
+    }
+   ],
+   "install": {
+    "command": "!pip install stokastisk --extra-index-url https://ai-biruni.github.io/stokastisk/simple/",
+    "succeeded": true
+   },
+   "max_model_len": 2048,
+   "model": "Qwen/Qwen2.5-Coder-7B-Instruct",
+   "notebook": "19",
+   "parallelism": "TP=2",
+   "pipeline_parallel_size": 1,
+   "process_manager_forced_cleanup_warning": true,
+   "python": "3.13.16",
+   "quantization": null,
+   "run": "nb19-qwen2.5-coder-7b-tp2",
+   "tensor_parallel_size": 2,
+   "torch": "2.11.0+cu130",
+   "triton": "3.6.0"
+  },
+  {
+   "attention_backend": "TRITON_ATTN",
+   "cuda": "13.0",
+   "date": "2026-11-14",
+   "dtype": "half",
+   "enforce_eager": true,
+   "free_gib_after_close": [
+    14.46,
+    14.46
+   ],
+   "free_gib_during_inference": [
+    2.42,
+    1.93
+   ],
+   "generation_completed": true,
+   "gpu_memory_recovered": true,
+   "gpus": [
+    {
+     "compute_capability": "7.5",
+     "model": "Tesla T4"
+    },
+    {
+     "compute_capability": "7.5",
+     "model": "Tesla T4"
+    }
+   ],
+   "install": {
+    "command": "!pip install stokastisk --extra-index-url https://ai-biruni.github.io/stokastisk/simple/",
+    "succeeded": true
+   },
+   "max_model_len": 2048,
+   "model": "Qwen/Qwen2.5-Coder-7B-Instruct",
+   "notebook": "19",
+   "parallelism": "PP=2",
+   "pipeline_parallel_size": 2,
+   "process_manager_forced_cleanup_warning": true,
+   "python": "3.13.16",
+   "quantization": null,
+   "run": "nb19-qwen2.5-coder-7b-pp2",
+   "tensor_parallel_size": 1,
+   "torch": "2.11.0+cu130",
+   "triton": "3.6.0"
+  },
+  {
+   "attention_backend": "TRITON_ATTN",
+   "cuda": null,
+   "date": "2026-11-13",
+   "dtype": "half",
+   "generation_completed": true,
+   "gpu_memory_recovered": null,
+   "gpus": [],
+   "install": {
+    "command": "!pip install stokastisk --extra-index-url https://ai-biruni.github.io/stokastisk/simple/",
+    "succeeded": true
+   },
+   "max_model_len": 2048,
+   "model": "Qwen/Qwen2.5-0.5B-Instruct",
+   "note": "this notebook prints no environment versions and no memory readings; the engine shut down cleanly (core_client shutdown complete)",
+   "notebook": "16",
+   "parallelism": "TP=1",
+   "python": null,
+   "quantization": null,
+   "run": "nb16-quickstart-qwen2.5-0.5b-tp1",
+   "torch": null,
+   "triton": null
+  }
+ ],
+ "schema": 1,
+ "statement": "Raw artifacts of the Kaggle 2 x Tesla T4 runs recorded for Stokastisk 0.1.0 build 3. Build 4 was NOT executed on Kaggle; see docs/PRODUCTION_READINESS.md."
+}

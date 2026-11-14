@@ -1,8 +1,13 @@
 """OpenAI-compatible serving for the T4 build: launch the bundled ``vllm serve`` with the Stokastisk T4 defaults, wait for /health, read /metrics, stream tokens.
 
-STATUS: implemented and CPU-tested (command construction, validation, supervision, error reporting, HTTP client against a local fake server). **Not yet verified on Kaggle
-for build 3** - notebook 15 (stage ``server``) is the verification. The server process is the real ``vllm serve``; this module only builds its command, supervises it and
-speaks plain HTTP with the standard library. It does not import vllm or torch in the calling process, so it is safe to use from a notebook that has not initialised CUDA.
+STATUS: implemented, CPU-tested (command construction, validation, supervision, error reporting, HTTP client against a local fake server) and **verified on Kaggle 2 x Tesla T4**:
+the notebook 15 ``server`` stage on integrated build 3 passed 21/21 checks with Qwen/Qwen2.5-0.5B-Instruct at TP=1 (health, model list, chat, SSE streaming, error mapping, structured
+output over HTTP, /metrics, restart on the same port, graceful SIGINT shutdown, GPU memory released). Not covered by that run: other models, TP=2/PP=2 serving, and the SageMaker
+``/ping`` and ``/invocations`` routes of the container-standards package (Kaggle's fastapi 0.141.1 is newer than upstream vLLM's ``<0.137`` cap).
+
+The supported public API is :class:`ServerProcess` (and the client helpers below). The process it launches is the bundled ``vllm serve``, started with the Stokastisk T4 defaults;
+running upstream ``vllm serve`` yourself is not a supported entry point because it bypasses these checks. This module only builds the command, supervises the child and speaks
+plain HTTP with the standard library. It does not import vllm or torch in the calling process, so it is safe to use from a notebook that has not initialised CUDA.
 
 Failure reporting (Part 6 of the build-3 requirements): the child's stdout+stderr always go to a PERSISTENT log file (a temporary directory is created when none is
 given and its path is reported). If the server exits, or does not become ready, :class:`~stokastisk.errors.ServerStartupError` carries the exit code, the exact command, the log

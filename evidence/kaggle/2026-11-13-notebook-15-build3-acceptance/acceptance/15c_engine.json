@@ -1,0 +1,358 @@
+{
+  "stage": "15c_engine",
+  "status": "PASS",
+  "checks": [
+    {
+      "check": "parent process has not initialised CUDA before the engine is created",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "both GPUs idle before the engine starts",
+      "status": "PASS",
+      "detail": "[0, 0]"
+    },
+    {
+      "check": "construction with a non-existent model raises EngineError",
+      "status": "PASS",
+      "detail": "vLLM engine initialisation failed: OSError: stokastisk-test/this-model-does-not-exist is not a local"
+    },
+    {
+      "check": "failed construction: no engine process and no GPU memory left behind",
+      "status": "PASS",
+      "detail": "([], [0, 0])"
+    },
+    {
+      "check": "dtype is float16",
+      "status": "PASS",
+      "detail": "torch.float16"
+    },
+    {
+      "check": "attention backend == TRITON_ATTN (live VllmConfig)",
+      "status": "PASS",
+      "detail": "TRITON_ATTN"
+    },
+    {
+      "check": "structured-output backend == xgrammar (live VllmConfig; never 'auto')",
+      "status": "PASS",
+      "detail": "xgrammar"
+    },
+    {
+      "check": "LLM.generate returns non-empty text for every prompt",
+      "status": "PASS",
+      "detail": "[' Paris. It is the largest city in Europe', '\\nAnswer Choices: (A) 3 (B) 4 (C) 5 (D) 6']"
+    },
+    {
+      "check": "greedy decoding is deterministic",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "LLM.generate([]) returns [] without touching the engine",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "LLM.chat returns non-empty text",
+      "status": "PASS",
+      "detail": "The sea, vast and boundless, is a natural wonder that holds the essence of the E"
+    },
+    {
+      "check": "LLM.complete returns text",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "invalid input rejected before the engine: generate([1])",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "invalid input rejected before the engine: generate('')",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "invalid input rejected before the engine: generate(['  '])",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "invalid input rejected before the engine: chat([])",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "invalid input rejected before the engine: chat([{'role':'user'}])",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "invalid input rejected before the engine: complete('')",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "invalid input rejected before the engine: complete(max_tokens=0)",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "invalid input rejected before the engine: generate(timeout=-1)",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "generate_structured: every output is JSON that satisfies the bounded schema (validated by jsonschema)",
+      "status": "PASS",
+      "detail": "[{'city': 'Paris', 'population': 20000000}, {'city': 'Tokyo', 'population': 13000000}]"
+    },
+    {
+      "check": "invalid structured output is detected: not JSON",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "invalid structured output is detected: wrong type",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "invalid structured output is detected: missing key",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "invalid structured output is detected: extra key",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "invalid structured output is detected: truncated",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "a schema the pinned xgrammar backend does not support is REJECTED (no hidden fallback to guidance/outlines)",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "engine is still healthy after the rejected request",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "xgrammar's native library is mapped in the engine process tree (the pinned backend really ran)",
+      "status": "PASS",
+      "detail": "['/usr/local/lib/python3.13/dist-packages/xgrammar/libxgrammar_bindings.so']"
+    },
+    {
+      "check": "outlines_core's native library is NOT mapped (no fallback backend ran)",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "4 concurrent callers are serialised: all return text, none interleave or raise",
+      "status": "PASS",
+      "detail": "[1, 2, 3, 4]"
+    },
+    {
+      "check": "generate(timeout=0.01) raises EngineTimeoutError",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "the next call waits for the timed-out request and then succeeds (the engine is never driven twice)",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "exactly one GPU holds the model (TP=1)",
+      "status": "PASS",
+      "detail": "[13465, 3]"
+    },
+    {
+      "check": "Triton cache holds compiled kernel_unified_attention (kernel-level TRITON_ATTN evidence)",
+      "status": "PASS",
+      "detail": "['__grp__kernel_unified_attention.json', 'kernel_unified_attention.cubin', 'kernel_unified_attention.json']"
+    },
+    {
+      "check": "no Flash library mapped in any process of the engine tree",
+      "status": "PASS",
+      "detail": "2 processes inspected"
+    },
+    {
+      "check": "LLM.close() completed without an engine shutdown error",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "LLM.closed is True; a second close() is a no-op; generate() after close raises EngineClosedError",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "no live engine process after close",
+      "status": "PASS",
+      "detail": "[]"
+    },
+    {
+      "check": "GPU memory released after close (<500 MiB each)",
+      "status": "PASS",
+      "detail": "[3, 3]"
+    },
+    {
+      "check": "[unsupported entry point] direct vllm.LLM(dtype='half') generates (no attention backend specified)",
+      "status": "PASS",
+      "detail": " Paris. It is the largest city in"
+    },
+    {
+      "check": "[unsupported entry point] direct vllm.LLM auto-selection never picks a Flash backend and compiles the Triton unified-attention kernel",
+      "status": "PASS",
+      "detail": "('None', ['__grp__kernel_unified_attention.json', 'kernel_unified_attention.cubin'])"
+    },
+    {
+      "check": "[unsupported entry point] no Flash library mapped",
+      "status": "PASS",
+      "detail": "none"
+    },
+    {
+      "check": "no live process and GPU memory released after the direct-vLLM check",
+      "status": "PASS",
+      "detail": "([], [3, 3])"
+    }
+  ],
+  "provenance": {
+    "project_version": "0.1.0",
+    "build": "3",
+    "wheel": "stokastisk-0.1.0-3-cp313-cp313-linux_x86_64.whl",
+    "wheel_sha256": "b31588c9b5f0d5ae103903283c7cfc25a9d7ef6c00112c3d46bb7b9ee84b023a",
+    "bundle_zip_sha256": null,
+    "bundle_source": "attached-directory",
+    "manifest_sha256": "0b5faa33585f5a617a505d8c4ac4fa6b1213890776ee6d5df5b5532c10baf6b3",
+    "source_commit": "c08956fdb93c7904d3942e5b92ed403f6c316c2e",
+    "installer_sha256": "463670047f463209d441bb6c6b7822b70252bc0e1ef6b5ffe1b84ed6332633ba",
+    "runtime": {
+      "python": "3.13.16",
+      "torch": "2.11.0+cu130",
+      "triton": "3.6.0",
+      "vllm": "0.25.1",
+      "stokastisk": "0.1.0",
+      "transformers": "5.20.2",
+      "xgrammar": "0.2.3",
+      "apache-tvm-ffi": "0.1.9",
+      "lm-format-enforcer": "0.11.3"
+    },
+    "stage_script_sha256": "9cb62f12bf3d818ac48a725dc86aa3a5c030ddeb1d1b1639310543ed76cbb1fe",
+    "common_sha256": "93dddcd4bf5b5cb7d1e1e15a36230b86bb76de9580a5505201069bdc7197c08c",
+    "python": "3.13.16",
+    "started": "2026-11-13T15:53:44+0000",
+    "finished": "2026-11-13T15:56:22+0000"
+  },
+  "versions": {
+    "python": "3.13.16",
+    "torch": "2.11.0+cu130",
+    "triton": "3.6.0",
+    "vllm": "0.25.1",
+    "transformers": "5.20.2",
+    "stokastisk": "0.1.0",
+    "torch_cuda": "13.0",
+    "nccl_compiled": "2.28.9",
+    "gpus": [
+      {
+        "name": "Tesla T4",
+        "capability": [
+          7,
+          5
+        ]
+      },
+      {
+        "name": "Tesla T4",
+        "capability": [
+          7,
+          5
+        ]
+      }
+    ],
+    "cuda_toolkit": {
+      "nvcc": "Build cuda_13.0.r13.0/compiler.36424714_0",
+      "nvidia_packages": {
+        "nvidia-cuda-nvcc-cu12": "12.9.86",
+        "nvidia-cuda-runtime": "13.0.96",
+        "nvidia-nccl-cu12": "2.32.3",
+        "nvidia-nccl-cu13": "2.28.9",
+        "nvidia-cuda-runtime-cu12": "12.9.79",
+        "nvidia-cuda-nvcc": "13.0.88"
+      }
+    }
+  },
+  "model": "Qwen/Qwen2.5-0.5B-Instruct",
+  "load_seconds": 58.98317360877991,
+  "chat_text": "The sea, vast and boundless, is a natural wonder that holds the essence of the Earth, nurturing life and shaping the world around us.",
+  "structured_objects": [
+    {
+      "city": "Paris",
+      "population": 20000000
+    },
+    {
+      "city": "Tokyo",
+      "population": 13000000
+    }
+  ],
+  "xgrammar_native_objects_mapped": [
+    "/usr/local/lib/python3.13/dist-packages/xgrammar/libxgrammar_bindings.so"
+  ],
+  "texts": [
+    " Paris. It is the largest city in Europe and the third largest city in the world. It is located in the south of France, on the banks of the",
+    "\nAnswer Choices: (A) 3 (B) 4 (C) 5 (D) 6 (E) 7\nThe answer"
+  ],
+  "gpu_used_MiB": {
+    "before": [
+      0,
+      0
+    ],
+    "peak": [
+      13465,
+      3
+    ]
+  },
+  "loaded_libs": {
+    "272": [
+      "/usr/local/lib/python3.13/dist-packages/nvidia/cu13/lib/libcublas.so.13",
+      "/usr/local/lib/python3.13/dist-packages/nvidia/cu13/lib/libcublasLt.so.13",
+      "/usr/local/lib/python3.13/dist-packages/nvidia/cu13/lib/libcudart.so.13",
+      "/usr/local/lib/python3.13/dist-packages/nvidia/cu13/lib/libnvrtc-builtins.so.13.0",
+      "/usr/local/lib/python3.13/dist-packages/nvidia/cu13/lib/libnvrtc.so.13",
+      "/usr/local/lib/python3.13/dist-packages/nvidia/cudnn/lib/libcudnn.so.9",
+      "/usr/local/lib/python3.13/dist-packages/nvidia/nccl/lib/libnccl.so.2",
+      "/usr/local/lib/python3.13/dist-packages/torchvision.libs/libcudart.faf08d9a.so.13"
+    ],
+    "328": [
+      "/usr/local/lib/python3.13/dist-packages/nvidia/cu13/lib/libcublas.so.13",
+      "/usr/local/lib/python3.13/dist-packages/nvidia/cu13/lib/libcublasLt.so.13",
+      "/usr/local/lib/python3.13/dist-packages/nvidia/cu13/lib/libcudart.so.13",
+      "/usr/local/lib/python3.13/dist-packages/nvidia/cu13/lib/libnvrtc-builtins.so.13.0",
+      "/usr/local/lib/python3.13/dist-packages/nvidia/cu13/lib/libnvrtc.so.13",
+      "/usr/local/lib/python3.13/dist-packages/nvidia/cudnn/lib/libcudnn.so.9",
+      "/usr/local/lib/python3.13/dist-packages/nvidia/nccl/lib/libnccl.so.2",
+      "/usr/local/lib/python3.13/dist-packages/torchvision.libs/libcudart.faf08d9a.so.13"
+    ]
+  },
+  "gpu_after_close": [
+    3,
+    3
+  ],
+  "shutdown": {
+    "live": [],
+    "ignored": [],
+    "waited_s": 0.0
+  },
+  "output_dir_gib": {
+    "used": 0.019,
+    "quota": 20.0
+  },
+  "check_counts": {
+    "PASS": 44
+  }
+}
