@@ -19,6 +19,15 @@ jobs:
         with:
           python-version: "3.13"
       - run: python -m pip install -r requirements/ci.txt -r requirements/docs.txt
+      - name: CPU-only PyTorch (the same 2.11.0 the project targets; three test modules import torch and never touch a GPU)
+        run: python -m pip install "torch==2.11.0+cpu" --index-url https://download.pytorch.org/whl/cpu
+      - name: Fetch the byte-pinned vLLM wheel (hash-checked) so no test is skipped for its absence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p inputs
+          gh release download v0.1.0 -R ${{ github.repository }} -p 'vllm-0.25.1-cp38-abi3-linux_x86_64.whl' -D inputs
+          echo "cc3bcafb6516791990ca302073ae153a08465d3df1e460d666e3ec09b4e98f5e  inputs/vllm-0.25.1-cp38-abi3-linux_x86_64.whl" | sha256sum -c -
       - name: Project version lock
         run: python scripts/release/verify_project_version.py
       - name: Full CPU test suite
