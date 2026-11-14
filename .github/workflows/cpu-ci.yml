@@ -60,24 +60,24 @@ jobs:
           import hashlib, json, pathlib, urllib.request
           rel = json.load(open("RELEASE.json"))
           assert hashlib.sha256(pathlib.Path("inputs/vllm-0.25.1-cp38-abi3-linux_x86_64.whl").read_bytes()).hexdigest() == rel["base_vllm_wheel"]["sha256"]
-          for b in ("4",):
+          for b in ("5",):
               w = rel["builds"][b]; dst = pathlib.Path("dist/ref") / w["filename"]
               urllib.request.urlretrieve(w["url"], dst)
               got = hashlib.sha256(dst.read_bytes()).hexdigest(); assert got == w["sha256"], (b, got)
               print("build", b, "downloaded and verified", got)
           PY
-      - name: Build 4 from source, audit it, rebuild to prove reproducibility
+      - name: Build 5 from source, audit it, rebuild to prove reproducibility
         run: |
-          python scripts/release/build_wheel_release.py --build-tag 4 --out dist/wheel-build4 --reproduce
-      - name: The rebuilt wheel has exactly the members of the published build 4
+          python scripts/release/build_wheel_release.py --build-tag 5 --out dist/wheel-build5 --reproduce
+      - name: The rebuilt wheel has exactly the members of the published build 5
         run: |
           python - <<'PY'
           import hashlib, json, pathlib, zipfile
-          rel = json.load(open("RELEASE.json")); w = rel["builds"]["4"]
-          pub = zipfile.ZipFile("dist/ref/" + w["filename"]); new = zipfile.ZipFile("dist/wheel-build4/" + w["filename"])
+          rel = json.load(open("RELEASE.json")); w = rel["builds"]["5"]
+          pub = zipfile.ZipFile("dist/ref/" + w["filename"]); new = zipfile.ZipFile("dist/wheel-build5/" + w["filename"])
           assert sorted(pub.namelist()) == sorted(new.namelist())
           diff = [n for n in pub.namelist() if pub.read(n) != new.read(n)]
           assert not diff, diff[:5]
-          same_bytes = hashlib.sha256(open("dist/wheel-build4/" + w["filename"], "rb").read()).hexdigest() == w["sha256"]
+          same_bytes = hashlib.sha256(open("dist/wheel-build5/" + w["filename"], "rb").read()).hexdigest() == w["sha256"]
           print("all", len(pub.namelist()), "members identical; zip bytes identical to the published file:", same_bytes)
           PY

@@ -13,7 +13,7 @@
 One cell:
 
 ```python
-!python -m pip install --index-url https://pypi.org/simple "stokastisk @ https://huggingface.co/waqasm86/stokastisk/resolve/main/wheels/stokastisk-0.1.0-4-cp313-cp313-linux_x86_64.whl#sha256=052156d71adc6ad9966901565f86dbded9ff41c620c782db4ff377a1a2b4f62e"
+!python -m pip install --index-url https://pypi.org/simple "stokastisk @ https://huggingface.co/waqasm86/stokastisk/resolve/main/wheels/stokastisk-0.1.0-5-cp313-cp313-linux_x86_64.whl#sha256=fe80d7c36fa78cf8a26feb1e00bb5f1f006ca45a027450353603976320ae0b3e"
 ```
 
 pip downloads the 38 MB wheel from the Hugging Face CDN, **refuses it unless its SHA256 matches**, and installs 19 pinned dependencies from PyPI. Kaggle's own PyTorch 2.11.0+cu130 and Triton 3.6.0 are never touched. The URL names the build‑4 wheel (project version 0.1.0); the current file and hash are in [RELEASE.json](../../RELEASE.json).

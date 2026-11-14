@@ -20,7 +20,7 @@ The single authoritative declaration is the file [`VERSION`](VERSION) (content `
 
 ## Project version vs. wheel build tag
 
-The **project version** is `0.1.0` and never changes. The PEP 427 **build tag** in the wheel file name (`stokastisk-0.1.0-<build>-cp313-cp313-linux_x86_64.whl`) numbers rebuilds of the same project version: build 1 and 2 were superseded candidates, build 3 is the Kaggle-accepted wheel, build 4 corrects the compatibility reporting. A new build tag is created only when shipped SDK content must change; it is never derived from the version, never overwrites an earlier wheel (an older build may later be withdrawn, as build 3 was), and its identity is recorded in `RELEASE.json`. The Git tag and GitHub release stay `v0.1.0`; a build-specific release, if one is ever made, uses a build identifier such as `integrated-0.1.0-build4`, not a new semantic version.
+The **project version** is `0.1.0` and never changes. The PEP 427 **build tag** in the wheel file name (`stokastisk-0.1.0-<build>-cp313-cp313-linux_x86_64.whl`) numbers rebuilds of the same project version: build 1 and 2 were superseded candidates, build 3 is the Kaggle-accepted wheel, build 4 corrects the compatibility reporting, build 5 corrects one error message. A new build tag is created only when shipped SDK content must change; it is never derived from the version, never overwrites an earlier wheel (an older build may later be withdrawn, as builds 3 and 4 were), and its identity is recorded in `RELEASE.json`. The Git tag and GitHub release stay `v0.1.0`; a build-specific release, if one is ever made, uses a build identifier such as `integrated-0.1.0-build5`, not a new semantic version.
 
 ## Permanent lock
 

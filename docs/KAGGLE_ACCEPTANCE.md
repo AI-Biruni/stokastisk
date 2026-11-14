@@ -10,7 +10,7 @@
 
 Raw artifacts are in `evidence/kaggle/` (executed notebooks with outputs, the notebook-15 reports and logs) and indexed, with sizes, SHA256 values, per-run versions, models, modes, memory readings and the forced-cleanup warning, in `evidence/kaggle/evidence-manifest.json` (rebuild: `python3.13 scripts/audit/build_evidence_manifest.py`). `stokastisk.compat` and the tests are checked against that manifest. Not in the repository: the two original output archives (their hashes are in the manifest).
 
-**Build 4 was not run on Kaggle.** It differs from build 3 only in compatibility reporting; the member-by-member audit proves the vLLM tree, native binaries, dependency pins and executable SDK code unchanged (see [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md)), so this record is inherited for those paths.
+**Builds 4 and 5 were not run on Kaggle.** Build 4 differs from build 3 only in compatibility reporting, and build 5 from build 4 only in one error-message string; the member-by-member audits prove the vLLM tree, native binaries, dependency pins and executable SDK code unchanged (see [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md)), so this record is inherited for those paths.
 
 Notebooks 18 and 19 (in `notebooks/`, outputs stripped) are the end-user pattern: one `pip install` cell, then ordinary cells. They are not throughput benchmarks; on two PCIe-connected T4s TP=1 is fastest for any model that fits one card.
 

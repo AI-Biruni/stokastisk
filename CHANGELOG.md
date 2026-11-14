@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-14 - build 5: one error message corrected; builds 3 and 4 withdrawn (wheel build tag 5)
+* **Defect:** the `MissingDependencyError` raised by `ServerProcess.start()` when server packages are missing told users to re-run a bundle installer (`scripts/kaggle/02_install_integrated.py`) that was retired together with build 3.
+* **Fix:** the text now says to reinstall with the SHA256-pinned command in `INSTALL.md`. String constants only in `stokastisk/serving.py` (identical AST once strings are blanked); a regression test checks the message and that no shipped SDK file names a removed script.
+* **Build 5** `stokastisk-0.1.0-5-cp313-cp313-linux_x86_64.whl`, SHA256 `fe80d7c3...`: 3 of 2,582 members differ from build 4 (`serving.py`, `WHEEL`, `RECORD`); all 2,517 `vllm/**` files, all 6 native binaries, `METADATA` and every dependency pin are byte-identical; no CUDA binary was rebuilt; reproducible. **Not run on Kaggle** (build 3's evidence is inherited through build 4).
+* **Build 4 withdrawn** (superseded; identity and audit kept in `RELEASE.json` and `evidence/release/build-4/`). Install command, package index, model card, release notes and docs now name build 5. New `--literals-only` check in `scripts/audit/wheel_delta.py`.
+
 ## 2026-11-14 - build 3 withdrawn; repository cleaned
 * **Build 3 withdrawn** by the owner: it is no longer an install target and has no rollback instructions; build 4 is the only published build (`RELEASE.json`, key `withdrawn_builds` keeps its identity). The Kaggle runs were made on build 3 and their evidence stays archived in `evidence/kaggle/`; build 4's executed code paths are byte-identical to it.
 * **Removed** the bundle-based Kaggle tooling that only served build 3: `scripts/kaggle/` (installer, bundle verifier, notebook-15 stage scripts), `scripts/release/assemble_build3_release.py`, `scripts/release/make_notebook15_build3.py` and their tests (`test_bundle_discovery`, `test_installer_integrated`, `test_stage_scripts`, `test_stage_status`, `test_inventory`). They remain in git history. `build_wheel_release.py` no longer needs a reference wheel; the CPU CI no longer downloads build 3.

@@ -2,7 +2,7 @@
 
 Generated from `stokastisk.compat` (`FEATURES`, `MODEL_EVIDENCE`) by `scripts/release/build_docs_site.py`; do not edit by hand. These are the records the installed SDK reports through `stokastisk.feature_matrix()` and `stokastisk.check_model()`.
 
-**Evidence classes.** `kaggle`: executed on Kaggle 2 × T4 (the *notebooks* column says which: 15 = acceptance suite on build 3, 16/18/19 = end-user notebooks, 01–14 = earlier notebooks). `kaggle-kernel`: a Triton kernel compiled and launched, output not asserted. `cpu-tests`: CPU unit tests only. `static`: source inspection only. Build 4 itself was not executed on Kaggle; its inference code is byte-identical to build 3.
+**Evidence classes.** `kaggle`: executed on Kaggle 2 × T4 (the *notebooks* column says which: 15 = acceptance suite on build 3, 16/18/19 = end-user notebooks, 01–14 = earlier notebooks). `kaggle-kernel`: a Triton kernel compiled and launched, output not asserted. `cpu-tests`: CPU unit tests only. `static`: source inspection only. Builds 4 and 5 were not executed on Kaggle; their inference code is byte-identical to build 3.
 
 ## Features
 

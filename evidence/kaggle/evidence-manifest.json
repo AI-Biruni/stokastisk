@@ -435,5 +435,5 @@
   }
  ],
  "schema": 1,
- "statement": "Raw artifacts of the Kaggle 2 x Tesla T4 runs recorded for Stokastisk 0.1.0 build 3. Build 4 was NOT executed on Kaggle; see docs/PRODUCTION_READINESS.md."
+ "statement": "Raw artifacts of the Kaggle 2 x Tesla T4 runs recorded for Stokastisk 0.1.0 build 3. Builds 4 and 5 were NOT executed on Kaggle; see docs/PRODUCTION_READINESS.md."
 }

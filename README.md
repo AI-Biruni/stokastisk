@@ -3,14 +3,14 @@
 **A Python 3.13 SDK for Kaggle's 2 × Tesla T4 (SM75) with a built‑in vLLM 0.25.1, Triton attention (`TRITON_ATTN`) and CUDA 13.0 `sm_75` binaries — installed with one line.**
 
 ```bash
-python -m pip install --index-url https://pypi.org/simple "stokastisk @ https://huggingface.co/waqasm86/stokastisk/resolve/main/wheels/stokastisk-0.1.0-4-cp313-cp313-linux_x86_64.whl#sha256=052156d71adc6ad9966901565f86dbded9ff41c620c782db4ff377a1a2b4f62e"
+python -m pip install --index-url https://pypi.org/simple "stokastisk @ https://huggingface.co/waqasm86/stokastisk/resolve/main/wheels/stokastisk-0.1.0-5-cp313-cp313-linux_x86_64.whl#sha256=fe80d7c36fa78cf8a26feb1e00bb5f1f006ca45a027450353603976320ae0b3e"
 ```
 
 That downloads the wheel (SDK + vLLM 0.25.1 + CUDA binaries, 38 MB) from the Hugging Face CDN, **refuses it unless its SHA256 matches**, and installs 19 small pinned dependencies from PyPI next to Kaggle's own PyTorch 2.11.0+cu130 / Triton 3.6.0 — which it never touches. No dataset upload, no manual wheels.
 
 | | |
 |---|---|
-| Project version | **0.1.0** (locked — [VERSION_POLICY.md](VERSION_POLICY.md)); current wheel build tag **4** (build 3, on which the Kaggle runs were made, is withdrawn — [RELEASE.md](RELEASE.md)) |
+| Project version | **0.1.0** (locked — [VERSION_POLICY.md](VERSION_POLICY.md)); current wheel build tag **5** (build 3, on which the Kaggle runs were made, is withdrawn — [RELEASE.md](RELEASE.md)) |
 | Runtime | Python 3.13 · vLLM 0.25.1 · PyTorch 2.11.0+cu130 · Triton 3.6.0 · CUDA 13.0 · 2 × Tesla T4 |
 | Attention | `TRITON_ATTN` only — no FlashAttention / FlashInfer / FlashMLA code is shipped (requesting one raises `ProhibitedBackendError`) |
 | Structured output | xgrammar 0.2.3, pinned (never `auto`); every output validated against its schema |
@@ -18,7 +18,7 @@ That downloads the wheel (SDK + vLLM 0.25.1 + CUDA binaries, 38 MB) from the Hug
 ## User guide (Kaggle)
 **1. Notebook settings:** Accelerator **GPU T4 × 2**, **Internet ON**, a Python 3.13 image.
 
-**2. Install** (one cell): `!python -m pip install --index-url https://pypi.org/simple "stokastisk @ https://huggingface.co/waqasm86/stokastisk/resolve/main/wheels/stokastisk-0.1.0-4-cp313-cp313-linux_x86_64.whl#sha256=052156d71adc6ad9966901565f86dbded9ff41c620c782db4ff377a1a2b4f62e"`
+**2. Install** (one cell): `!python -m pip install --index-url https://pypi.org/simple "stokastisk @ https://huggingface.co/waqasm86/stokastisk/resolve/main/wheels/stokastisk-0.1.0-5-cp313-cp313-linux_x86_64.whl#sha256=fe80d7c36fa78cf8a26feb1e00bb5f1f006ca45a027450353603976320ae0b3e"`
 
 **3. Run.** Engine code works in ordinary notebook cells (notebooks 18 and 19) and in scripts; in a **script** keep it under a `__main__` guard, because vLLM starts its engine in a spawned process:
 ```python
@@ -70,7 +70,7 @@ Three separate classes of evidence — details in [RELEASE.md](RELEASE.md), [doc
 |---|---|
 | **Build 3 on Kaggle 2 × T4** — notebook 15 acceptance (2026‑11‑13): installer 32/32 · static 79/79 · engine 44/44 · parallel 23/23 · server 21/21 · summary 15/15 | **Kaggle‑tested** (acceptance wheel `b31588c9…`; the published build‑3 wheel differs only in `METADATA`/`RECORD`) |
 | **Build 3, end‑user notebooks 16, 18, 19** (Python 3.13.16, PyTorch 2.11.0+cu130, Triton 3.6.0): quickstart; Qwen2.5‑0.5B‑Instruct TP=1; Qwen2.5‑3B‑Instruct TP=2 and PP=2; Qwen2.5‑Coder‑7B‑Instruct TP=2 and PP=2 (FP16, `max_model_len` 2048, `TRITON_ATTN`; GPUs back to 14.46 of 14.56 GiB free after each engine) | **Kaggle‑tested** — only these exact models and modes; `stokastisk.check_model()` reports them |
-| **Build 4 (current)** — compatibility‑reporting correction; 2,577 of 2,582 members byte‑identical to build 3 (all vLLM files, all native binaries, every dependency pin) | **verified on CPU** (wheel audit, delta audit, reproducible build, tests). **Not itself run on Kaggle**; build 3's evidence is inherited for the unchanged inference/server code |
+| **Build 5 (current)** — build 4 (compatibility‑reporting correction over build 3) plus one corrected error message; 2,579 of 2,582 members byte‑identical to build 4, including every vLLM file, every native binary and every dependency pin | **verified on CPU** (wheel audit, delta audit, reproducible build, tests). **Not itself run on Kaggle**; build 3's evidence is inherited, through build 4, for the unchanged inference/server code |
 
 A checkpoint that is not in that list — even another Qwen2 model — is reported as `UNKNOWN_REQUIRES_EVIDENCE`. Details and limits: [docs/PRODUCTION_READINESS.md](docs/PRODUCTION_READINESS.md), [docs/KAGGLE_ACCEPTANCE.md](docs/KAGGLE_ACCEPTANCE.md).
 

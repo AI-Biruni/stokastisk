@@ -86,7 +86,7 @@ def main():
     ej = json.loads((d / "15c_engine.json").read_text())
     arch = [{"name": pathlib.Path(n).name, "size": p.stat().st_size, "sha256": sha(p.read_bytes())} for n, p in ((n, pathlib.Path(n)) for n in sys.argv[1:] if n != "--archive") if p.is_file()] if "--archive" in sys.argv else (json.loads((EV / "evidence-manifest.json").read_text()).get("original_archives", []) if (EV / "evidence-manifest.json").exists() else [])
     man = {"schema": 1, "project_version": "0.1.0",
-           "statement": "Raw artifacts of the Kaggle 2 x Tesla T4 runs recorded for Stokastisk 0.1.0 build 3. Build 4 was NOT executed on Kaggle; see docs/PRODUCTION_READINESS.md.",
+           "statement": "Raw artifacts of the Kaggle 2 x Tesla T4 runs recorded for Stokastisk 0.1.0 build 3. Builds 4 and 5 were NOT executed on Kaggle; see docs/PRODUCTION_READINESS.md.",
            "notebook_15_acceptance": {"date": "2026-11-13", "acceptance_wheel": prov["wheel"], "acceptance_wheel_sha256": prov["wheel_sha256"], "build": prov["build"], "python": ej["versions"]["python"] if isinstance(ej["versions"], dict) else None,
                                       "stages": a15, "models": {"engine": ej["model"], "server": json.loads((d / "15c_server.json").read_text())["model"], "parallel": ej["model"]},
                                       "note": "Run on the acceptance wheel; the published build-3 wheel (72039ca4...) differs from it only in METADATA/RECORD."},

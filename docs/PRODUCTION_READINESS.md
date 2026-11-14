@@ -5,8 +5,8 @@
 | Item | Value |
 |---|---|
 | Project version | **0.1.0** (locked; `v0.1.0` tag and GitHub release unchanged) |
-| Current wheel | build tag **4** — `stokastisk-0.1.0-4-cp313-cp313-linux_x86_64.whl`, 38,057,512 bytes, SHA256 `052156d71adc6ad9966901565f86dbded9ff41c620c782db4ff377a1a2b4f62e` |
-| Earlier build | build tag 3 (SHA256 `72039ca4044e48fdf5edca8051dcb48b42fe61a69e07715fa8803e029581fe12`) was the build the Kaggle runs used; it has been **withdrawn** and is not an install target |
+| Current wheel | build tag **5** — `stokastisk-0.1.0-5-cp313-cp313-linux_x86_64.whl`, 38,057,515 bytes, SHA256 `fe80d7c36fa78cf8a26feb1e00bb5f1f006ca45a027450353603976320ae0b3e` |
+| Earlier builds | build tag 3 (SHA256 `72039ca4044e48fdf5edca8051dcb48b42fe61a69e07715fa8803e029581fe12`) is the build the Kaggle runs used; build 4 (`052156d7…`) corrected the compatibility reporting. Both are **withdrawn** and not install targets |
 | Bundled vLLM | 0.25.1, from the byte-pinned base wheel SHA256 `cc3bcafb6516791990ca302073ae153a08465d3df1e460d666e3ec09b4e98f5e` (natives compiled once for `sm_75`, CUDA 13.0) |
 | Runtime target | Python 3.13 · CUDA 13.0 · PyTorch 2.11.0+cu130 · Triton 3.6.0 · 2 × Tesla T4 (SM75) · FP16 · `TRITON_ATTN` only |
 | Machine-readable identities | [RELEASE.json](../RELEASE.json) |
@@ -16,7 +16,7 @@
 ## Evidence — three separate classes
 1. **Build 3, Kaggle acceptance (notebook 15, 2026-11-13).** installer 32/32, static 79/79, engine 44/44, parallel 23/23, server 21/21, summary 15/15, run on the acceptance wheel `b31588c9b5f0d5ae103903283c7cfc25a9d7ef6c00112c3d46bb7b9ee84b023a` with Qwen2.5-0.5B-Instruct. Raw reports and the executed notebook: `evidence/kaggle/2026-11-13-notebook-15-build3-acceptance/` (the two original ZIP archives are not in the repository; their SHA256 values are in `evidence/kaggle/evidence-manifest.json`). The published build-3 wheel differs from the acceptance wheel only in `METADATA`/`RECORD` (2,580 of 2,582 members byte-identical).
 2. **Build 3, end-user notebooks 16, 18, 19 (2026-11-13/14).** The published install, then inference. Python 3.13.16, PyTorch 2.11.0+cu130, CUDA 13.0, Triton 3.6.0, two Tesla T4 (SM75). Executed notebooks with outputs: `evidence/kaggle/`.
-3. **Build 4, CPU only.** Independent wheel audit (21 checks), member-by-member delta against build 3 (when it was still published), reproducible rebuild, unit and documentation-consistency tests. **Build 4 was not separately run on Kaggle.**
+3. **Builds 4 and 5, CPU only.** Independent wheel audit (21 checks), member-by-member delta (build 4 against build 3, build 5 against build 4, each while the earlier build was still published), reproducible rebuild, unit and documentation-consistency tests. **Neither build was separately run on Kaggle.**
 
 ### Exact verified models (what `stokastisk.check_model()` reports)
 | Model id | Dtype | Modes run | Max `max_model_len` | Evidence |
@@ -29,7 +29,11 @@ Not claimed: that every `Qwen2ForCausalLM` checkpoint works (any other checkpoin
 
 Lifecycle: after every engine in notebooks 18 and 19 both GPUs returned to 14.46 of 14.56 GiB free. At the end of each TP=2 and PP=2 engine vLLM's process manager logged `force killing remaining processes count=1`; `close()` still completed and memory was recovered. The two facts are recorded separately in the evidence manifest.
 
-## Build 4 — what changed and how it was verified
+## Builds 4 and 5 — what changed and how they were verified
+**Build 5 (current)** = build 4 + one corrected error message. The `MissingDependencyError` text for missing server packages in `stokastisk/serving.py` told users to re-run a bundle installer that no longer exists; it now points to the pinned install command in `INSTALL.md`. Delta audit against build 4: 3 of 2,582 members differ (`serving.py`, `WHEEL`, `RECORD`); `serving.py` has an identical AST once string constants are blanked, so no code or control flow changed; all 2,517 `vllm/**` files, all 6 native binaries, `METADATA` and every dependency pin are byte-identical; a second build gave the identical SHA256. No CUDA binary was rebuilt. Archive: `evidence/release/build-5/`.
+
+**Build 4 (withdrawn)** — the compatibility-evidence correction over build 3:
+
 | | |
 |---|---|
 | Defect corrected | The shipped SDK carried build-time evidence: the OpenAI server, streaming, metrics and structured output were labelled "unknown / pending", chat cited a failed build-2 run, offline generation named only the two smallest Qwen2.5 models, `check_model()` marked **any** Qwen2 checkpoint `SUPPORTED`, and the `serving` docstring said server verification was pending. |
@@ -38,7 +42,7 @@ Lifecycle: after every engine in notebooks 18 and 19 both GPUs returned to 14.46
 | Delta audit | of 2,582 members, 2,577 byte-identical; the 5 that differ are `stokastisk/compat.py`, `stokastisk/serving.py`, `METADATA`, `WHEEL`, `RECORD`. `serving.py` has an identical AST once docstrings are removed; the `compat` names the runtime imports (`check_dtype`, `check_quantization`, `check_feature`, `get_feature`, `BLOCKING`, `SM75`, `QUANT_MIN_CAPABILITY`) are AST-identical. |
 | Reproducibility | a second build produced the identical SHA256. |
 | Independent audit | RECORD hashes, strict Flash policy (0 hits), natives equal to the pinned vLLM wheel, `vllm/**` equals pinned wheel + documented transform, dependency pins — 21/21. |
-| Not done | no GPU test, no Kaggle run, no model inference, no CUDA initialisation. Build 3's Kaggle evidence is **inherited** for the unchanged implementation paths, and only because the delta audit proves them unchanged. |
+| Not done | no GPU test, no Kaggle run, no model inference, no CUDA initialisation, for build 4 or build 5. Build 3's Kaggle evidence is **inherited** (3 → 4 → 5) for the unchanged implementation paths, and only because the two delta audits prove them unchanged. |
 
 ## Gates
 | Gate | State |
@@ -47,7 +51,7 @@ Lifecycle: after every engine in notebooks 18 and 19 both GPUs returned to 14.46
 | B dependency integrity | met — four hash-pinned locks resolved against Kaggle's real inventory, 0 conflicts; the wheel pins all 19 new packages exactly; unchanged in build 4 |
 | C package integrity | met — tags, RECORD, byte-equality with the pinned vLLM wheel + documented transform, 0 Flash files / markers / bindings, natives unchanged, reproducible |
 | D delivery | met — wheels on the Hugging Face CDN, SHA256-pinned install command, optional PEP 503 index on GitHub Pages |
-| E Kaggle GPU verification | **met for build 3** (acceptance + notebooks 16/18/19); **inherited, not re-run, for build 4** |
+| E Kaggle GPU verification | **met for build 3** (acceptance + notebooks 16/18/19); **inherited, not re-run, for builds 4 and 5** |
 | F Documentation | met — [user guide](guide/index.md) (also <https://stokastisk-ai.github.io/stokastisk/docs/>), generated [feature matrix](guide/feature-matrix.md), maintainer notes here; tests fail on broken links, stale API reference, missing referenced files, or a document that contradicts the SDK's evidence |
 
 ## Feature labels (the authoritative table is the generated [feature matrix](guide/feature-matrix.md))
@@ -61,7 +65,7 @@ Lifecycle: after every engine in notebooks 18 and 19 both GPUs returned to 14.46
 | PP=2 | Kaggle-tested, **experimental** (also 3B and Coder-7B) |
 | `ReplicaPool` worker-failure recovery | CPU-tested with fake workers only |
 | Flash-free tree | Kaggle-tested (no Flash backend or library in any process) |
-| One-line install | Kaggle-tested for build 3 (notebooks 16, 18, 19); the build-4 install command was verified by downloading the published file and checking its hash, not by a Kaggle run |
+| One-line install | Kaggle-tested for build 3 (notebooks 16, 18, 19); the build-5 install command was verified by downloading the published file and checking its hash, not by a Kaggle run |
 | `models` extra (compressed-tensors, depyf, setproctitle) | Implemented, not exercised |
 | Prefix caching, chunked prefill, CUDA graphs, custom all-reduce, LoRA, multimodal, speculative decoding | **Unknown** — never run |
 | SageMaker `/ping`, `/invocations` | **Not exercised, not claimed** |
@@ -76,4 +80,4 @@ Lifecycle: after every engine in notebooks 18 and 19 both GPUs returned to 14.46
 6. The observability exporters conflict with Kaggle's protobuf 7.x and are unsupported.
 7. `--extra-index-url` (the optional convenience index) also searches PyPI; the recommended command does not use it.
 8. The raw original Kaggle archives (about 17 MB, mostly Triton caches) are kept outside the repository; only their reports and logs, plus their hashes, are archived.
-9. Build 4 has not been executed on a GPU; if a defect is ever found in a path build 4 shares with build 3, it is in both.
+9. Builds 4 and 5 have not been executed on a GPU; if a defect is ever found in a path they share with build 3, it is in all of them.

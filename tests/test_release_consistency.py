@@ -8,6 +8,7 @@ import make_pip_index as mpi  # noqa: E402
 REL = json.loads((ROOT / "RELEASE.json").read_text())
 CUR = REL["builds"][str(REL["current_build"])]
 WITHDRAWN = REL["withdrawn_builds"]["3"]
+BUILD4_SHA = "052156d71adc6ad9966901565f86dbded9ff41c620c782db4ff377a1a2b4f62e"     # historical: withdrawn build 4
 BUILD3_SHA = "72039ca4044e48fdf5edca8051dcb48b42fe61a69e07715fa8803e029581fe12"     # historical: the build the Kaggle evidence was produced on
 PIN = f'python -m pip install --index-url https://pypi.org/simple "stokastisk @ {CUR["url"]}#sha256={CUR["sha256"]}"'
 DOCS = ["README.md", "INSTALL.md", "docs/HUB_README.md", "docs/guide/getting-started.md"]
@@ -16,7 +17,8 @@ DOCS = ["README.md", "INSTALL.md", "docs/HUB_README.md", "docs/guide/getting-sta
 class ReleaseConsistency(unittest.TestCase):
     def test_project_version_and_build_tags(self):
         self.assertEqual(REL["project_version"], "0.1.0"); self.assertEqual((ROOT / "VERSION").read_text(), "0.1.0\n")
-        self.assertRegex(CUR["filename"], r"^stokastisk-0\.1\.0-4-cp313-cp313-linux_x86_64\.whl$"); self.assertEqual(list(REL["builds"]), ["4"])
+        self.assertRegex(CUR["filename"], r"^stokastisk-0\.1\.0-5-cp313-cp313-linux_x86_64\.whl$"); self.assertEqual(list(REL["builds"]), ["5"]); self.assertEqual(REL["current_build"], 5)
+        self.assertEqual(sorted(REL["withdrawn_builds"]), ["3", "4"]); self.assertEqual(REL["withdrawn_builds"]["4"]["sha256"], BUILD4_SHA)
         self.assertEqual(WITHDRAWN["sha256"], BUILD3_SHA); self.assertIn("withdrawn", WITHDRAWN["status"])
         self.assertEqual(REL["base_vllm_wheel"]["sha256"], "cc3bcafb6516791990ca302073ae153a08465d3df1e460d666e3ec09b4e98f5e")
         self.assertTrue(CUR["url"].endswith("/" + CUR["filename"])); self.assertEqual(re.fullmatch(r"[0-9a-f]{64}", CUR["sha256"]) is not None, True)
@@ -47,7 +49,7 @@ class ReleaseConsistency(unittest.TestCase):
         self.assertIn(REL["pip_index"], (ROOT / "scripts/release/make_pip_index.py").read_text())
         self.assertEqual(mpi.INDEX, REL["pip_index"]); self.assertEqual(mpi.HF + CUR["filename"], CUR["url"])
 
-    def test_build4_is_never_called_kaggle_executed(self):
+    def test_current_build_is_never_called_kaggle_executed(self):
         self.assertFalse(CUR["executed_on_kaggle"])
         for d in ("README.md", "RELEASE.md", "docs/PRODUCTION_READINESS.md", "docs/HUB_README.md"):
             t = (ROOT / d).read_text()
@@ -58,30 +60,42 @@ class ReleaseConsistency(unittest.TestCase):
         self.assertNotIn(CUR["sha256"], t); self.assertNotIn(BUILD3_SHA, t); self.assertIn('readme = "README.wheel.md"', (ROOT / "pyproject.toml").read_text())
 
 
-if __name__ == "__main__":
-    unittest.main()
-
-
 class ArchivedBuildReport(unittest.TestCase):
-    """evidence/release/build-4/ is the archived audit of the current wheel; it must describe exactly the wheel RELEASE.json names."""
-    D = ROOT / "evidence/release/build-4"
+    """evidence/release/build-5/ is the archived audit of the current wheel; it must describe exactly the wheel RELEASE.json names."""
+    D = ROOT / "evidence/release/build-5"
 
     def test_manifest_matches_release_json(self):
         m = json.loads((self.D / "release-manifest.json").read_text())
-        self.assertEqual((m["project_version"], m["build_tag"]), ("0.1.0", "4"))
+        self.assertEqual((m["project_version"], m["build_tag"]), ("0.1.0", "5"))
         self.assertEqual({k: m["wheel"][k] for k in ("filename", "size", "sha256")}, {k: CUR[k] for k in ("filename", "size", "sha256")})
         self.assertEqual(m["base_vllm_wheel"]["sha256"], REL["base_vllm_wheel"]["sha256"])
         v = m["verification"]
         self.assertFalse(v["this_build_executed_on_kaggle"]); self.assertTrue(v["build3_kaggle_acceptance"]["executed_on_kaggle"]); self.assertIn("NOT_RUN", v["this_build_kaggle_status"])
-        self.assertTrue(v["inference_code_equivalent_to_build3"]["proven_by_delta_audit"])
+        self.assertTrue(v["inference_code_equivalent_to_previous_build"]["proven_by_delta_audit"])
         self.assertEqual((v["cpu_verification"]["wheel_audit"], v["cpu_verification"]["delta_audit"], v["cpu_verification"]["reproducible_build"]), ("PASS", "PASS", True))
         self.assertEqual(m["publication"]["huggingface_wheel"]["remote_redownloaded_sha256"], CUR["sha256"])
-        self.assertEqual(m["audits"]["delta_vs_reference"]["reference"]["sha256"], BUILD3_SHA)          # archived audit of the time, against the then-published build 3
+        self.assertEqual(m["audits"]["delta_vs_reference"]["reference"]["sha256"], BUILD4_SHA)          # audited against build 4 while it was still published
 
     def test_delta_report_shows_only_the_approved_changes(self):
         d = json.loads((self.D / "reports/delta-vs-reference.json").read_text())
         self.assertEqual(d["status"], "PASS"); s = d["summary"]
-        self.assertEqual((s["added"], s["removed"], s["changed"]), (0, 0, 5)); self.assertEqual(s["vllm_members"], s["vllm_members_identical"]); self.assertEqual(s["native_binaries"], s["native_binaries_identical"])
-        self.assertEqual(sorted(r["member"] for r in d["changed_members"]), sorted(["stokastisk/compat.py", "stokastisk/serving.py", "stokastisk-0.1.0.dist-info/METADATA", "stokastisk-0.1.0.dist-info/RECORD", "stokastisk-0.1.0.dist-info/WHEEL"]))
+        self.assertEqual((s["added"], s["removed"], s["changed"]), (0, 0, 3)); self.assertEqual(s["vllm_members"], s["vllm_members_identical"]); self.assertEqual(s["native_binaries"], s["native_binaries_identical"])
+        self.assertEqual(sorted(r["member"] for r in d["changed_members"]), sorted(["stokastisk/serving.py", "stokastisk-0.1.0.dist-info/RECORD", "stokastisk-0.1.0.dist-info/WHEEL"]))
+        self.assertTrue(d["ast_analysis"]["stokastisk/serving.py"]["string_literals_only_change"])
         self.assertEqual(d["new_wheel"]["sha256"], CUR["sha256"]); self.assertTrue(all(c["status"] == "PASS" for c in d["checks"]))
         self.assertEqual(json.loads((self.D / "reports/verify.json").read_text())["status"], "PASS")
+
+
+class WithdrawnBuild4Archive(unittest.TestCase):
+    """evidence/release/build-4/ is history: the audit of the withdrawn build 4, still internally consistent and still naming the withdrawn identity."""
+    D = ROOT / "evidence/release/build-4"
+
+    def test_archive_describes_the_withdrawn_identity(self):
+        m = json.loads((self.D / "release-manifest.json").read_text()); w = REL["withdrawn_builds"]["4"]
+        self.assertEqual((m["build_tag"], m["wheel"]["sha256"], m["wheel"]["size"], m["wheel"]["filename"]), ("4", w["sha256"], w["size"], w["filename"]))
+        self.assertFalse(m["verification"]["this_build_executed_on_kaggle"])
+        d = json.loads((self.D / "reports/delta-vs-reference.json").read_text()); self.assertEqual((d["status"], d["summary"]["changed"]), ("PASS", 5))
+
+
+if __name__ == "__main__":
+    unittest.main()
