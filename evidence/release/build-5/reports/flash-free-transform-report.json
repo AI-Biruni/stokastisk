@@ -1,0 +1,589 @@
+{
+ "added": [
+  {
+   "path": "vllm/utils/t4_prohibited_stubs.py",
+   "sha256": "30d4411cc817d162082a92abaa9a409c6a453a1af0489d234ad3d941cbe5b15a"
+  },
+  {
+   "path": "vllm/t4_backend_policy.py",
+   "sha256": "284a0fb5b06c6d2985eb5147aafdf2dc27d64d93d2278796d4e0bb60c80ff988"
+  }
+ ],
+ "dangling_prohibited_imports": {
+  "vllm.distributed.device_communicators.flashinfer_all_reduce": [
+   "vllm/distributed/device_communicators/cuda_communicator.py:102"
+  ],
+  "vllm.v1.attention.backends.flash_attn_diffkv": [
+   "vllm/model_executor/models/openpangu.py:91"
+  ],
+  "vllm.v1.attention.backends.flashinfer": [
+   "vllm/v1/sample/ops/topk_topp_sampler.py:45"
+  ],
+  "vllm.v1.attention.ops.flashmla": [
+   "vllm/v1/attention/backends/mla/sparse_swa.py:21"
+  ],
+  "vllm.vllm_flash_attn": [
+   "vllm/model_executor/models/mimo_audio.py:693"
+  ]
+ },
+ "guarded_untouched": [
+  "vllm/compilation/passes/fusion/collective_fusion.py:928",
+  "vllm/model_executor/layers/fused_allreduce_gemma_rms_norm.py:36",
+  "vllm/model_executor/models/whisper_causal.py:37",
+  "vllm/v1/sample/ops/topk_topp_sampler.py:45"
+ ],
+ "patched": [
+  {
+   "after_sha256": "2cd8d1028e7389df20cb27caea372f482a8b5fee601fb5dcf4c962694cfdb451",
+   "before_sha256": "fd3708e5a13abe98c566afd79a6b1987cef70c0548bb19c1218ff6a7f9d43346",
+   "path": "vllm/__init__.py"
+  },
+  {
+   "after_sha256": "7347e7295fb4d92dfb4f8dbaea23f7cdf14a6d7623a639389ce0eed73b53b0c0",
+   "before_sha256": "e50f83a7cbdb6ff10530741b12202217a341066265c5754b7a5d1ca66513b343",
+   "path": "vllm/v1/attention/backends/registry.py"
+  },
+  {
+   "after_sha256": "9d692c90863c36590927718d45dcccb7746d21a1889c63215e4c8427c5c48a5f",
+   "before_sha256": "e24b2dc1ea3000a6e01e16a8e54ce22f82e55aa3fd51493ffb64981883068ec9",
+   "path": "vllm/v1/attention/backends/mla/prefill/registry.py"
+  },
+  {
+   "after_sha256": "3ca4462b5c8701429e5abcdbda2facbdf16f8a67c4e0de51f9582e5443213081",
+   "before_sha256": "70481beeaff872bbd18a937b2be9840515d11d76780ffe6144e0bd8256af1057",
+   "path": "vllm/config/attention.py"
+  },
+  {
+   "after_sha256": "02bfaaa5e1bafe6b1cea07affb9a201195da7b4f2f22cd2b6973820619edddb6",
+   "before_sha256": "28b91ef5d609af2046f504efcdb72353ed7ca7aae600be580f243777320b0e85",
+   "path": "vllm/platforms/cuda.py"
+  }
+ ],
+ "removed": [
+  {
+   "bytes": 2351,
+   "path": "vllm/model_executor/kernels/linear/mxfp4/flashinfer.py",
+   "sha256": "1473b082290c6cdcc7b67b8abf9a8311fa1679ce90977899065638a657f4c923"
+  },
+  {
+   "bytes": 5652,
+   "path": "vllm/model_executor/kernels/linear/mxfp8/flashinfer.py",
+   "sha256": "ecc607bdb3998ad0180303b38b4999147badacfb99406825774ed979c62ad45d"
+  },
+  {
+   "bytes": 12041,
+   "path": "vllm/model_executor/kernels/linear/nvfp4/flashinfer.py",
+   "sha256": "4b1cee05250c7526d72b19652d44370f7e681bf0ed0c1554e1a0ff2e4d12ddd7"
+  },
+  {
+   "bytes": 11155,
+   "path": "vllm/model_executor/kernels/linear/scaled_mm/flashinfer.py",
+   "sha256": "ab2c9485c0ba38d99b47da1b101cbd6de239f35c800252dd4aa563d7fb1853f2"
+  },
+  {
+   "bytes": 11599,
+   "path": "vllm/model_executor/layers/fused_moe/experts/flashinfer_b12x_moe.py",
+   "sha256": "f415cd871fa107af00072f59783de3e854c6ea285a2ae2d5bde1f3a8984e0c2e"
+  },
+  {
+   "bytes": 12181,
+   "path": "vllm/model_executor/layers/fused_moe/experts/flashinfer_cutedsl_batched_moe.py",
+   "sha256": "295254dfeeec8df3eb8110e6f659a946cb9cded3de1565ecad4d741b3c3f3e00"
+  },
+  {
+   "bytes": 5531,
+   "path": "vllm/model_executor/layers/fused_moe/experts/flashinfer_cutedsl_moe.py",
+   "sha256": "9de20c80f2e8a5125364486323de314d1995e0e6cb0a6e0dc808bb43163d6524"
+  },
+  {
+   "bytes": 15495,
+   "path": "vllm/model_executor/layers/fused_moe/experts/flashinfer_cutlass_moe.py",
+   "sha256": "d90f5215a6972c742be60ff8e9786432ab544570273483daa8faf317ba2d3ab5"
+  },
+  {
+   "bytes": 6569,
+   "path": "vllm/model_executor/layers/fused_moe/prepare_finalize/flashinfer_nvlink_one_sided.py",
+   "sha256": "1dd5f456ce236761c13fa764427a192df913dcaa38f864c6da8483e79c88153f"
+  },
+  {
+   "bytes": 7798,
+   "path": "vllm/model_executor/layers/fused_moe/prepare_finalize/flashinfer_nvlink_two_sided.py",
+   "sha256": "cc5b00d6a157b6eca5afaaf7435165dbd1b4524d6d88bf75808cbe074a389f79"
+  },
+  {
+   "bytes": 12649,
+   "path": "vllm/model_executor/layers/quantization/utils/flashinfer_fp4_moe.py",
+   "sha256": "7a98da73bebad0168fbb19ecd96232d4bed0c3586af882a6409e8dabb4b60b9d"
+  },
+  {
+   "bytes": 10257,
+   "path": "vllm/model_executor/layers/quantization/utils/flashinfer_mxint4_moe.py",
+   "sha256": "7070022ebd02df62f5c9d1d0a17e82a896b912a5e6d82fb6bd6d306e37592a28"
+  },
+  {
+   "bytes": 18900,
+   "path": "vllm/model_executor/layers/quantization/utils/flashinfer_utils.py",
+   "sha256": "5a8d2b44b9dcfa52cffeb18024ccf0b30886464e7656c375b55634b825e0c5c7"
+  },
+  {
+   "bytes": 6953,
+   "path": "vllm/model_executor/warmup/fa4_cutedsl_config.py",
+   "sha256": "89a0151a3f55f062ce01e751ea7b1f8861a7cc7a6116da93b33b22fac6ef1db3"
+  },
+  {
+   "bytes": 1827,
+   "path": "vllm/model_executor/warmup/flashinfer_autotune_cache.py",
+   "sha256": "fcdaf1135e3d9e2be619f423c80c3288397470e85823fc6315b36598ad3297b7"
+  },
+  {
+   "bytes": 8549,
+   "path": "vllm/model_executor/warmup/flashinfer_sparse_mla_warmup.py",
+   "sha256": "b95e6865be25c2cad3c8d7e5a7c1c88f1cdcb72ff9e7e81dfe7a618ab56faa7b"
+  },
+  {
+   "bytes": 36567,
+   "path": "vllm/models/deepseek_v4/nvidia/flashinfer_sparse.py",
+   "sha256": "f6674841a34047a3aa54772c260e24e73c3dc910f57a9b7ecca4fe6a3856745c"
+  },
+  {
+   "bytes": 14093,
+   "path": "vllm/models/deepseek_v4/nvidia/flashmla.py",
+   "sha256": "42ccf698e6a1a27313d01758e05013138cea83d47a4ee7c76f54dac1641f5fec"
+  },
+  {
+   "bytes": 33954,
+   "path": "vllm/utils/flashinfer.py",
+   "sha256": "8a287cc0f151d1445362710b2bf0b34972fa879b4629f283410ab70c95c7f037"
+  },
+  {
+   "bytes": 11746,
+   "path": "vllm/v1/attention/backends/fa_utils.py",
+   "sha256": "a2f99447939a1989a5adc5e8b9341c93bd4179fd979800aa4b16fe56074e79e4"
+  },
+  {
+   "bytes": 60761,
+   "path": "vllm/v1/attention/backends/flash_attn.py",
+   "sha256": "e14f55a3576e73682147e2a8375b0355ccf40c30ff816585bb5d0a0fb020e19d"
+  },
+  {
+   "bytes": 19065,
+   "path": "vllm/v1/attention/backends/mla/flashinfer_mla_sparse.py",
+   "sha256": "c7ecffde93d9ce2336673cf7473d22036b779e1b3d4956d00a050b28098928cc"
+  },
+  {
+   "bytes": 5650,
+   "path": "vllm/v1/attention/backends/mla/flashinfer_mla_sparse_sm120.py",
+   "sha256": "ca94aa47a517aeb7aefc799e93f631304d07998e10687435dbf940213fc859f6"
+  },
+  {
+   "bytes": 12219,
+   "path": "vllm/v1/attention/backends/mla/flashmla.py",
+   "sha256": "83d14ad0faf0ed7ebeedb3c9c536a918020269015f59ab2491411e272d33601f"
+  },
+  {
+   "bytes": 35490,
+   "path": "vllm/v1/attention/backends/mla/flashmla_sparse.py",
+   "sha256": "31316f5d852a06d8e9dd919395f52671732548559486371b06c08a6e2504f723"
+  },
+  {
+   "bytes": 3876,
+   "path": "vllm/v1/attention/backends/mla/prefill/aiter_flash_attn.py",
+   "sha256": "e867e56111b53db2bd4c86d0ac16a02d11266a9a047c79b67d28bf928a3bd387"
+  },
+  {
+   "bytes": 9038,
+   "path": "vllm/v1/attention/backends/mla/prefill/flash_attn.py",
+   "sha256": "e82b9fa11f9379185c6afae7eb470a5a47fe854ec2d20d7964e436022f11abed"
+  },
+  {
+   "bytes": 58220,
+   "path": "vllm/v1/attention/backends/rocm_aiter_fa.py",
+   "sha256": "eec8a7094b892a3c718924cad2c1ffc2630b53ae76aff32779e7a9b637477014"
+  }
+ ],
+ "rewritten": [
+  {
+   "file": "vllm/_custom_ops.py",
+   "line": 13,
+   "new": "from vllm.utils.t4_prohibited_stubs import (",
+   "old": "from vllm.utils.flashinfer import ("
+  },
+  {
+   "file": "vllm/compilation/passes/fusion/collective_fusion.py",
+   "line": 89,
+   "new": "from vllm.utils.t4_prohibited_stubs import flashinfer_scaled_fp4_mm_out",
+   "old": "from vllm.utils.flashinfer import flashinfer_scaled_fp4_mm_out"
+  },
+  {
+   "file": "vllm/compilation/passes/fusion/collective_fusion.py",
+   "line": 51,
+   "new": "from vllm.utils.t4_prohibited_stubs import flashinfer_scaled_fp8_mm_out",
+   "old": "from vllm.utils.flashinfer import flashinfer_scaled_fp8_mm_out"
+  },
+  {
+   "file": "vllm/config/vllm.py",
+   "line": 131,
+   "new": "from vllm.utils.t4_prohibited_stubs import has_flashinfer",
+   "old": "from vllm.utils.flashinfer import has_flashinfer"
+  },
+  {
+   "file": "vllm/distributed/device_communicators/cuda_communicator.py",
+   "line": 102,
+   "new": "from vllm.utils.t4_prohibited_stubs import (",
+   "old": "from vllm.distributed.device_communicators.flashinfer_all_reduce import ("
+  },
+  {
+   "file": "vllm/model_executor/kernels/linear/__init__.py",
+   "line": 162,
+   "new": "from vllm.utils.t4_prohibited_stubs import (",
+   "old": "from vllm.model_executor.kernels.linear.scaled_mm.flashinfer import ("
+  },
+  {
+   "file": "vllm/model_executor/kernels/linear/__init__.py",
+   "line": 122,
+   "new": "from vllm.utils.t4_prohibited_stubs import (",
+   "old": "from vllm.model_executor.kernels.linear.nvfp4.flashinfer import ("
+  },
+  {
+   "file": "vllm/model_executor/kernels/linear/__init__.py",
+   "line": 93,
+   "new": "from vllm.utils.t4_prohibited_stubs import (",
+   "old": "from vllm.model_executor.kernels.linear.mxfp8.flashinfer import ("
+  },
+  {
+   "file": "vllm/model_executor/kernels/linear/__init__.py",
+   "line": 74,
+   "new": "from vllm.utils.t4_prohibited_stubs import (",
+   "old": "from vllm.model_executor.kernels.linear.mxfp4.flashinfer import ("
+  },
+  {
+   "file": "vllm/model_executor/kernels/linear/scaled_mm/__init__.py",
+   "line": 18,
+   "new": "from vllm.utils.t4_prohibited_stubs import (",
+   "old": "from vllm.model_executor.kernels.linear.scaled_mm.flashinfer import ("
+  },
+  {
+   "file": "vllm/model_executor/layers/attention/mla_attention.py",
+   "line": 244,
+   "new": "from vllm.utils.t4_prohibited_stubs import has_flashinfer",
+   "old": "from vllm.utils.flashinfer import has_flashinfer"
+  },
+  {
+   "file": "vllm/model_executor/layers/attention/mm_encoder_attention.py",
+   "line": 32,
+   "new": "from vllm.utils.t4_prohibited_stubs import get_flash_attn_version",
+   "old": "from vllm.v1.attention.backends.fa_utils import get_flash_attn_version"
+  },
+  {
+   "file": "vllm/model_executor/layers/attention/mm_encoder_attention.py",
+   "line": 27,
+   "new": "from vllm.utils.t4_prohibited_stubs import (",
+   "old": "from vllm.utils.flashinfer import ("
+  },
+  {
+   "file": "vllm/model_executor/layers/fused_moe/experts/trtllm_bf16_moe.py",
+   "line": 21,
+   "new": "from vllm.utils.t4_prohibited_stubs import has_flashinfer_trtllm_fused_moe",
+   "old": "from vllm.utils.flashinfer import has_flashinfer_trtllm_fused_moe"
+  },
+  {
+   "file": "vllm/model_executor/layers/fused_moe/experts/trtllm_bf16_moe.py",
+   "line": 14,
+   "new": "from vllm.utils.t4_prohibited_stubs import (",
+   "old": "from vllm.model_executor.layers.quantization.utils.flashinfer_utils import ("
+  },
+  {
+   "file": "vllm/model_executor/layers/fused_moe/experts/trtllm_fp8_moe.py",
+   "line": 31,
+   "new": "from vllm.utils.t4_prohibited_stubs import has_flashinfer_trtllm_fused_moe",
+   "old": "from vllm.utils.flashinfer import has_flashinfer_trtllm_fused_moe"
+  },
+  {
+   "file": "vllm/model_executor/layers/fused_moe/experts/trtllm_fp8_moe.py",
+   "line": 19,
+   "new": "from vllm.utils.t4_prohibited_stubs import (",
+   "old": "from vllm.model_executor.layers.quantization.utils.flashinfer_utils import ("
+  },
+  {
+   "file": "vllm/model_executor/layers/fused_moe/experts/trtllm_mxfp4_moe.py",
+   "line": 24,
+   "new": "from vllm.utils.t4_prohibited_stubs import has_flashinfer",
+   "old": "from vllm.utils.flashinfer import has_flashinfer"
+  },
+  {
+   "file": "vllm/model_executor/layers/fused_moe/experts/trtllm_mxint4_moe.py",
+   "line": 141,
+   "new": "from vllm.utils.t4_prohibited_stubs import (  # noqa: E501",
+   "old": "from vllm.model_executor.layers.quantization.utils.flashinfer_mxint4_moe import (  # noqa: E501"
+  },
+  {
+   "file": "vllm/model_executor/layers/fused_moe/experts/trtllm_mxint4_moe.py",
+   "line": 47,
+   "new": "from vllm.utils.t4_prohibited_stubs import (  # noqa: E501",
+   "old": "from vllm.model_executor.layers.quantization.utils.flashinfer_mxint4_moe import (  # noqa: E501"
+  },
+  {
+   "file": "vllm/model_executor/layers/fused_moe/experts/trtllm_nvfp4_moe.py",
+   "line": 29,
+   "new": "from vllm.utils.t4_prohibited_stubs import has_flashinfer_trtllm_fused_moe",
+   "old": "from vllm.utils.flashinfer import has_flashinfer_trtllm_fused_moe"
+  },
+  {
+   "file": "vllm/model_executor/layers/fused_moe/experts/trtllm_nvfp4_moe.py",
+   "line": 20,
+   "new": "from vllm.utils.t4_prohibited_stubs import (",
+   "old": "from vllm.model_executor.layers.quantization.utils.flashinfer_utils import ("
+  },
+  {
+   "file": "vllm/model_executor/layers/fused_moe/oracle/fp8.py",
+   "line": 148,
+   "new": "from vllm.utils.t4_prohibited_stubs import (  # noqa: E501",
+   "old": "from vllm.model_executor.layers.fused_moe.experts.flashinfer_cutlass_moe import (  # noqa: E501"
+  },
+  {
+   "file": "vllm/model_executor/layers/fused_moe/oracle/fp8.py",
+   "line": 23,
+   "new": "from vllm.utils.t4_prohibited_stubs import (",
+   "old": "from vllm.model_executor.layers.quantization.utils.flashinfer_utils import ("
+  },
+  {
+   "file": "vllm/model_executor/layers/fused_moe/oracle/int_wna16.py",
+   "line": 383,
+   "new": "from vllm.utils.t4_prohibited_stubs import (",
+   "old": "from vllm.model_executor.layers.quantization.utils.flashinfer_mxint4_moe import ("
+  },
+  {
+   "file": "vllm/model_executor/layers/fused_moe/oracle/mxfp4.py",
+   "line": 172,
+   "new": "from vllm.utils.t4_prohibited_stubs import (  # noqa: E501",
+   "old": "from vllm.model_executor.layers.fused_moe.experts.flashinfer_cutlass_moe import (  # noqa: E501"
+  },
+  {
+   "file": "vllm/model_executor/layers/fused_moe/oracle/nvfp4.py",
+   "line": 104,
+   "new": "from vllm.utils.t4_prohibited_stubs import (  # noqa: E501",
+   "old": "from vllm.model_executor.layers.fused_moe.experts.flashinfer_b12x_moe import (  # noqa: E501"
+  },
+  {
+   "file": "vllm/model_executor/layers/fused_moe/oracle/nvfp4.py",
+   "line": 97,
+   "new": "from vllm.utils.t4_prohibited_stubs import (  # noqa: E501",
+   "old": "from vllm.model_executor.layers.fused_moe.experts.flashinfer_cutedsl_batched_moe import (  # noqa: E501"
+  },
+  {
+   "file": "vllm/model_executor/layers/fused_moe/oracle/nvfp4.py",
+   "line": 90,
+   "new": "from vllm.utils.t4_prohibited_stubs import (  # noqa: E501",
+   "old": "from vllm.model_executor.layers.fused_moe.experts.flashinfer_cutedsl_moe import (  # noqa: E501"
+  },
+  {
+   "file": "vllm/model_executor/layers/fused_moe/oracle/nvfp4.py",
+   "line": 83,
+   "new": "from vllm.utils.t4_prohibited_stubs import (  # noqa: E501",
+   "old": "from vllm.model_executor.layers.fused_moe.experts.flashinfer_cutlass_moe import (  # noqa: E501"
+  },
+  {
+   "file": "vllm/model_executor/layers/fused_moe/oracle/nvfp4.py",
+   "line": 21,
+   "new": "from vllm.utils.t4_prohibited_stubs import (",
+   "old": "from vllm.model_executor.layers.quantization.utils.flashinfer_fp4_moe import ("
+  },
+  {
+   "file": "vllm/model_executor/layers/fused_moe/oracle/unquantized.py",
+   "line": 113,
+   "new": "from vllm.utils.t4_prohibited_stubs import (  # noqa: E501",
+   "old": "from vllm.model_executor.layers.fused_moe.experts.flashinfer_cutlass_moe import (  # noqa: E501"
+  },
+  {
+   "file": "vllm/model_executor/layers/fused_moe/oracle/unquantized.py",
+   "line": 23,
+   "new": "from vllm.utils.t4_prohibited_stubs import (",
+   "old": "from vllm.model_executor.layers.quantization.utils.flashinfer_utils import ("
+  },
+  {
+   "file": "vllm/model_executor/layers/fused_moe/prepare_finalize/naive_dp_ep.py",
+   "line": 13,
+   "new": "from vllm.utils.t4_prohibited_stubs import nvfp4_block_scale_interleave",
+   "old": "from vllm.utils.flashinfer import nvfp4_block_scale_interleave"
+  },
+  {
+   "file": "vllm/model_executor/layers/quantization/modelopt.py",
+   "line": 61,
+   "new": "from vllm.utils.t4_prohibited_stubs import (",
+   "old": "from vllm.model_executor.layers.quantization.utils.flashinfer_utils import ("
+  },
+  {
+   "file": "vllm/model_executor/layers/rotary_embedding/deepseek_scaling_rope.py",
+   "line": 9,
+   "new": "from vllm.utils.t4_prohibited_stubs import has_flashinfer",
+   "old": "from vllm.utils.flashinfer import has_flashinfer"
+  },
+  {
+   "file": "vllm/model_executor/models/config.py",
+   "line": 219,
+   "new": "from vllm.utils.t4_prohibited_stubs import is_fa_version_supported",
+   "old": "from vllm.v1.attention.backends.fa_utils import is_fa_version_supported"
+  },
+  {
+   "file": "vllm/model_executor/models/config.py",
+   "line": 90,
+   "new": "from vllm.utils.t4_prohibited_stubs import is_fa_version_supported",
+   "old": "from vllm.v1.attention.backends.fa_utils import is_fa_version_supported"
+  },
+  {
+   "file": "vllm/model_executor/models/mimo_audio.py",
+   "line": 693,
+   "new": "from vllm.utils.t4_prohibited_stubs import flash_attn_varlen_func",
+   "old": "from vllm.vllm_flash_attn import flash_attn_varlen_func"
+  },
+  {
+   "file": "vllm/model_executor/models/mimo_v2_omni.py",
+   "line": 218,
+   "new": "from vllm.utils.t4_prohibited_stubs import flash_attn_varlen_func",
+   "old": "from vllm.vllm_flash_attn import flash_attn_varlen_func"
+  },
+  {
+   "file": "vllm/model_executor/models/openpangu.py",
+   "line": 91,
+   "new": "from vllm.utils.t4_prohibited_stubs import FlashAttentionDiffKVBackend",
+   "old": "from vllm.v1.attention.backends.flash_attn_diffkv import FlashAttentionDiffKVBackend"
+  },
+  {
+   "file": "vllm/model_executor/models/whisper_causal.py",
+   "line": 34,
+   "new": "from vllm.utils.t4_prohibited_stubs import FlashAttentionBackend",
+   "old": "from vllm.v1.attention.backends.flash_attn import FlashAttentionBackend"
+  },
+  {
+   "file": "vllm/model_executor/warmup/kernel_warmup.py",
+   "line": 146,
+   "new": "import vllm.utils.t4_prohibited_stubs as fi_utils",
+   "old": "import vllm.utils.flashinfer as fi_utils"
+  },
+  {
+   "file": "vllm/model_executor/warmup/kernel_warmup.py",
+   "line": 37,
+   "new": "from vllm.utils.t4_prohibited_stubs import has_flashinfer",
+   "old": "from vllm.utils.flashinfer import has_flashinfer"
+  },
+  {
+   "file": "vllm/model_executor/warmup/kernel_warmup.py",
+   "line": 24,
+   "new": "from vllm.utils.t4_prohibited_stubs import (",
+   "old": "from vllm.model_executor.warmup.flashinfer_sparse_mla_warmup import ("
+  },
+  {
+   "file": "vllm/model_executor/warmup/kernel_warmup.py",
+   "line": 20,
+   "new": "from vllm.utils.t4_prohibited_stubs import (",
+   "old": "from vllm.model_executor.warmup.flashinfer_autotune_cache import ("
+  },
+  {
+   "file": "vllm/models/deepseek_v4/nvidia/model.py",
+   "line": 72,
+   "new": "from vllm.utils.t4_prohibited_stubs import DeepseekV4FlashMLAAttention",
+   "old": "from vllm.models.deepseek_v4.nvidia.flashmla import DeepseekV4FlashMLAAttention"
+  },
+  {
+   "file": "vllm/models/deepseek_v4/nvidia/model.py",
+   "line": 68,
+   "new": "from vllm.utils.t4_prohibited_stubs import (",
+   "old": "from vllm.models.deepseek_v4.nvidia.flashinfer_sparse import ("
+  },
+  {
+   "file": "vllm/v1/attention/backends/mla/sparse_swa.py",
+   "line": 21,
+   "new": "from vllm.utils.t4_prohibited_stubs import FlashMLASchedMeta, get_mla_metadata",
+   "old": "from vllm.v1.attention.ops.flashmla import FlashMLASchedMeta, get_mla_metadata"
+  },
+  {
+   "file": "vllm/v1/attention/backends/mla/xpu_mla_sparse.py",
+   "line": 26,
+   "new": "from vllm.utils.t4_prohibited_stubs import (",
+   "old": "from vllm.v1.attention.backends.mla.flashmla_sparse import ("
+  },
+  {
+   "file": "vllm/v1/attention/backends/turboquant_attn.py",
+   "line": 63,
+   "new": "from vllm.utils.t4_prohibited_stubs import flash_attn_varlen_func",
+   "old": "from vllm.v1.attention.backends.fa_utils import flash_attn_varlen_func"
+  },
+  {
+   "file": "vllm/v1/attention/backends/turboquant_attn.py",
+   "line": 45,
+   "new": "from vllm.utils.t4_prohibited_stubs import (",
+   "old": "from vllm.v1.attention.backends.fa_utils import ("
+  },
+  {
+   "file": "vllm/v1/attention/ops/vit_attn_wrappers.py",
+   "line": 42,
+   "new": "from vllm.utils.t4_prohibited_stubs import flash_attn_varlen_func",
+   "old": "from vllm.v1.attention.backends.fa_utils import flash_attn_varlen_func"
+  },
+  {
+   "file": "vllm/v1/spec_decode/llm_base_proposer.py",
+   "line": 300,
+   "new": "from vllm.utils.t4_prohibited_stubs import (",
+   "old": "from vllm.v1.attention.backends.rocm_aiter_fa import ("
+  }
+ ],
+ "stub_entries": {
+  "AiterFlashAttentionMetadata": "class",
+  "DeepseekV4FlashInferMLAAttention": "class",
+  "DeepseekV4FlashInferSM120Attention": "class",
+  "DeepseekV4FlashMLAAttention": "class",
+  "FlashAttentionBackend": "class",
+  "FlashAttentionDiffKVBackend": "class",
+  "FlashInferAllReduce": "class",
+  "FlashInferB12xExperts": "class",
+  "FlashInferB12xNvFp4LinearKernel": "class",
+  "FlashInferCudnnNvFp4LinearKernel": "class",
+  "FlashInferCuteDSLBatchedExperts": "class",
+  "FlashInferCuteDSLExperts": "class",
+  "FlashInferCuteDslNvFp4LinearKernel": "class",
+  "FlashInferCutedslMxfp8LinearKernel": "class",
+  "FlashInferCutlassMxfp8LinearKernel": "class",
+  "FlashInferCutlassNvFp4LinearKernel": "class",
+  "FlashInferExperts": "class",
+  "FlashInferFP8ScaledMMLinearKernel": "class",
+  "FlashInferFp8DeepGEMMDynamicBlockScaledKernel": "class",
+  "FlashInferMxFp4LinearKernel": "class",
+  "FlashInferTrtllmNvFp4LinearKernel": "class",
+  "FlashMLASchedMeta": "class",
+  "activation_to_flashinfer_int": "function",
+  "align_moe_weights_for_fi": "function",
+  "autotune": "function",
+  "convert_moe_weights_to_flashinfer_trtllm_block_layout": "function",
+  "deepseek_v4_sparse_mla_attention_warmup": "none",
+  "flash_attn_varlen_func": "function",
+  "flashinfer_quant_nvfp4_8x4_sf_layout": "function",
+  "flashinfer_scaled_fp4_mm_out": "function",
+  "flashinfer_scaled_fp8_mm_out": "function",
+  "flashinfer_sparse_mla_decode_autotune_warmup": "none",
+  "flashinfer_trtllm_mxint4_moe": "function",
+  "get_flash_attn_version": "none",
+  "get_mla_metadata": "function",
+  "has_flashinfer": "false",
+  "has_flashinfer_trtllm_fused_moe": "false",
+  "is_fa_version_supported": "false",
+  "is_flash_attn_varlen_func_available": "false",
+  "is_flashinfer_cudnn_fp8_prefill_attn_supported": "false",
+  "is_flashinfer_mxint4_moe_available": "false",
+  "nvfp4_block_scale_interleave": "function",
+  "prepare_fp8_moe_layer_for_fi": "function",
+  "prepare_nvfp4_moe_layer_for_fi_or_cutlass": "function",
+  "prepare_nvfp4_moe_layer_for_flashinfer_cutedsl": "function",
+  "prepare_static_weights_for_trtllm_mxint4_moe": "function",
+  "resolve_flashinfer_autotune_file": "function",
+  "swap_w13_to_w31": "function",
+  "triton_convert_req_index_to_global_index": "function",
+  "write_flashinfer_autotune_cache": "function"
+ },
+ "summary": {
+  "guarded_imports_left_alone": 4,
+  "patched_files": 5,
+  "removed_files": 28,
+  "rewritten_import_sites": 54,
+  "stub_entries": 50
+ }
+}

@@ -1,0 +1,134 @@
+{
+ "allowed_sdk_changes": [
+  "stokastisk/serving.py"
+ ],
+ "ast_analysis": {
+  "stokastisk/serving.py": {
+   "string_literals_added": [
+    "Reinstall Stokastisk with the SHA256-pinned command in INSTALL.md (it installs the serving and structured-output dependencies from PyPI); Stokastisk never installs packages on its own (protected Kaggle baseline)."
+   ],
+   "string_literals_only_change": true,
+   "string_literals_removed": [
+    "Re-run the bundle installer (scripts/kaggle/02_install_integrated.py), which installs the serving and structured-output locks; Stokastisk never installs packages on its own (protected Kaggle baseline)."
+   ]
+  }
+ },
+ "changed_members": [
+  {
+   "member": "stokastisk-0.1.0.dist-info/RECORD",
+   "new_sha256": "7fba97e79647e73a7d473c1855bdf51961e1e917eb6bd4ed77c2401904c236da",
+   "old_sha256": "07798a541b4e0dc060583f015757f5176b37adf0f97c9aaae3ab499640d68eec"
+  },
+  {
+   "member": "stokastisk-0.1.0.dist-info/WHEEL",
+   "new_sha256": "f871f9378aaf593ed2e2b16f1d2edf87b5aad4a53ba7bbce3f7a79363f244155",
+   "old_sha256": "f05c9a628ce431b00bdeddee87e08cbc87e0cc5aa64087fd466a0ad9fad252c0"
+  },
+  {
+   "member": "stokastisk/serving.py",
+   "new_sha256": "ac35260f8e83441686d85f0e71e130deb5b6e21d4df35cc1235db1a1617e8f3b",
+   "old_sha256": "7d7d6711889d80cf9f5ec99b1c423f40baec9e231b7927e8c2c7aea5314dad16"
+  }
+ ],
+ "checks": [
+  {
+   "check": "no member added or removed",
+   "detail": "[]",
+   "status": "PASS"
+  },
+  {
+   "check": "every vllm/** member is byte-identical",
+   "detail": "[]",
+   "status": "PASS"
+  },
+  {
+   "check": "every native object (.so/.cubin/.ptx/...) is byte-identical",
+   "detail": "6",
+   "status": "PASS"
+  },
+  {
+   "check": "the bundled vllm-0.25.1 dist-info under .data/ is byte-identical",
+   "detail": "[]",
+   "status": "PASS"
+  },
+  {
+   "check": "only the explicitly allowed stokastisk/** files changed",
+   "detail": "[]",
+   "status": "PASS"
+  },
+  {
+   "check": "every allowed SDK file really changed (the allow-list is not padding)",
+   "detail": "[]",
+   "status": "PASS"
+  },
+  {
+   "check": "only METADATA, WHEEL and RECORD changed in the dist-info",
+   "detail": "['stokastisk-0.1.0.dist-info/RECORD', 'stokastisk-0.1.0.dist-info/WHEEL']",
+   "status": "PASS"
+  },
+  {
+   "check": "no other member category changed",
+   "detail": "[]",
+   "status": "PASS"
+  },
+  {
+   "check": "every dependency pin is identical (Requires-Dist / Provides-Extra / Requires-Python)",
+   "detail": "[]",
+   "status": "PASS"
+  },
+  {
+   "check": "METADATA headers (name, version, license, ...) are identical apart from the description",
+   "detail": "[]",
+   "status": "PASS"
+  },
+  {
+   "check": "WHEEL differs only in its Build tag",
+   "detail": "('Wheel-Version: 1.0\\nGenerator: stokastisk-build_integrated_wheel\\nRoot-Is-Purelib: false\\nTag: cp313-cp313-linux_x86_64\\nBuild: 4\\n', 'Wheel-Version: 1.0\\nGenerator: stokastisk-build_integrated_wheel\\nRoot-Is-Purelib: false\\nTag: cp313-cp313-linux_x86_64\\nBuild: 5\\n')",
+   "status": "PASS"
+  },
+  {
+   "check": "stokastisk/serving.py: the change is confined to string constants (identical AST once every string is blanked)",
+   "detail": "",
+   "status": "PASS"
+  },
+  {
+   "check": "no Flash-family path, native marker or binding in the new wheel",
+   "detail": "{'path_hits': [], 'native_hits': {}, 'binding_hits': []}",
+   "status": "PASS"
+  }
+ ],
+ "new_wheel": {
+  "name": "stokastisk-0.1.0-5-cp313-cp313-linux_x86_64.whl",
+  "sha256": "fe80d7c36fa78cf8a26feb1e00bb5f1f006ca45a027450353603976320ae0b3e",
+  "size": 38057515
+ },
+ "old_wheel": {
+  "name": "stokastisk-0.1.0-4-cp313-cp313-linux_x86_64.whl",
+  "sha256": "052156d71adc6ad9966901565f86dbded9ff41c620c782db4ff377a1a2b4f62e",
+  "size": 38057512
+ },
+ "status": "PASS",
+ "summary": {
+  "added": 0,
+  "by_category_changed": {
+   "dist-info": [
+    "stokastisk-0.1.0.dist-info/RECORD",
+    "stokastisk-0.1.0.dist-info/WHEEL"
+   ],
+   "other": [],
+   "sdk": [
+    "stokastisk/serving.py"
+   ],
+   "vllm": []
+  },
+  "changed": 3,
+  "identical": 2579,
+  "members_new": 2582,
+  "members_old": 2582,
+  "native_binaries": 6,
+  "native_binaries_identical": 6,
+  "removed": 0,
+  "vllm_members": 2517,
+  "vllm_members_identical": 2517
+ }
+}
