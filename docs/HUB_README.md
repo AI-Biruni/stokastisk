@@ -5,7 +5,7 @@ tags: [vllm, kaggle, tesla-t4, sm75, cuda-13, triton, inference, python-3.13]
 ---
 # Stokastisk 0.1.0 — vLLM 0.25.1 + Triton attention + CUDA binaries for Kaggle's 2 × Tesla T4
 
-This repository is the **CDN for the Stokastisk wheel** (SDK + bundled vLLM 0.25.1 + CUDA 13.0 `sm_75` binaries, no FlashAttention/FlashInfer/FlashMLA). Source, docs and tests: <https://github.com/stokastisk-ai/stokastisk>
+This repository is the **CDN for the Stokastisk wheel** (SDK + bundled vLLM 0.25.1 + CUDA 13.0 `sm_75` binaries, no FlashAttention/FlashInfer/FlashMLA). Source, docs and tests: <https://github.com/stokastisk-ai/stokastisk> · User guide: <https://stokastisk-ai.github.io/stokastisk/docs/>
 
 ## Install (one line, Kaggle: GPU T4 × 2, Internet ON, Python 3.13)
 ```bash
