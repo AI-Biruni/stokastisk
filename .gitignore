@@ -62,3 +62,6 @@ kaggle-notebooks-executed/
 # local Kaggle execution outputs and downloaded build inputs (never publish)
 kaggle-notebooks-executed/
 inputs/
+
+# the archived release audits are evidence, not temporary reports
+!evidence/release/*/reports/

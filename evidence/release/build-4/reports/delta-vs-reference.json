@@ -1,0 +1,197 @@
+{
+ "allowed_sdk_changes": [
+  "stokastisk/compat.py",
+  "stokastisk/serving.py"
+ ],
+ "ast_analysis": {
+  "stokastisk/compat.py": {
+   "runtime_names_identical": [
+    "check_dtype",
+    "check_quantization",
+    "check_feature",
+    "get_feature",
+    "BLOCKING",
+    "SM75",
+    "QUANT_MIN_CAPABILITY"
+   ],
+   "top_level_names_changed": [
+    "FEATURES",
+    "KAGGLE_VERIFIED_ARCHITECTURES",
+    "MODEL_EVIDENCE",
+    "_VERIFIED_DTYPES",
+    "__all__",
+    "_mode_name",
+    "_model_record",
+    "check_model"
+   ]
+  },
+  "stokastisk/serving.py": {
+   "docstring_only_change": true
+  }
+ },
+ "changed_members": [
+  {
+   "member": "stokastisk-0.1.0.dist-info/METADATA",
+   "new_sha256": "5b7076f4a88efec4d6da3ec8bdcc9896e6e980d0211963bf1518383a2658d223",
+   "old_sha256": "8b1395126ba24218d6348cd6c0feef4c9c26c036e8ea9e03e5f15c4bd5854175"
+  },
+  {
+   "member": "stokastisk-0.1.0.dist-info/RECORD",
+   "new_sha256": "07798a541b4e0dc060583f015757f5176b37adf0f97c9aaae3ab499640d68eec",
+   "old_sha256": "83d625c2c73deea4743fac6ff70757b520fb2460e96320ff7930543c92ed3d15"
+  },
+  {
+   "member": "stokastisk-0.1.0.dist-info/WHEEL",
+   "new_sha256": "f05c9a628ce431b00bdeddee87e08cbc87e0cc5aa64087fd466a0ad9fad252c0",
+   "old_sha256": "5c3ccf872aa15e6d7f1492a4d498a72ea1fb64c95bb775ccaeb27e212e79a4dc"
+  },
+  {
+   "member": "stokastisk/compat.py",
+   "new_sha256": "54d0df9bf6aa4a83113e1dfaa01c3bfa34916dad85ef5790ea9965bc369f2d46",
+   "old_sha256": "0edaccb27b94c07d50934d449d61cbceb20b26d30691d18bf1cdb46ebdf058a8"
+  },
+  {
+   "member": "stokastisk/serving.py",
+   "new_sha256": "7d7d6711889d80cf9f5ec99b1c423f40baec9e231b7927e8c2c7aea5314dad16",
+   "old_sha256": "a4667f62a6056c5754813e9547e2a9b38207c262cbf32a216bfde62d1851b276"
+  }
+ ],
+ "checks": [
+  {
+   "check": "no member added or removed",
+   "detail": "[]",
+   "status": "PASS"
+  },
+  {
+   "check": "every vllm/** member is byte-identical",
+   "detail": "[]",
+   "status": "PASS"
+  },
+  {
+   "check": "every native object (.so/.cubin/.ptx/...) is byte-identical",
+   "detail": "6",
+   "status": "PASS"
+  },
+  {
+   "check": "the bundled vllm-0.25.1 dist-info under .data/ is byte-identical",
+   "detail": "[]",
+   "status": "PASS"
+  },
+  {
+   "check": "only the explicitly allowed stokastisk/** files changed",
+   "detail": "[]",
+   "status": "PASS"
+  },
+  {
+   "check": "every allowed SDK file really changed (the allow-list is not padding)",
+   "detail": "[]",
+   "status": "PASS"
+  },
+  {
+   "check": "only METADATA, WHEEL and RECORD changed in the dist-info",
+   "detail": "['stokastisk-0.1.0.dist-info/METADATA', 'stokastisk-0.1.0.dist-info/RECORD', 'stokastisk-0.1.0.dist-info/WHEEL']",
+   "status": "PASS"
+  },
+  {
+   "check": "no other member category changed",
+   "detail": "[]",
+   "status": "PASS"
+  },
+  {
+   "check": "every dependency pin is identical (Requires-Dist / Provides-Extra / Requires-Python)",
+   "detail": "[]",
+   "status": "PASS"
+  },
+  {
+   "check": "METADATA headers (name, version, license, ...) are identical apart from the description",
+   "detail": "[]",
+   "status": "PASS"
+  },
+  {
+   "check": "WHEEL differs only in its Build tag",
+   "detail": "('Wheel-Version: 1.0\\nGenerator: stokastisk-build_integrated_wheel\\nRoot-Is-Purelib: false\\nTag: cp313-cp313-linux_x86_64\\nBuild: 3\\n', 'Wheel-Version: 1.0\\nGenerator: stokastisk-build_integrated_wheel\\nRoot-Is-Purelib: false\\nTag: cp313-cp313-linux_x86_64\\nBuild: 4\\n')",
+   "status": "PASS"
+  },
+  {
+   "check": "stokastisk/serving.py: the change is confined to docstrings (identical AST once docstrings are removed)",
+   "detail": "",
+   "status": "PASS"
+  },
+  {
+   "check": "stokastisk/compat.py: check_dtype is AST-identical in both builds (the runtime imports it)",
+   "detail": "check_dtype",
+   "status": "PASS"
+  },
+  {
+   "check": "stokastisk/compat.py: check_quantization is AST-identical in both builds (the runtime imports it)",
+   "detail": "check_quantization",
+   "status": "PASS"
+  },
+  {
+   "check": "stokastisk/compat.py: check_feature is AST-identical in both builds (the runtime imports it)",
+   "detail": "check_feature",
+   "status": "PASS"
+  },
+  {
+   "check": "stokastisk/compat.py: get_feature is AST-identical in both builds (the runtime imports it)",
+   "detail": "get_feature",
+   "status": "PASS"
+  },
+  {
+   "check": "stokastisk/compat.py: BLOCKING is AST-identical in both builds (the runtime imports it)",
+   "detail": "BLOCKING",
+   "status": "PASS"
+  },
+  {
+   "check": "stokastisk/compat.py: SM75 is AST-identical in both builds (the runtime imports it)",
+   "detail": "SM75",
+   "status": "PASS"
+  },
+  {
+   "check": "stokastisk/compat.py: QUANT_MIN_CAPABILITY is AST-identical in both builds (the runtime imports it)",
+   "detail": "QUANT_MIN_CAPABILITY",
+   "status": "PASS"
+  },
+  {
+   "check": "no Flash-family path, native marker or binding in the new wheel",
+   "detail": "{'path_hits': [], 'native_hits': {}, 'binding_hits': []}",
+   "status": "PASS"
+  }
+ ],
+ "new_wheel": {
+  "name": "stokastisk-0.1.0-4-cp313-cp313-linux_x86_64.whl",
+  "sha256": "052156d71adc6ad9966901565f86dbded9ff41c620c782db4ff377a1a2b4f62e",
+  "size": 38057512
+ },
+ "old_wheel": {
+  "name": "stokastisk-0.1.0-3-cp313-cp313-linux_x86_64.whl",
+  "sha256": "72039ca4044e48fdf5edca8051dcb48b42fe61a69e07715fa8803e029581fe12",
+  "size": 38056944
+ },
+ "status": "PASS",
+ "summary": {
+  "added": 0,
+  "by_category_changed": {
+   "dist-info": [
+    "stokastisk-0.1.0.dist-info/METADATA",
+    "stokastisk-0.1.0.dist-info/RECORD",
+    "stokastisk-0.1.0.dist-info/WHEEL"
+   ],
+   "other": [],
+   "sdk": [
+    "stokastisk/compat.py",
+    "stokastisk/serving.py"
+   ],
+   "vllm": []
+  },
+  "changed": 5,
+  "identical": 2577,
+  "members_new": 2582,
+  "members_old": 2582,
+  "native_binaries": 6,
+  "native_binaries_identical": 6,
+  "removed": 0,
+  "vllm_members": 2517,
+  "vllm_members_identical": 2517
+ }
+}

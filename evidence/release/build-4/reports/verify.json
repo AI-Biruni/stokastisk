@@ -1,0 +1,140 @@
+{
+ "status": "PASS",
+ "wheel": "stokastisk-0.1.0-4-cp313-cp313-linux_x86_64.whl",
+ "wheel_sha256": "052156d71adc6ad9966901565f86dbded9ff41c620c782db4ff377a1a2b4f62e",
+ "files": 2582,
+ "scan": {
+  "files": 2582,
+  "py": 1980,
+  "pyc": 0,
+  "native": 6,
+  "pycache_dirs": [],
+  "path_hits": [],
+  "native_hits": {},
+  "binding_hits": [],
+  "allowed_flash_named": [
+   "vllm/model_executor/models/laguna_dflash.py",
+   "vllm/model_executor/models/longcat_flash.py",
+   "vllm/model_executor/models/longcat_flash_mtp.py",
+   "vllm/model_executor/models/qwen3_dflash.py",
+   "vllm/v1/attention/ops/triton_reshape_and_cache_flash.py",
+   "vllm/v1/spec_decode/dflash.py"
+  ],
+  "prohibited_file_count": 0,
+  "clean": true
+ },
+ "transform_summary": {
+  "removed_files": 28,
+  "rewritten_import_sites": 54,
+  "patched_files": 5,
+  "stub_entries": 50,
+  "guarded_imports_left_alone": 4
+ },
+ "checks": [
+  {
+   "check": "filename is stokastisk-0.1.0-<build>-cp313-cp313-linux_x86_64.whl",
+   "status": "PASS",
+   "detail": "stokastisk-0.1.0-4-cp313-cp313-linux_x86_64.whl"
+  },
+  {
+   "check": "WHEEL tag cp313-cp313-linux_x86_64 and a build tag >= 3",
+   "status": "PASS",
+   "detail": "Wheel-Version: 1.0 | Generator: stokastisk-build_integrated_wheel | Root-Is-Purelib: false | Tag: cp313-cp313-linux_x86_64 | Build: 4 | "
+  },
+  {
+   "check": "METADATA Version is 0.1.0",
+   "status": "PASS",
+   "detail": ""
+  },
+  {
+   "check": "top-level packages are exactly stokastisk + vllm (one vLLM tree)",
+   "status": "PASS",
+   "detail": "['stokastisk', 'vllm']"
+  },
+  {
+   "check": "RECORD lists every member with the right sha256",
+   "status": "PASS",
+   "detail": "[]"
+  },
+  {
+   "check": "strict Flash policy: 0 path hits (.py/.pyc/.so/...), 0 native markers, 0 bindings, 0 __pycache__",
+   "status": "PASS",
+   "detail": "{'path_hits': [], 'native_hits': {}, 'binding_hits': [], 'pycache_dirs': []}"
+  },
+  {
+   "check": "the pinned vLLM wheel DID contain the prohibited files (the scanner is not vacuous)",
+   "status": "PASS",
+   "detail": "28"
+  },
+  {
+   "check": "every native object equals the byte-pinned vLLM wheel's (nothing recompiled, nothing Flash added)",
+   "status": "PASS",
+   "detail": "['vllm/_C_stable_libtorch.abi3.so', 'vllm/_moe_C_stable_libtorch.abi3.so', 'vllm/_rust_tool_parser.abi3.so', 'vllm/cumem_allocator.abi3.so', 'vllm/fs_io_C.abi3.so', 'vllm/spinloop.abi3.so']"
+  },
+  {
+   "check": "vllm/** equals (pinned wheel + the documented transform) byte for byte",
+   "status": "PASS",
+   "detail": "[]"
+  },
+  {
+   "check": "everything the transform did not touch is byte-identical to the pinned wheel",
+   "status": "PASS",
+   "detail": "2477 identical of 2543"
+  },
+  {
+   "check": "METADATA requires every lock root exactly (core + structured-output + serving; names compared canonically)",
+   "status": "PASS",
+   "detail": "[]"
+  },
+  {
+   "check": "METADATA pins EVERY package of the three locks exactly (a plain `pip install` can never float a transitive package or upgrade a protected one)",
+   "status": "PASS",
+   "detail": "[]"
+  },
+  {
+   "check": "METADATA pins torch==2.11.0+cu130 and triton==3.6.0, transformers>=5.5.3,<6",
+   "status": "PASS",
+   "detail": ""
+  },
+  {
+   "check": "METADATA does not require xgrammar<\u2026transformers caps: xgrammar==0.2.3",
+   "status": "PASS",
+   "detail": ""
+  },
+  {
+   "check": "models extra present, not in the default requirements",
+   "status": "PASS",
+   "detail": ""
+  },
+  {
+   "check": "vllm 0.25.1 dist-info bundled (vLLM resolves its own version through it)",
+   "status": "PASS",
+   "detail": ""
+  },
+  {
+   "check": "vllm/t4_backend_policy.py is present",
+   "status": "PASS",
+   "detail": ""
+  },
+  {
+   "check": "vllm/utils/t4_prohibited_stubs.py is present",
+   "status": "PASS",
+   "detail": ""
+  },
+  {
+   "check": "stokastisk/prohibited.py is present",
+   "status": "PASS",
+   "detail": ""
+  },
+  {
+   "check": "stokastisk/dependencies.py is present",
+   "status": "PASS",
+   "detail": ""
+  },
+  {
+   "check": "stokastisk/structured.py is present",
+   "status": "PASS",
+   "detail": ""
+  }
+ ]
+}
