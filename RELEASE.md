@@ -22,5 +22,7 @@ Build 4 corrects the compatibility **reporting** shipped in the SDK: `stokastisk
 | **Build 4** — CPU only | independent wheel audit (RECORD, Flash-free, natives = pinned vLLM), member delta vs build 3, reproducible rebuild, `check_model`/feature-matrix unit tests, documentation consistency tests | **verified on CPU** |
 | **Build 4 on Kaggle** | — | **not run** (no further T4 verification was requested); its inference, server and native code is byte-identical to build 3, so build 3's Kaggle evidence is inherited for those paths |
 
+Archived audit of the current wheel (release manifest, 21-check verification, member-by-member delta against build 3, Flash scan, transform report): `evidence/release/build-4/`. It also records the verified publication (Hugging Face file re-downloaded and hashed, pip index, documentation site) and that GitHub Actions rebuilt the wheel from source with an identical SHA256.
+
 ## Known facts
 TP=2, PP=2 and replicas are **slower** than TP=1 for a model that fits one T4 (PCIe host bridge, no NVLink). Kaggle resolves NCCL to its cu12 build 2.32.3; our binaries do not link it. Unsupported: bfloat16, Flash*, FP8/FP4, L4/SM89, Mistral-family models, OpenTelemetry exporters, direct `vllm.LLM`/`vllm serve`. Limits: [docs/PRODUCTION_READINESS.md](docs/PRODUCTION_READINESS.md).

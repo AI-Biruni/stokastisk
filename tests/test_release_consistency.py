@@ -56,3 +56,28 @@ class ReleaseConsistency(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ArchivedBuildReport(unittest.TestCase):
+    """evidence/release/build-4/ is the archived audit of the current wheel; it must describe exactly the wheel RELEASE.json names."""
+    D = ROOT / "evidence/release/build-4"
+
+    def test_manifest_matches_release_json(self):
+        m = json.loads((self.D / "release-manifest.json").read_text())
+        self.assertEqual((m["project_version"], m["build_tag"]), ("0.1.0", "4"))
+        self.assertEqual({k: m["wheel"][k] for k in ("filename", "size", "sha256")}, {k: CUR[k] for k in ("filename", "size", "sha256")})
+        self.assertEqual(m["base_vllm_wheel"]["sha256"], REL["base_vllm_wheel"]["sha256"])
+        v = m["verification"]
+        self.assertFalse(v["this_build_executed_on_kaggle"]); self.assertTrue(v["build3_kaggle_acceptance"]["executed_on_kaggle"]); self.assertIn("NOT_RUN", v["this_build_kaggle_status"])
+        self.assertTrue(v["inference_code_equivalent_to_build3"]["proven_by_delta_audit"])
+        self.assertEqual((v["cpu_verification"]["wheel_audit"], v["cpu_verification"]["delta_audit"], v["cpu_verification"]["reproducible_build"]), ("PASS", "PASS", True))
+        self.assertEqual(m["publication"]["huggingface_wheel"]["remote_redownloaded_sha256"], CUR["sha256"])
+        self.assertEqual(m["audits"]["delta_vs_reference"]["reference"]["sha256"], OLD["sha256"])
+
+    def test_delta_report_shows_only_the_approved_changes(self):
+        d = json.loads((self.D / "reports/delta-vs-reference.json").read_text())
+        self.assertEqual(d["status"], "PASS"); s = d["summary"]
+        self.assertEqual((s["added"], s["removed"], s["changed"]), (0, 0, 5)); self.assertEqual(s["vllm_members"], s["vllm_members_identical"]); self.assertEqual(s["native_binaries"], s["native_binaries_identical"])
+        self.assertEqual(sorted(r["member"] for r in d["changed_members"]), sorted(["stokastisk/compat.py", "stokastisk/serving.py", "stokastisk-0.1.0.dist-info/METADATA", "stokastisk-0.1.0.dist-info/RECORD", "stokastisk-0.1.0.dist-info/WHEEL"]))
+        self.assertEqual(d["new_wheel"]["sha256"], CUR["sha256"]); self.assertTrue(all(c["status"] == "PASS" for c in d["checks"]))
+        self.assertEqual(json.loads((self.D / "reports/verify.json").read_text())["status"], "PASS")

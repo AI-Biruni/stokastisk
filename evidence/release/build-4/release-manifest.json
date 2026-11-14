@@ -1,0 +1,190 @@
+{
+ "audits": {
+  "delta_vs_reference": {
+   "reference": {
+    "name": "stokastisk-0.1.0-3-cp313-cp313-linux_x86_64.whl",
+    "sha256": "72039ca4044e48fdf5edca8051dcb48b42fe61a69e07715fa8803e029581fe12",
+    "size": 38056944
+   },
+   "report": "reports/delta-vs-reference.json",
+   "status": "PASS",
+   "summary": {
+    "added": 0,
+    "by_category_changed": {
+     "dist-info": [
+      "stokastisk-0.1.0.dist-info/METADATA",
+      "stokastisk-0.1.0.dist-info/RECORD",
+      "stokastisk-0.1.0.dist-info/WHEEL"
+     ],
+     "other": [],
+     "sdk": [
+      "stokastisk/compat.py",
+      "stokastisk/serving.py"
+     ],
+     "vllm": []
+    },
+    "changed": 5,
+    "identical": 2577,
+    "members_new": 2582,
+    "members_old": 2582,
+    "native_binaries": 6,
+    "native_binaries_identical": 6,
+    "removed": 0,
+    "vllm_members": 2517,
+    "vllm_members_identical": 2517
+   }
+  },
+  "flash_removal_audit": [
+   "PASS"
+  ],
+  "native_binary_comparison_with_pinned_vllm": [
+   "PASS"
+  ],
+  "record_verified": true,
+  "reproducible_build": {
+   "identical": true,
+   "second_build_sha256": "052156d71adc6ad9966901565f86dbded9ff41c620c782db4ff377a1a2b4f62e"
+  },
+  "verify_integrated_wheel": {
+   "checks": 21,
+   "report": "reports/verify.json",
+   "status": "PASS"
+  }
+ },
+ "base_vllm_wheel": {
+  "filename": "vllm-0.25.1-cp38-abi3-linux_x86_64.whl",
+  "sha256": "cc3bcafb6516791990ca302073ae153a08465d3df1e460d666e3ec09b4e98f5e",
+  "size": 38067501
+ },
+ "build_tag": "4",
+ "dependency_locks_sha256": {
+  "core.lock": "6467163a01bd30be3a49724ba3e9154daaf95eba87020c4f749a1309cded5006",
+  "core.roots": "7d88b5ea89cb290c0621af0395f75b46f3a5f71c44ab29bfc8edb78d59dd3bd6",
+  "models.lock": "ff8e451655090b265e578232cacf1dac46135a384f895db367b22399b15de4d9",
+  "models.roots": "994960dfb9b480dfd21b59d7e7efd8df8cf4955ae781b0a88ad4c3d704fbf071",
+  "serving.lock": "f341a9b3228291e12c942cd98e71859882c771292fff01a2d318f285edae64e1",
+  "serving.roots": "c44718c653a620c0618405e00d2c25cf9c2454cf9d93e339f97582423ebc3b97",
+  "structured-output.lock": "cb5178ae1083a111aa50322d9b46d92e4e10f04911c2bf2b23999ea47af73404",
+  "structured-output.roots": "185b6dd5b7724532c91f396966b3f7e96df5a28032bf48f13717bb06845bc429"
+ },
+ "project_version": "0.1.0",
+ "publication": {
+  "documentation_site": "https://stokastisk-ai.github.io/stokastisk/docs/ (feature matrix and diagnostics pages serve the build-4 content)",
+  "github_release": "no build-specific release was created; the v0.1.0 tag and release are unchanged",
+  "huggingface_model_card": "uploaded from docs/HUB_README.md; contains the build-4 hash",
+  "huggingface_wheel": {
+   "build_3_untouched_and_rehashed": "72039ca4044e48fdf5edca8051dcb48b42fe61a69e07715fa8803e029581fe12",
+   "matches_local_file": true,
+   "path": "wheels/stokastisk-0.1.0-4-cp313-cp313-linux_x86_64.whl",
+   "remote_redownloaded_sha256": "052156d71adc6ad9966901565f86dbded9ff41c620c782db4ff377a1a2b4f62e",
+   "remote_size": 38057512,
+   "uploaded_alongside_build_3": true
+  },
+  "independent_rebuild": "GitHub Actions workflow cpu-ci (ubuntu-24.04, Python 3.13.18) rebuilt the wheel from source: identical SHA256, all 2,582 members identical, full suite 323 passed, 0 skipped",
+  "pinned_install_command_verified": "pip download of the documented command fetched the file; a wrong sha256 was refused (THESE PACKAGES DO NOT MATCH THE HASHES)",
+  "pip_index": {
+   "lists": "stokastisk-0.1.0-4-cp313-cp313-linux_x86_64.whl",
+   "pip_download_via_index_sha256": "052156d71adc6ad9966901565f86dbded9ff41c620c782db4ff377a1a2b4f62e",
+   "sha256_in_link": "052156d71adc6ad9966901565f86dbded9ff41c620c782db4ff377a1a2b4f62e",
+   "url": "https://stokastisk-ai.github.io/stokastisk/simple/"
+  }
+ },
+ "schema": 1,
+ "sdk_file_delta_against_reference": {
+  "allowed": [
+   "stokastisk/compat.py",
+   "stokastisk/serving.py"
+  ],
+  "ast_analysis": {
+   "stokastisk/compat.py": {
+    "runtime_names_identical": [
+     "check_dtype",
+     "check_quantization",
+     "check_feature",
+     "get_feature",
+     "BLOCKING",
+     "SM75",
+     "QUANT_MIN_CAPABILITY"
+    ],
+    "top_level_names_changed": [
+     "FEATURES",
+     "KAGGLE_VERIFIED_ARCHITECTURES",
+     "MODEL_EVIDENCE",
+     "_VERIFIED_DTYPES",
+     "__all__",
+     "_mode_name",
+     "_model_record",
+     "check_model"
+    ]
+   },
+   "stokastisk/serving.py": {
+    "docstring_only_change": true
+   }
+  },
+  "changed": [
+   "stokastisk/compat.py",
+   "stokastisk/serving.py"
+  ],
+  "docstring_only": [
+   "stokastisk/serving.py"
+  ]
+ },
+ "source": {
+  "git_commit": "f3a26a19a738b5b3138cedb55c23887841a8422d",
+  "tracked_files_modified_at_build": []
+ },
+ "target": {
+  "attention": "TRITON_ATTN",
+  "cuda_toolkit": "13.0",
+  "dtype": "float16",
+  "gpu": "Tesla T4 x 2 (SM75)",
+  "torch": "2.11.0+cu130",
+  "triton": "3.6.0",
+  "vllm": "0.25.1"
+ },
+ "verification": {
+  "build3_end_user_notebooks": {
+   "executed_on_kaggle": true,
+   "notebooks": [
+    "16",
+    "18",
+    "19"
+   ],
+   "raw_evidence": "evidence/kaggle/evidence-manifest.json"
+  },
+  "build3_kaggle_acceptance": {
+   "executed_on_kaggle": true,
+   "on_wheel": "b31588c9b5f0d5ae103903283c7cfc25a9d7ef6c00112c3d46bb7b9ee84b023a",
+   "raw_evidence": "evidence/kaggle/evidence-manifest.json",
+   "stages": {
+    "engine": "44/44",
+    "installer": "32/32",
+    "parallel": "23/23",
+    "server": "21/21",
+    "static": "79/79",
+    "summary": "15/15"
+   }
+  },
+  "cpu_verification": {
+   "delta_audit": "PASS",
+   "reproducible_build": true,
+   "tests": [
+    "CUDA_VISIBLE_DEVICES= python3.13 -m pytest tests -p no:cacheprovider -q -rs = 323 passed, 0 skipped, 158 subtests passed, 1 warning (290 s); no GPU, no CUDA, no Kaggle"
+   ],
+   "wheel_audit": "PASS"
+  },
+  "inference_code_equivalent_to_build3": {
+   "meaning": "all vllm/** members and native objects are byte-identical, every dependency pin is unchanged, and the only SDK edits are the allowed files (docstring-only where listed; the runtime-imported compat names are AST-identical). Build-3 Kaggle evidence is therefore inherited for the unchanged implementation paths.",
+   "proven_by_delta_audit": true
+  },
+  "this_build_executed_on_kaggle": false,
+  "this_build_kaggle_status": "NOT_RUN (the owner prohibited further T4 verification); nothing below is a claim that this build ran on a GPU"
+ },
+ "wheel": {
+  "filename": "stokastisk-0.1.0-4-cp313-cp313-linux_x86_64.whl",
+  "python_tag": "cp313-cp313-linux_x86_64",
+  "requires_python": ">=3.13,<3.14",
+  "sha256": "052156d71adc6ad9966901565f86dbded9ff41c620c782db4ff377a1a2b4f62e",
+  "size": 38057512
+ }
+}
