@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>10. Troubleshooting · Stokastisk 0.1.0</title><link rel="stylesheet" href="style.css"></head><body><div class="wrap"><nav><h1>Stokastisk</h1><div class="v">0.1.0 · Kaggle 2 × T4 · Python 3.13</div><a class="" href="index.html">Overview</a><a class="" href="getting-started.html">1. Getting started</a><a class="" href="configuration.html">2. Configuration</a><a class="" href="engine.html">3. The LLM engine</a><a class="" href="structured-output.html">4. Structured output</a><a class="" href="server.html">5. OpenAI-compatible server</a><a class="" href="multi-gpu.html">6. Using both GPUs</a><a class="" href="diagnostics.html">7. Checks and diagnostics</a><a class="" href="errors.html">8. Errors</a><a class="" href="advanced.html">9. Advanced modules</a><a class="cur" href="troubleshooting.html">10. Troubleshooting</a><a class="" href="api-reference.html">API reference</a><div class="ext"><a href="https://github.com/stokastisk-ai/stokastisk">GitHub</a><a href="https://huggingface.co/waqasm86/stokastisk">Hugging Face</a><a href="../">Package index</a></div></nav><main><h1>10. Troubleshooting</h1>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>10. Troubleshooting · Stokastisk 0.1.0</title><link rel="stylesheet" href="style.css"></head><body><div class="wrap"><nav><h1>Stokastisk</h1><div class="v">0.1.0 · Kaggle 2 × T4 · Python 3.13</div><a class="" href="index.html">Overview</a><a class="" href="getting-started.html">1. Getting started</a><a class="" href="configuration.html">2. Configuration</a><a class="" href="engine.html">3. The LLM engine</a><a class="" href="structured-output.html">4. Structured output</a><a class="" href="server.html">5. OpenAI-compatible server</a><a class="" href="multi-gpu.html">6. Using both GPUs</a><a class="" href="diagnostics.html">7. Checks and diagnostics</a><a class="" href="feature-matrix.html">   Feature matrix</a><a class="" href="errors.html">8. Errors</a><a class="" href="advanced.html">9. Advanced modules</a><a class="cur" href="troubleshooting.html">10. Troubleshooting</a><a class="" href="api-reference.html">API reference</a><div class="ext"><a href="https://github.com/stokastisk-ai/stokastisk">GitHub</a><a href="https://huggingface.co/waqasm86/stokastisk">Hugging Face</a><a href="../">Package index</a></div></nav><main><h1>10. Troubleshooting</h1>
 <table>
 <thead>
 <tr>
@@ -8,8 +8,12 @@
 </thead>
 <tbody>
 <tr>
-  <td><code>No matching distribution found for stokastisk</code></td>
-  <td>the notebook is not Python 3.13, or Internet is OFF, or the old index address is used — use <code>https://stokastisk-ai.github.io/stokastisk/simple/</code></td>
+  <td><code>No matching distribution</code> / <code>is not a supported wheel</code></td>
+  <td>the notebook is not Python 3.13, or Internet is OFF, or an old install line with the retired index address is used — use the pinned command in <a href="getting-started.html">Getting started</a></td>
+</tr>
+<tr>
+  <td><code>THESE PACKAGES DO NOT MATCH THE HASHES</code></td>
+  <td>the downloaded file is not the one the command names; do not use it. Retry; if it persists, report it with the full log</td>
 </tr>
 <tr>
   <td>pip wants to change torch / transformers</td>
@@ -53,7 +57,11 @@
 </tr>
 <tr>
   <td><code>UNKNOWN_REQUIRES_EVIDENCE</code> from <code>check_model</code></td>
-  <td>pass <code>architectures=[...]</code> or a local directory — see <a href="diagnostics.html">Checks</a></td>
+  <td>that exact model id was never run on Kaggle (or its architecture could not be determined: pass <code>architectures=[...]</code>). It is not an error — see <a href="diagnostics.html">Checks</a></td>
+</tr>
+<tr>
+  <td><code>Process manager: force killing remaining processes</code> at shutdown</td>
+  <td>seen after every TP=2/PP=2 engine in the Kaggle runs; the GPUs were fully released each time (see <a href="engine.html">The LLM engine</a>)</td>
 </tr>
 <tr>
   <td><code>StructuredOutputError: truncated</code></td>

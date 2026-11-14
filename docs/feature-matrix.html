@@ -1,0 +1,321 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>   Feature matrix · Stokastisk 0.1.0</title><link rel="stylesheet" href="style.css"></head><body><div class="wrap"><nav><h1>Stokastisk</h1><div class="v">0.1.0 · Kaggle 2 × T4 · Python 3.13</div><a class="" href="index.html">Overview</a><a class="" href="getting-started.html">1. Getting started</a><a class="" href="configuration.html">2. Configuration</a><a class="" href="engine.html">3. The LLM engine</a><a class="" href="structured-output.html">4. Structured output</a><a class="" href="server.html">5. OpenAI-compatible server</a><a class="" href="multi-gpu.html">6. Using both GPUs</a><a class="" href="diagnostics.html">7. Checks and diagnostics</a><a class="cur" href="feature-matrix.html">   Feature matrix</a><a class="" href="errors.html">8. Errors</a><a class="" href="advanced.html">9. Advanced modules</a><a class="" href="troubleshooting.html">10. Troubleshooting</a><a class="" href="api-reference.html">API reference</a><div class="ext"><a href="https://github.com/stokastisk-ai/stokastisk">GitHub</a><a href="https://huggingface.co/waqasm86/stokastisk">Hugging Face</a><a href="../">Package index</a></div></nav><main><h1>Feature matrix and model evidence</h1>
+<p>Generated from <code>stokastisk.compat</code> (<code>FEATURES</code>, <code>MODEL_EVIDENCE</code>) by <code>scripts/release/build_docs_site.py</code>; do not edit by hand. These are the records the installed SDK reports through <code>stokastisk.feature_matrix()</code> and <code>stokastisk.check_model()</code>.</p>
+<p><strong>Evidence classes.</strong> <code>kaggle</code>: executed on Kaggle 2 × T4 (the <em>notebooks</em> column says which: 15 = acceptance suite on build 3, 16/18/19 = end-user notebooks, 01–14 = earlier notebooks). <code>kaggle-kernel</code>: a Triton kernel compiled and launched, output not asserted. <code>cpu-tests</code>: CPU unit tests only. <code>static</code>: source inspection only. Build 4 itself was not executed on Kaggle; its inference code is byte-identical to build 3.</p>
+<h2>Features</h2>
+<table>
+<thead>
+<tr>
+  <th>Feature</th>
+  <th>Status</th>
+  <th>Evidence</th>
+  <th>Notebooks</th>
+  <th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>offline_generation</code></td>
+  <td>SUPPORTED</td>
+  <td>kaggle</td>
+  <td>15,16,18,19</td>
+  <td>vllm.LLM generate() in FP16, enforce_eager, TRITON_ATTN. Exact models run: Qwen/Qwen2.5-0.5B-Instruct (TP=1; TP=2, PP=2 and 2 replicas in the notebook 15 parallel stage), Qwen/Qwen2.5-3B-Instruct (TP=2, PP=2) and Qwen/Qwen2.5-Coder-7B-Instruct (TP=2, PP=2); max_model_len 2048. See MODEL_EVIDENCE; other checkpoints are not covered</td>
+</tr>
+<tr>
+  <td><code>batch_generation</code></td>
+  <td>SUPPORTED</td>
+  <td>kaggle</td>
+  <td>09,11,14</td>
+  <td>batches of 1..64 requests, 64 output tokens</td>
+</tr>
+<tr>
+  <td><code>triton_attention</code></td>
+  <td>SUPPORTED</td>
+  <td>kaggle</td>
+  <td>05,13</td>
+  <td>TRITON_ATTN selected and confirmed in the live VllmConfig; kernel_unified_attention compiled; no Flash library mapped in any process</td>
+</tr>
+<tr>
+  <td><code>tensor_parallel_2</code></td>
+  <td>SUPPORTED</td>
+  <td>kaggle</td>
+  <td>05,06,13,15,18,19</td>
+  <td>both GPUs hold a shard; slower than TP=1 for a model that fits one T4 (about 0.55x decode, earlier notebooks); generated with Qwen2.5-0.5B (nb 15), Qwen2.5-3B (nb 18) and Qwen2.5-Coder-7B (nb 19)</td>
+</tr>
+<tr>
+  <td><code>pipeline_parallel_2</code></td>
+  <td>SUPPORTED_WITH_CONDITIONS</td>
+  <td>kaggle</td>
+  <td>08,13,15,18,19</td>
+  <td>experimental in this SDK; both GPUs hold stages; about 0.6x of TP=1 decode for a model that fits one T4 (earlier notebooks); generated with Qwen2.5-0.5B (nb 15), Qwen2.5-3B (nb 18) and Qwen2.5-Coder-7B (nb 19)</td>
+</tr>
+<tr>
+  <td><code>replica_parallel</code></td>
+  <td>SUPPORTED_WITH_CONDITIONS</td>
+  <td>kaggle</td>
+  <td>09,14,15</td>
+  <td>SDK feature (ReplicaPool): one TP=1 engine per GPU, both receive work; no throughput gain over one engine up to batch 64; also the notebook 15 parallel stage (two workers on two GPUs, both received work, clean close)</td>
+</tr>
+<tr>
+  <td><code>gpu_telemetry</code></td>
+  <td>SUPPORTED</td>
+  <td>kaggle</td>
+  <td>09,11,14</td>
+  <td>nvidia-smi sampling during benchmarks</td>
+</tr>
+<tr>
+  <td><code>topology_discovery</code></td>
+  <td>SUPPORTED</td>
+  <td>kaggle</td>
+  <td>01,07</td>
+  <td>PHB; CUDA peer access measured per session (true in one Kaggle VM, false in another)</td>
+</tr>
+<tr>
+  <td><code>nccl_collectives</code></td>
+  <td>SUPPORTED</td>
+  <td>kaggle</td>
+  <td>04</td>
+  <td>all_reduce/all_gather/reduce_scatter/broadcast on both ranks</td>
+</tr>
+<tr>
+  <td><code>sampling_temperature_top_k_top_p</code></td>
+  <td>SUPPORTED_WITH_CONDITIONS</td>
+  <td>kaggle-kernel</td>
+  <td>—</td>
+  <td>kernels compiled during runs; only greedy (temperature 0) output was asserted</td>
+</tr>
+<tr>
+  <td><code>logprobs</code></td>
+  <td>SUPPORTED_WITH_CONDITIONS</td>
+  <td>kaggle-kernel</td>
+  <td>—</td>
+  <td>logprob / prompt-logprob kernels compiled; output not asserted</td>
+</tr>
+<tr>
+  <td><code>penalties_min_p_bad_words_logit_bias</code></td>
+  <td>SUPPORTED_WITH_CONDITIONS</td>
+  <td>kaggle-kernel</td>
+  <td>—</td>
+  <td>kernels compiled; output not asserted</td>
+</tr>
+<tr>
+  <td><code>chat_generation</code></td>
+  <td>SUPPORTED</td>
+  <td>kaggle</td>
+  <td>15,16,18,19</td>
+  <td>LLM.chat and LLM.complete returned text on 2 x T4: notebook 15 engine stage (build 3), the notebook 16 quickstart, notebook 18 (0.5B TP=1; 3B TP=2 and PP=2) and notebook 19 (Coder-7B TP=2 and PP=2)</td>
+</tr>
+<tr>
+  <td><code>openai_server</code></td>
+  <td>SUPPORTED_WITH_CONDITIONS</td>
+  <td>kaggle</td>
+  <td>15</td>
+  <td>the real <code>vllm serve</code> launched by stokastisk.serving.ServerProcess was started and exercised on 2 x T4 (notebook 15, server stage, 21/21: /health, /v1/models, chat completions, SSE streaming, HTTP error mapping, structured output over HTTP, /metrics, restart on the same port, graceful SIGINT shutdown, GPU memory released). Conditions: exercised with Qwen/Qwen2.5-0.5B-Instruct, TP=1 only; Kaggle's fastapi 0.141.1 is newer than upstream vLLM's &lt;0.137 cap; the SageMaker /ping and /invocations routes were NOT exercised and are not claimed. Calling upstream <code>vllm serve</code> directly is unsupported (see direct_upstream_vllm)</td>
+</tr>
+<tr>
+  <td><code>streaming</code></td>
+  <td>SUPPORTED</td>
+  <td>kaggle</td>
+  <td>15</td>
+  <td>stream_chat: SSE through the real server yielded several non-empty deltas and ended with [DONE] (notebook 15, server stage, Qwen2.5-0.5B, TP=1); the truncated-stream error path is CPU-tested against a fake server only</td>
+</tr>
+<tr>
+  <td><code>prometheus_metrics</code></td>
+  <td>SUPPORTED_WITH_CONDITIONS</td>
+  <td>kaggle</td>
+  <td>15</td>
+  <td>GET /metrics on the running server exposed vllm: samples (notebook 15, server stage). Only the presence of those samples was asserted, not their values; the fetch_metrics text parser is CPU-tested</td>
+</tr>
+<tr>
+  <td><code>structured_outputs</code></td>
+  <td>SUPPORTED_WITH_CONDITIONS</td>
+  <td>kaggle</td>
+  <td>15,16,18</td>
+  <td>JSON-schema output with the pinned xgrammar 0.2.3 backend (never 'auto'): notebook 15 engine stage (every generate_structured output satisfied the bounded schema; not-JSON, wrong type, missing key, extra key and truncated outputs were each detected; a schema xgrammar does not support was rejected with no fallback; xgrammar's native library was mapped and outlines_core's was not), the server stage (structured output over HTTP) and notebooks 16 and 18 (generate_structured). Conditions: bound open-ended schema fields (a grammar cannot make a model stop); acceptance model Qwen2.5-0.5B</td>
+</tr>
+<tr>
+  <td><code>direct_upstream_vllm</code></td>
+  <td>UNSUPPORTED_ENTRY_POINT</td>
+  <td>static</td>
+  <td>—</td>
+  <td>calling vllm.LLM or <code>vllm serve</code> directly bypasses the SDK's dtype, NCCL, structured-output and backend checks and is NOT a supported Stokastisk entry point (use stokastisk.LLM / ServerProcess / ReplicaPool). The Flash-free tree makes upstream auto-selection resolve to TRITON_ATTN on SM75 (CPU-evaluated), and FlashAttention/FlashInfer/FlashMLA are refused with ProhibitedBackendError, but only the SDK paths are verified</td>
+</tr>
+<tr>
+  <td><code>prefix_caching</code></td>
+  <td>UNKNOWN_REQUIRES_EVIDENCE</td>
+  <td>static</td>
+  <td>—</td>
+  <td>no run asserts it</td>
+</tr>
+<tr>
+  <td><code>chunked_prefill</code></td>
+  <td>UNKNOWN_REQUIRES_EVIDENCE</td>
+  <td>static</td>
+  <td>—</td>
+  <td>no run asserts it</td>
+</tr>
+<tr>
+  <td><code>cuda_graphs</code></td>
+  <td>UNKNOWN_REQUIRES_EVIDENCE</td>
+  <td>static</td>
+  <td>—</td>
+  <td>every Kaggle run used enforce_eager=True (the SDK default); graph capture on T4 is unverified</td>
+</tr>
+<tr>
+  <td><code>custom_all_reduce</code></td>
+  <td>UNKNOWN_REQUIRES_EVIDENCE</td>
+  <td>static</td>
+  <td>—</td>
+  <td>disabled by the SDK default; needs CUDA peer access, which differs between Kaggle VMs</td>
+</tr>
+<tr>
+  <td><code>lora</code></td>
+  <td>UNKNOWN_REQUIRES_EVIDENCE</td>
+  <td>static</td>
+  <td>—</td>
+  <td>present in the source; no run</td>
+</tr>
+<tr>
+  <td><code>multimodal</code></td>
+  <td>UNKNOWN_REQUIRES_EVIDENCE</td>
+  <td>static</td>
+  <td>—</td>
+  <td>present in the source; no run</td>
+</tr>
+<tr>
+  <td><code>embedding_pooling_reranking</code></td>
+  <td>UNKNOWN_REQUIRES_EVIDENCE</td>
+  <td>static</td>
+  <td>—</td>
+  <td>present in the source; no run</td>
+</tr>
+<tr>
+  <td><code>speculative_decoding</code></td>
+  <td>UNKNOWN_REQUIRES_EVIDENCE</td>
+  <td>static</td>
+  <td>—</td>
+  <td>present in the source; no run</td>
+</tr>
+<tr>
+  <td><code>mla_models_deepseek</code></td>
+  <td>UNKNOWN_REQUIRES_EVIDENCE</td>
+  <td>static</td>
+  <td>—</td>
+  <td>FlashMLA/FlashInfer-MLA backends are excluded; other MLA backends were not run</td>
+</tr>
+<tr>
+  <td><code>worker_failure_recovery</code></td>
+  <td>SUPPORTED_WITH_CONDITIONS</td>
+  <td>cpu-tests</td>
+  <td>—</td>
+  <td>ReplicaPool restarts/retries covered by CPU tests with fake workers only</td>
+</tr>
+<tr>
+  <td><code>bfloat16</code></td>
+  <td>NOT_SUPPORTED_SM75</td>
+  <td>static</td>
+  <td>—</td>
+  <td>vllm/platforms/cuda.py rejects bfloat16 below compute capability 8.0; use dtype='half'</td>
+</tr>
+<tr>
+  <td><code>flash_attention</code></td>
+  <td>EXCLUDED_FLASH_DEPENDENCY</td>
+  <td>static</td>
+  <td>—</td>
+  <td>FlashAttention is not shipped and not allowed</td>
+</tr>
+<tr>
+  <td><code>flashinfer</code></td>
+  <td>EXCLUDED_FLASH_DEPENDENCY</td>
+  <td>static</td>
+  <td>—</td>
+  <td>FlashInfer attention, sampler and all-reduce fusion are not shipped</td>
+</tr>
+<tr>
+  <td><code>flashmla</code></td>
+  <td>EXCLUDED_FLASH_DEPENDENCY</td>
+  <td>static</td>
+  <td>—</td>
+  <td>FlashMLA is not shipped</td>
+</tr>
+<tr>
+  <td><code>allreduce_rms_fusion</code></td>
+  <td>EXCLUDED_FLASH_DEPENDENCY</td>
+  <td>static</td>
+  <td>—</td>
+  <td>needs FlashInfer comm; pass_manager raises a clear error if requested</td>
+</tr>
+<tr>
+  <td><code>fp8_mxfp4_nvfp4_native</code></td>
+  <td>NOT_SUPPORTED_SM75</td>
+  <td>static</td>
+  <td>—</td>
+  <td>native FP8/FP4 kernels need SM89/SM90/SM100 (see check_quantization for the per-method minimum declared in the source)</td>
+</tr>
+<tr>
+  <td><code>expert_parallel_all2all</code></td>
+  <td>NOT_SUPPORTED_SM75</td>
+  <td>static</td>
+  <td>—</td>
+  <td>DeepEP / NIXL / FlashInfer all2all backends are not shipped or need newer GPUs</td>
+</tr>
+<tr>
+  <td><code>qwen_omni_models</code></td>
+  <td>NEEDS_ADAPTATION</td>
+  <td>static</td>
+  <td>—</td>
+  <td>qwen2_5_omni_thinker was removed from the T4 wheel by the module-level flash-import rule (its flash_attn import is guarded); restoring it needs a new vLLM wheel</td>
+</tr>
+<tr>
+  <td><code>l4_sm89</code></td>
+  <td>NOT_IMPLEMENTED</td>
+  <td>static</td>
+  <td>—</td>
+  <td>planned only; no SM89 binaries, no support claim</td>
+</tr>
+</tbody>
+</table>
+<h2>Models that were run</h2>
+<table>
+<thead>
+<tr>
+  <th>Model id</th>
+  <th>Architecture</th>
+  <th>Dtype</th>
+  <th>Max tested <code>max_model_len</code></th>
+  <th>Modes</th>
+  <th>Evidence</th>
+  <th>Limitations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>Qwen/Qwen2.5-0.5B-Instruct</code></td>
+  <td>Qwen2ForCausalLM</td>
+  <td>half</td>
+  <td>2048</td>
+  <td>TP=1, TP=2, PP=2, replicas=2</td>
+  <td>notebook 15 (build 3 acceptance): engine 44/44 and server 21/21 at TP=1; parallel 23/23 with TP=2, PP=2 and two replicas; notebook 16 (quickstart script, TP=1); notebook 18 (plain cells, TP=1)</td>
+  <td>FP16, eager execution, max_model_len 2048 only; TP=2, PP=2 and replicas are slower than TP=1 for a model this small</td>
+</tr>
+<tr>
+  <td><code>Qwen/Qwen2.5-3B-Instruct</code></td>
+  <td>Qwen2ForCausalLM</td>
+  <td>half</td>
+  <td>2048</td>
+  <td>TP=2, PP=2</td>
+  <td>notebook 18 (build 3): completion and chat with TP=2, and with PP=2</td>
+  <td>TP=1 was not tested for this model; free memory during inference: about 1.09 GiB per GPU at TP=2, 1.96 and 1.48 GiB at PP=2 (gpu_memory_utilization 0.88); PP=2 is experimental</td>
+</tr>
+<tr>
+  <td><code>Qwen/Qwen2.5-Coder-7B-Instruct</code></td>
+  <td>Qwen2ForCausalLM</td>
+  <td>half</td>
+  <td>2048</td>
+  <td>TP=2, PP=2</td>
+  <td>notebook 19 (build 3): original unquantized checkpoint (BF16 weights cast to FP16); one Python-coding chat answer with TP=2 and one with PP=2</td>
+  <td>does not fit one T4 in FP16, so TP=1 is not an option; memory is tight: about 1.34 GiB free per GPU during inference at TP=2, 2.42 and 1.93 GiB at PP=2 (max_model_len 2048, gpu_memory_utilization 0.88); a single prompt per mode; this is not a throughput measurement and does not show that other 7B models fit; PP=2 is experimental</td>
+</tr>
+</tbody>
+</table>
+<p>Any other checkpoint — including other <code>Qwen2ForCausalLM</code> models — is <code>UNKNOWN_REQUIRES_EVIDENCE</code> in <code>check_model()</code>; see <a href="diagnostics.html">Checks and diagnostics</a>.</p>
+<footer>Stokastisk 0.1.0 · Apache-2.0 · <a href="https://github.com/stokastisk-ai/stokastisk/blob/main/docs/guide/feature-matrix.md">edit this page on GitHub</a></footer></main></div></body></html>

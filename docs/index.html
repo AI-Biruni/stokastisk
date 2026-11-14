@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Overview · Stokastisk 0.1.0</title><link rel="stylesheet" href="style.css"></head><body><div class="wrap"><nav><h1>Stokastisk</h1><div class="v">0.1.0 · Kaggle 2 × T4 · Python 3.13</div><a class="cur" href="index.html">Overview</a><a class="" href="getting-started.html">1. Getting started</a><a class="" href="configuration.html">2. Configuration</a><a class="" href="engine.html">3. The LLM engine</a><a class="" href="structured-output.html">4. Structured output</a><a class="" href="server.html">5. OpenAI-compatible server</a><a class="" href="multi-gpu.html">6. Using both GPUs</a><a class="" href="diagnostics.html">7. Checks and diagnostics</a><a class="" href="errors.html">8. Errors</a><a class="" href="advanced.html">9. Advanced modules</a><a class="" href="troubleshooting.html">10. Troubleshooting</a><a class="" href="api-reference.html">API reference</a><div class="ext"><a href="https://github.com/stokastisk-ai/stokastisk">GitHub</a><a href="https://huggingface.co/waqasm86/stokastisk">Hugging Face</a><a href="../">Package index</a></div></nav><main><h1>Stokastisk 0.1.0 — User Guide</h1>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Overview · Stokastisk 0.1.0</title><link rel="stylesheet" href="style.css"></head><body><div class="wrap"><nav><h1>Stokastisk</h1><div class="v">0.1.0 · Kaggle 2 × T4 · Python 3.13</div><a class="cur" href="index.html">Overview</a><a class="" href="getting-started.html">1. Getting started</a><a class="" href="configuration.html">2. Configuration</a><a class="" href="engine.html">3. The LLM engine</a><a class="" href="structured-output.html">4. Structured output</a><a class="" href="server.html">5. OpenAI-compatible server</a><a class="" href="multi-gpu.html">6. Using both GPUs</a><a class="" href="diagnostics.html">7. Checks and diagnostics</a><a class="" href="feature-matrix.html">   Feature matrix</a><a class="" href="errors.html">8. Errors</a><a class="" href="advanced.html">9. Advanced modules</a><a class="" href="troubleshooting.html">10. Troubleshooting</a><a class="" href="api-reference.html">API reference</a><div class="ext"><a href="https://github.com/stokastisk-ai/stokastisk">GitHub</a><a href="https://huggingface.co/waqasm86/stokastisk">Hugging Face</a><a href="../">Package index</a></div></nav><main><h1>Stokastisk 0.1.0 — User Guide</h1>
 <p>Stokastisk is a Python 3.13 SDK for <strong>Kaggle's 2 × Tesla T4 GPUs</strong> (SM75, CUDA 13.0). It bundles vLLM 0.25.1, runs attention only through the Triton backend (<code>TRITON_ATTN</code>), and installs with one <code>pip</code> line.</p>
 <div class="callout">
 
@@ -47,8 +47,8 @@
 </tr>
 <tr>
   <td>7</td>
-  <td><a href="diagnostics.html">Checks and diagnostics</a></td>
-  <td><code>check_model</code>, environment report, Kaggle limits, backend policy</td>
+  <td><a href="diagnostics.html">Checks and diagnostics</a> · <a href="feature-matrix.html">Feature matrix</a></td>
+  <td><code>check_model</code> (which exact models were run), environment report, Kaggle limits, backend policy, what each feature's evidence is</td>
 </tr>
 <tr>
   <td>8</td>
@@ -83,7 +83,7 @@
 <tbody>
 <tr>
   <td>Qwen2.5-0.5B-Instruct, TP=1</td>
-  <td>completion, chat, structured JSON</td>
+  <td>completion, chat, structured JSON; also the notebook 15 acceptance suite (server, streaming, metrics, TP=2, PP=2, replicas)</td>
 </tr>
 <tr>
   <td>Qwen2.5-3B-Instruct, TP=2 and PP=2</td>

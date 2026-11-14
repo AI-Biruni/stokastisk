@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>7. Checks and diagnostics · Stokastisk 0.1.0</title><link rel="stylesheet" href="style.css"></head><body><div class="wrap"><nav><h1>Stokastisk</h1><div class="v">0.1.0 · Kaggle 2 × T4 · Python 3.13</div><a class="" href="index.html">Overview</a><a class="" href="getting-started.html">1. Getting started</a><a class="" href="configuration.html">2. Configuration</a><a class="" href="engine.html">3. The LLM engine</a><a class="" href="structured-output.html">4. Structured output</a><a class="" href="server.html">5. OpenAI-compatible server</a><a class="" href="multi-gpu.html">6. Using both GPUs</a><a class="cur" href="diagnostics.html">7. Checks and diagnostics</a><a class="" href="errors.html">8. Errors</a><a class="" href="advanced.html">9. Advanced modules</a><a class="" href="troubleshooting.html">10. Troubleshooting</a><a class="" href="api-reference.html">API reference</a><div class="ext"><a href="https://github.com/stokastisk-ai/stokastisk">GitHub</a><a href="https://huggingface.co/waqasm86/stokastisk">Hugging Face</a><a href="../">Package index</a></div></nav><main><h1>7. Checks and diagnostics</h1>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>7. Checks and diagnostics · Stokastisk 0.1.0</title><link rel="stylesheet" href="style.css"></head><body><div class="wrap"><nav><h1>Stokastisk</h1><div class="v">0.1.0 · Kaggle 2 × T4 · Python 3.13</div><a class="" href="index.html">Overview</a><a class="" href="getting-started.html">1. Getting started</a><a class="" href="configuration.html">2. Configuration</a><a class="" href="engine.html">3. The LLM engine</a><a class="" href="structured-output.html">4. Structured output</a><a class="" href="server.html">5. OpenAI-compatible server</a><a class="" href="multi-gpu.html">6. Using both GPUs</a><a class="cur" href="diagnostics.html">7. Checks and diagnostics</a><a class="" href="feature-matrix.html">   Feature matrix</a><a class="" href="errors.html">8. Errors</a><a class="" href="advanced.html">9. Advanced modules</a><a class="" href="troubleshooting.html">10. Troubleshooting</a><a class="" href="api-reference.html">API reference</a><div class="ext"><a href="https://github.com/stokastisk-ai/stokastisk">GitHub</a><a href="https://huggingface.co/waqasm86/stokastisk">Hugging Face</a><a href="../">Package index</a></div></nav><main><h1>7. Checks and diagnostics</h1>
 <p>Everything on this page is safe to run <strong>before</strong> starting an engine, and most of it works without a GPU.</p>
 <h2>Environment</h2>
 <div class="hl"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">stokastisk</span>
@@ -38,39 +38,92 @@
 <p>Keys: <code>distributions</code>, <code>modules</code>, <code>files</code>, <code>native_hits</code>, <code>binaries</code>, <code>clean</code>. All lists are empty when the install is Flash-free (as verified in every Kaggle notebook). Requesting a Flash backend raises <code>ConfigurationError</code> (SDK) or <code>ProhibitedBackendError</code> (an <code>ImportError</code> from the bundled vLLM).</p>
 <p><code>stokastisk.prohibited</code> holds the scanners used to audit a wheel or tree (<code>scan_wheel</code>, <code>scan_tree</code>, <code>is_prohibited_path</code>, <code>loaded_flash_libraries</code>).</p>
 <h2>Is my model supported? — <code>check_model</code></h2>
-<div class="hl"><pre><span></span><span class="n">stokastisk</span><span class="o">.</span><span class="n">check_model</span><span class="p">(</span><span class="s2">"Qwen/Qwen2.5-Coder-7B-Instruct"</span><span class="p">,</span> <span class="n">architectures</span><span class="o">=</span><span class="p">[</span><span class="s2">"Qwen2ForCausalLM"</span><span class="p">])</span>
+<div class="hl"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">stokastisk</span>
+<span class="n">r</span> <span class="o">=</span> <span class="n">stokastisk</span><span class="o">.</span><span class="n">check_model</span><span class="p">(</span><span class="s2">"Qwen/Qwen2.5-Coder-7B-Instruct"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"TP=2"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="s2">"status"</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="s2">"model_status"</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="s2">"architecture_status"</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="s2">"tested_modes"</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="s2">"mode_status"</span><span class="p">])</span>
+<span class="c1"># SUPPORTED SUPPORTED SUPPORTED_WITH_CONDITIONS ['TP=2', 'PP=2'] TESTED</span>
 </pre></div>
-<p><code>check_model</code> is <strong>offline</strong>: it never downloads the model; it reads the model registry of the <em>installed</em> package (so run it after <code>pip install stokastisk</code>). Therefore:</p>
-<ul>
-<li>pass <code>architectures=[...]</code> (read it from the model's <code>config.json</code> → <code>architectures</code>), <strong>or</strong> pass a local directory containing <code>config.json</code>;</li>
-<li>without either, the status is <code>UNKNOWN_REQUIRES_EVIDENCE</code> and the note tells you to pass the architecture.</li>
-</ul>
-<p>Result keys: <code>model</code>, <code>dtype</code>, <code>quantization</code>, <code>architectures</code>, <code>note</code>, <code>status</code>.</p>
+<p><code>check_model</code> is <strong>offline</strong>: it never downloads anything. It reads the model registry of the <em>installed</em> package (run it after installing Stokastisk) and a small table of the checkpoints that were actually run on Kaggle. It answers two different questions:</p>
 <table>
 <thead>
 <tr>
-  <th>Status</th>
-  <th>Meaning</th>
+  <th>Field</th>
+  <th>Question</th>
+  <th>Values</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td><code>SUPPORTED</code></td>
-  <td>the architecture is shipped and has been run on Kaggle</td>
+  <td><code>architecture_status</code></td>
+  <td>Is the architecture in the shipped vLLM, and has any verified checkpoint exercised it?</td>
+  <td><code>SUPPORTED_WITH_CONDITIONS</code> (exercised, for the listed checkpoints only) · <code>UNKNOWN_REQUIRES_EVIDENCE</code></td>
 </tr>
 <tr>
-  <td><code>UNKNOWN_REQUIRES_EVIDENCE</code></td>
-  <td>shipped or unknown, but never run on Kaggle</td>
+  <td><code>model_status</code></td>
+  <td>Was <strong>this exact checkpoint</strong> (FP16, unquantized) run on Kaggle?</td>
+  <td><code>SUPPORTED</code> · <code>UNKNOWN_REQUIRES_EVIDENCE</code></td>
+</tr>
+<tr>
+  <td><code>status</code></td>
+  <td>the overall answer; equal to <code>model_status</code></td>
+  <td><code>SUPPORTED</code> only for a verified checkpoint</td>
+</tr>
+<tr>
+  <td><code>tested_modes</code>, <code>max_tested_model_len</code>, <code>evidence</code>, <code>limitations</code></td>
+  <td>for a verified checkpoint: what was run and the caveats</td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>mode_status</code></td>
+  <td>only if you pass <code>mode=&quot;TP=2&quot;</code> etc.</td>
+  <td><code>TESTED</code> · <code>UNTESTED</code></td>
 </tr>
 </tbody>
 </table>
-<p>It raises <code>StokastiskCompatibilityError</code> when the architecture's module is missing from this wheel, the dtype is bfloat16, or the quantization cannot work on SM75 (Mistral-family models are refused).</p>
-<div class="callout">
+<p>An architecture being present in vLLM — or another checkpoint of it having been run — is <strong>never</strong> treated as evidence for your checkpoint.</p>
+<h3>The verified models</h3>
+<table>
+<thead>
+<tr>
+  <th>Model id</th>
+  <th>Modes run</th>
+  <th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>Qwen/Qwen2.5-0.5B-Instruct</code></td>
+  <td>TP=1, TP=2, PP=2, two replicas</td>
+  <td>notebook 15 acceptance (TP=1 engine and server; parallel stage), notebooks 16 and 18</td>
+</tr>
+<tr>
+  <td><code>Qwen/Qwen2.5-3B-Instruct</code></td>
+  <td>TP=2, PP=2</td>
+  <td>notebook 18</td>
+</tr>
+<tr>
+  <td><code>Qwen/Qwen2.5-Coder-7B-Instruct</code></td>
+  <td>TP=2, PP=2</td>
+  <td>notebook 19 (original unquantized checkpoint)</td>
+</tr>
+</tbody>
+</table>
+<p>All: FP16, <code>max_model_len</code> 2048, eager execution, <code>TRITON_ATTN</code>, Kaggle 2 × T4. The full registry is <code>stokastisk.compat.MODEL_EVIDENCE</code>; the evidence behind it is in <code>evidence/kaggle/</code> in the repository.</p>
+<h3>Examples</h3>
+<div class="hl"><pre><span></span><span class="n">stokastisk</span><span class="o">.</span><span class="n">check_model</span><span class="p">(</span><span class="s2">"Qwen/Qwen2.5-0.5B-Instruct"</span><span class="p">)[</span><span class="s2">"status"</span><span class="p">]</span>                  <span class="c1"># SUPPORTED</span>
+<span class="n">stokastisk</span><span class="o">.</span><span class="n">check_model</span><span class="p">(</span><span class="s2">"Qwen/Qwen2.5-3B-Instruct"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"TP=1"</span><span class="p">)[</span><span class="s2">"mode_status"</span><span class="p">]</span>  <span class="c1"># UNTESTED  (3B was run with TP=2 and PP=2 only)</span>
+<span class="n">stokastisk</span><span class="o">.</span><span class="n">check_model</span><span class="p">(</span><span class="s2">"Qwen/Qwen2.5-Coder-7B-Instruct"</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"auto"</span><span class="p">)[</span><span class="s2">"status"</span><span class="p">]</span>  <span class="c1"># UNKNOWN_REQUIRES_EVIDENCE (only FP16 was run)</span>
 
-<p>The evidence note on <code>Qwen2ForCausalLM</code> was written at build time and names only the 0.5B/1.5B runs. The 3B and Coder-7B runs described in this guide happened afterwards; the shipped wheel (frozen at 0.1.0) was not rebuilt to mention them.</p>
-</div>
-
-<p>Related: <code>check_dtype(dtype)</code>, <code>check_quantization(method)</code>, <code>check_feature(name)</code>, <code>feature_matrix()</code> (a copy of the feature table: <code>SUPPORTED</code>, <code>SUPPORTED_WITH_CONDITIONS</code>, <code>UNKNOWN_REQUIRES_EVIDENCE</code>, <code>EXCLUDED_FLASH_DEPENDENCY</code>, …). Feature evidence strings reflect the state when the wheel was built; for example the OpenAI server is marked &quot;unknown&quot; in the table although it later passed the Kaggle server stage (21/21) — see <a href="https://github.com/stokastisk-ai/stokastisk/blob/main/docs/KAGGLE_ACCEPTANCE.md">KAGGLE_ACCEPTANCE.md</a>.</p>
+<span class="c1"># an untested Qwen2-family checkpoint: the architecture is fine, the checkpoint is unproven</span>
+<span class="n">r</span> <span class="o">=</span> <span class="n">stokastisk</span><span class="o">.</span><span class="n">check_model</span><span class="p">(</span><span class="s2">"Qwen/Qwen2.5-7B-Instruct"</span><span class="p">,</span> <span class="n">architectures</span><span class="o">=</span><span class="p">[</span><span class="s2">"Qwen2ForCausalLM"</span><span class="p">])</span>
+<span class="n">r</span><span class="p">[</span><span class="s2">"status"</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="s2">"architecture_status"</span><span class="p">]</span>       <span class="c1"># ('UNKNOWN_REQUIRES_EVIDENCE', 'SUPPORTED_WITH_CONDITIONS')</span>
+</pre></div>
+<p>For a model you have downloaded, pass its directory: <code>check_model(&quot;/kaggle/working/my-model&quot;)</code>. The directory's <code>config.json</code> supplies the architecture and quantization; it is matched to a verified checkpoint only through its <code>_name_or_path</code> entry (which identifies the configuration, not the weights).</p>
+<h3>When it raises</h3>
+<p><code>StokastiskCompatibilityError</code> is raised, instead of a status being returned, when the architecture cannot run here: its module is missing from the shipped vLLM (e.g. FlashAttention-based models), it is a Mistral‑family architecture, the dtype is bfloat16, or the quantization needs a newer GPU (e.g. <code>mxfp4</code>, minimum capability 8.0). Without a model id, architecture or directory, the status is <code>UNKNOWN_REQUIRES_EVIDENCE</code> and the note says what to pass.</p>
+<p><code>UNKNOWN_REQUIRES_EVIDENCE</code> is not an error and not a prohibition: it means no one has run that checkpoint on these GPUs yet. Related: <code>check_dtype(dtype)</code>, <code>check_quantization(method)</code>, <code>check_feature(name)</code>, <code>feature_matrix()</code>.</p>
+<h3>Feature matrix</h3>
+<p>The same module records which <em>features</em> were exercised on Kaggle (OpenAI server, streaming, metrics, structured output, parallelism, …) and which were not. The table is on its own page, generated from the code so it cannot drift: <a href="feature-matrix.html">Feature matrix</a>.</p>
 <h2>Kaggle limits</h2>
 <div class="hl"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">stokastisk</span><span class="o">.</span><span class="n">LIMITS</span><span class="p">)</span>                    <span class="c1"># 4 CPU, 30 GiB RAM, 20 GiB /kaggle/working, 2 × T4 (SM75, ~15 GiB)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">stokastisk</span><span class="o">.</span><span class="n">check_resources</span><span class="p">())</span>         <span class="c1"># PASS / WARNING per limit; never raises</span>
