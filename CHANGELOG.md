@@ -1,10 +1,14 @@
 # Changelog
 
+## 2026-11-14 - move to the `stokastisk-ai` organisation (wheel unchanged)
+* Repository moved to <https://github.com/stokastisk-ai/stokastisk>; install line is now `pip install stokastisk --extra-index-url https://stokastisk-ai.github.io/stokastisk/simple/`. The wheel (`72039ca4...`) and the Hugging Face repository are unchanged.
+* Kaggle 2 x T4 runs of the published install: quickstart, Qwen2.5-0.5B (TP=1), Qwen2.5-3B (TP=2, PP=2), Qwen2.5-Coder-7B-Instruct (TP=2, PP=2) - all passed. User-guide notebooks 18 and 19 added; stored acceptance notebooks and local download files removed.
+
 Project version is permanently **0.1.0** (VERSION_POLICY.md). Entries are distinguished by date and wheel build tag, never by version.
 
 ## 2026-11-13 - production release (build tag 3, GPU stages verified)
 * **Kaggle 2 x T4 acceptance passed** (installer 32/32, static 79/79, engine 44/44, parallel 23/23, server 21/21, summary 15/15). Its findings were fixed first: a raising Flash placeholder in vLLM's unconditional kernel warm-up (now a no-op), unbounded structured-output test schemas (bounded; truncation now explained), stage resilience, a runtime fingerprint in every stage.
-* **One-line install:** `pip install stokastisk --extra-index-url https://ai-biruni.github.io/stokastisk/simple/` - a static PEP 503 index (GitHub Pages) whose link points at the wheel on the Hugging Face CDN with its SHA256. The wheel pins all 19 locked packages exactly, so pip's resolver can neither float a transitive package nor upgrade a protected Kaggle package.
+* **One-line install:** `pip install stokastisk --extra-index-url https://stokastisk-ai.github.io/stokastisk/simple/` - a static PEP 503 index (GitHub Pages) whose link points at the wheel on the Hugging Face CDN with its SHA256. The wheel pins all 19 locked packages exactly, so pip's resolver can neither float a transitive package nor upgrade a protected Kaggle package.
 * **Lean distribution:** only the wheel (Hugging Face) and the source (GitHub); the acceptance bundle ZIP is built locally (`scripts/release/assemble_build3_release.py`), not published.
 
 ## 2026-11-13 — build tag 3 (the only distribution; GPU stages: verification pending)

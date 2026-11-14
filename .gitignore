@@ -58,3 +58,7 @@ inputs/
 
 # executed Kaggle notebooks and their outputs (local analysis only)
 kaggle-notebooks-executed/
+
+# local Kaggle execution outputs and downloaded build inputs (never publish)
+kaggle-notebooks-executed/
+inputs/

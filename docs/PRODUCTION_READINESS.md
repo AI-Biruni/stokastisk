@@ -1,6 +1,6 @@
 # Production readiness - Stokastisk 0.1.0
 
-**Verdict: production-ready for Kaggle 2 x Tesla T4 (SM75, Python 3.13).** All Kaggle GPU stages passed on 2026-11-13 (installer 32/32, static 79/79, engine 44/44, parallel 23/23, server 21/21, summary 15/15). One item is open and stated plainly: the one-line `pip install` has been verified by resolver simulation and by byte-identity with the Kaggle-tested wheel, but its first run on Kaggle (notebook 16) has not happened yet.
+**Verdict: production-ready for Kaggle 2 x Tesla T4 (SM75, Python 3.13).** All Kaggle GPU stages passed on 2026-11-13 (installer 32/32, static 79/79, engine 44/44, parallel 23/23, server 21/21, summary 15/15). The published one-line `pip install` itself was then run on Kaggle (notebooks 16, 18, 19, 2026-11-13/14): quickstart; Qwen2.5-0.5B TP=1; Qwen2.5-3B TP=2 and PP=2; Qwen2.5-Coder-7B-Instruct TP=2 and PP=2 - all completed with `TRITON_ATTN`, and both GPUs were fully released after every engine.
 
 | Gate | State |
 |---|---|
@@ -16,11 +16,11 @@
 | FP16 generate / chat / complete, `TRITON_ATTN`, determinism, timeouts, serialised calls, cleanup | Kaggle-tested |
 | Structured output (xgrammar 0.2.3 pinned, schema-validated, no fallback) | Kaggle-tested |
 | OpenAI-compatible server, streaming, metrics, restart, startup-failure report | Kaggle-tested |
-| TP=2, ReplicaPool | Kaggle-tested (slower than TP=1 for models that fit one T4) |
-| PP=2 | Kaggle-tested, **Experimental** |
+| TP=2, ReplicaPool | Kaggle-tested (slower than TP=1 for models that fit one T4); TP=2 also with Qwen2.5-3B and Qwen2.5-Coder-7B |
+| PP=2 | Kaggle-tested (also Qwen2.5-3B and Qwen2.5-Coder-7B), **Experimental** |
 | `ReplicaPool` worker-failure recovery | CPU-tested with fake workers only |
 | Flash-free tree | Kaggle-tested (no Flash backend or library in any process) |
-| One-line `pip install` | resolver-simulated; first Kaggle run pending |
+| One-line `pip install` | Kaggle-tested (notebooks 16, 18, 19) |
 | `models` extra (compressed-tensors, depyf, setproctitle) | Implemented, not exercised |
 | Observability (OpenTelemetry), Mistral-family models, bfloat16, FP8/FP4, L4/SM89, direct `vllm.LLM`/`vllm serve` | **Unsupported** |
 
@@ -29,5 +29,5 @@
 2. xgrammar 0.2.3 is older than the 0.2.5.post1 vLLM was developed against (inside vLLM's declared range; JSON-schema constrained decoding Kaggle-tested). A grammar cannot make a model stop: bound open-ended schema fields.
 3. Offline generation cannot be cancelled: `timeout=` raises, the request runs on and later calls wait for it.
 4. `ReplicaPool` workers are non-daemon; a hard-killed parent leaves them (Kaggle ends the session anyway).
-5. Models other than Qwen2.5-0.5B-Instruct, LoRA, multimodal, CUDA graphs, speculative decoding are unverified.
+5. Kaggle-exercised models are Qwen2.5-0.5B/3B-Instruct and Qwen2.5-Coder-7B-Instruct (FP16, `max_model_len` 2048); `check_model()` without `architectures=` returns `UNKNOWN_REQUIRES_EVIDENCE` for a model it cannot inspect offline, and its evidence note still names only the 0.5B/1.5B runs. Other models, LoRA, multimodal, CUDA graphs, speculative decoding are unverified.
 6. `--extra-index-url` also searches PyPI; the name `stokastisk` is unregistered there today.

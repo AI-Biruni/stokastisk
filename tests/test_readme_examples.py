@@ -15,10 +15,10 @@ class ReadmeExamples(unittest.TestCase):
             for b in python_blocks(d.read_text()):
                 ast.parse(b.split("\n", 1)[1] if b.startswith("%%") else b)       # a notebook cell magic (%%writefile) is not Python; the rest of the cell must be
 
-    def test_documents_state_the_locked_version_and_the_unverified_gpu_status(self):
+    def test_documents_state_the_locked_version_and_the_kaggle_status(self):
         for d in (ROOT / "README.md", ROOT / "RELEASE.md", ROOT / "docs/HUB_README.md"):
             t = d.read_text()
-            self.assertIn("0.1.0", t); self.assertRegex(t, r"[Vv]erification pending|pending", d.name)
+            self.assertIn("0.1.0", t); self.assertIn("Kaggle", t, d.name)
 
     def test_no_document_references_removed_files(self):
         gone = ("fetch_release.py", "02_install.py", "docs/VLLM_T4_COVERAGE.md", "docs/KAGGLE_T4_VERIFICATION.md", "STOKASTISK_0.1.0_FINAL_RELEASE_REPORT", "notebooks-executed-with-output", "dist-rc")

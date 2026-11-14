@@ -1,10 +1,16 @@
 # Kaggle acceptance (maintainers)
 
-Two notebooks, two purposes:
-* **Notebook 16 - quickstart** (`16_stokastisk_quickstart.ipynb`): what an end user does - `pip install stokastisk --extra-index-url ...`, then a short run. This is the first-run check of the published one-line install.
-* **Notebook 15 - acceptance** (`15_stokastisk_candidate_sdk_integration.ipynb`): the full GPU test suite against a locally built bundle.
+## Verification record (Kaggle 2 x Tesla T4, Python 3.13.16, PyTorch 2.11.0+cu130, Triton 3.6.0)
+| Notebook | Date | What ran | Result |
+|---|---|---|---|
+| 15 - acceptance (maintainers) | 2026-11-13 | full GPU suite on a locally built bundle | installer 32/32, static 79/79, engine 44/44, parallel 23/23, server 21/21, summary 15/15 |
+| 16 - quickstart | 2026-11-13 | `pip install` from the published index + `demo.py` | `TRITON_ATTN`; completion, chat, structured JSON; clean shutdown |
+| 18 - Qwen2.5, plain cells | 2026-11-14 | 0.5B-Instruct TP=1; 3B-Instruct TP=2; 3B-Instruct PP=2 | all generated; `TRITON_ATTN`; GPUs released (14.46 of 14.56 GiB free) |
+| 19 - Qwen2.5-Coder-7B-Instruct | 2026-11-14 | original FP16 checkpoint, TP=2 then PP=2 | both generated; `TRITON_ATTN`; GPUs released |
 
-## Running notebook 15
+Notebooks 18 and 19 (in `notebooks/`, outputs stripped) are the end-user pattern: one `pip install` cell, then ordinary cells. They are not throughput benchmarks; on two PCIe-connected T4s TP=1 is fastest for any model that fits one card.
+
+## Running notebook 15 (maintainers only; the notebook is regenerated, not stored)
 1. `python3.13 scripts/release/assemble_build3_release.py` builds the wheel and `dist/wheel-build3/stokastisk-0.1.0-build3-kaggle-t4-sm75-kaggle-input.zip` and regenerates the notebook pinned to the wheel, ZIP and `SHA256SUMS` hashes.
 2. Upload the ZIP **unchanged** as a Kaggle Dataset and attach it (Kaggle extracts it). Import the notebook; *GPU T4 x 2*, *Internet ON*; *Run All*.
 3. Cell 1 finds and verifies the attached bundle (no silent download; a stale or different bundle is refused). The notebook prints a per-stage table and fails unless every stage is `PASS`; `/kaggle/working/15-stokastisk-build3-acceptance.zip` is written even on failure.

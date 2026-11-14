@@ -3,7 +3,7 @@
 **A Python 3.13 SDK for Kaggle's 2 × Tesla T4 (SM75) with a built‑in vLLM 0.25.1, Triton attention (`TRITON_ATTN`) and CUDA 13.0 `sm_75` binaries — installed with one line.**
 
 ```bash
-pip install stokastisk --extra-index-url https://ai-biruni.github.io/stokastisk/simple/
+pip install stokastisk --extra-index-url https://stokastisk-ai.github.io/stokastisk/simple/
 ```
 
 That downloads the wheel (SDK + vLLM 0.25.1 + CUDA binaries, 38 MB) from the Hugging Face CDN, verifies its SHA256, and installs 19 small pinned dependencies next to Kaggle's own PyTorch 2.11.0+cu130 / Triton 3.6.0 — which it never touches. No dataset upload, no manual wheels.
@@ -18,7 +18,7 @@ That downloads the wheel (SDK + vLLM 0.25.1 + CUDA binaries, 38 MB) from the Hug
 ## User guide (Kaggle)
 **1. Notebook settings:** Accelerator **GPU T4 × 2**, **Internet ON**, a Python 3.13 image.
 
-**2. Install** (one cell): `!pip install stokastisk --extra-index-url https://ai-biruni.github.io/stokastisk/simple/`
+**2. Install** (one cell): `!pip install stokastisk --extra-index-url https://stokastisk-ai.github.io/stokastisk/simple/`
 
 **3. Run.** vLLM starts its engine in a separate process (spawn), so put engine code in a script with a `__main__` guard:
 ```python
@@ -34,7 +34,7 @@ if __name__ == "__main__":
         print(llm.chat([{"role": "user", "content": "Say hello in five words."}])[0].outputs[0].text)
         print(llm.generate_structured(["Describe Paris."], schema, max_tokens=96))   # JSON that satisfies the schema, or an error
 ```
-then `!python demo.py`. A ready‑made notebook: [notebooks/kaggle-t4-sm75/notebooks/16_stokastisk_quickstart.ipynb](notebooks/kaggle-t4-sm75/notebooks/16_stokastisk_quickstart.ipynb).
+then `!python demo.py`. Ready‑made notebooks (plain cells, no script needed): [notebooks/18_stokastisk_qwen25_t4.ipynb](notebooks/18_stokastisk_qwen25_t4.ipynb) (Qwen2.5‑0.5B TP=1, Qwen2.5‑3B TP=2 and PP=2) and [notebooks/19_stokastisk_qwen25_coder_7b_dual_t4.ipynb](notebooks/19_stokastisk_qwen25_coder_7b_dual_t4.ipynb) (Qwen2.5‑Coder‑7B‑Instruct, TP=2 and PP=2).
 
 **4. OpenAI‑compatible server** (also from a script):
 ```python
@@ -68,14 +68,17 @@ bfloat16 · FlashAttention/FlashInfer/FlashMLA · native FP8/FP4 · L4/SM89 · *
 |---|---|
 | Kaggle 2 × T4 acceptance (notebook 15, 2026‑11‑13): installer 32/32 · static 79/79 · engine 44/44 · parallel 23/23 · server 21/21 · summary 15/15, one wheel SHA throughout | **Kaggle‑tested** (wheel `b31588c9…`) |
 | The published wheel (hash: [RELEASE.md](RELEASE.md)) | differs from that wheel **only** in `METADATA`/`RECORD` (two extra exact pins and this README as description); all 2,580 other members — every line of code and every CUDA binary — are byte‑identical |
-| The one‑line `pip install` | resolver simulated against Kaggle's real 937‑package inventory: installs exactly `stokastisk` + 19 pinned packages, changes **nothing** in the Kaggle image. First run on Kaggle itself: notebook 16 — **pending** |
+| The one‑line `pip install` on Kaggle (2026‑11‑13/14, notebooks 16, 18, 19; Python 3.13.16, PyTorch 2.11.0+cu130, Triton 3.6.0) | installed `stokastisk` + 19 pinned packages from the published index; `prohibited_report()['clean']` is `True`; **Kaggle‑tested** |
+| Notebook 16 — quickstart script | `TRITON_ATTN`; completion, chat and schema‑constrained JSON returned; engine shut down cleanly — **Kaggle‑tested** |
+| Notebook 18 — Qwen2.5 (FP16, eager, `max_model_len` 2048) | 0.5B‑Instruct TP=1; 3B‑Instruct TP=2 and PP=2: `TRITON_ATTN` verified, completion + chat returned, both T4s back to 14.46 GiB free after close — **Kaggle‑tested** |
+| Notebook 19 — Qwen2.5‑Coder‑7B‑Instruct (original unquantized checkpoint, FP16) | TP=2 and PP=2 each generated a Python answer; `TRITON_ATTN` verified; GPUs fully released after each engine — **Kaggle‑tested** (PP=2 stays experimental) |
 Details and limits: [docs/PRODUCTION_READINESS.md](docs/PRODUCTION_READINESS.md), [docs/KAGGLE_ACCEPTANCE.md](docs/KAGGLE_ACCEPTANCE.md).
 
 ## Public API
 `LLM` (`generate`, `chat`, `complete`, `generate_structured`, `close`) · `StokastiskConfig` · `ReplicaPool` · `serving.ServerProcess` · `discover_topology` · `recommend_parallelism` · `check_model`/`check_dtype`/`check_feature` · `validate_json_output` · `prohibited_report` · `LIMITS` · exceptions (`EngineClosedError`, `EngineTimeoutError`, `EngineCloseError`, `StructuredOutputError`, `ServerStartupError`, `ServerHTTPError`, `MissingDependencyError`, …).
 
 ## Repository
-`sdk/` the SDK · `scripts/release/` wheel builder, Flash‑free transform, lock resolver, index generator · `scripts/kaggle/` + `scripts/audit/` acceptance and audit tools · `requirements/` hash‑pinned locks · `notebooks/kaggle-t4-sm75/notebooks/` notebooks 15 (acceptance) and 16 (quickstart) · `docs/` · `tests/`. Build from source: [BUILD.md](BUILD.md).
+`sdk/` the SDK · `scripts/release/` wheel builder, Flash‑free transform, lock resolver, index generator · `scripts/kaggle/` + `scripts/audit/` acceptance and audit tools · `requirements/` hash‑pinned locks · `notebooks/` Kaggle user‑guide notebooks 18 and 19 · `docs/` · `tests/`. Build from source: [BUILD.md](BUILD.md).
 
 ## License
 Apache‑2.0. vLLM is Apache‑2.0 © the vLLM project.
