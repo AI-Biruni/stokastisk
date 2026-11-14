@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-14 - user guide, Hugging Face restored
+* **User guide** for Kaggle users covering every module of the SDK: `docs/guide/` (Markdown) and <https://stokastisk-ai.github.io/stokastisk/docs/> (HTML, built by `scripts/release/build_docs_site.py`).
+* The wheel file on Hugging Face (`wheels/stokastisk-0.1.0-3-...whl`, SHA256 `72039ca4...`) was restored after it had been deleted; the pip index and install line are unchanged.
+
 ## 2026-11-14 - move to the `stokastisk-ai` organisation (wheel unchanged)
 * Repository moved to <https://github.com/stokastisk-ai/stokastisk>; install line is now `pip install stokastisk --extra-index-url https://stokastisk-ai.github.io/stokastisk/simple/`. The wheel (`72039ca4...`) and the Hugging Face repository are unchanged.
 * Kaggle 2 x T4 runs of the published install: quickstart, Qwen2.5-0.5B (TP=1), Qwen2.5-3B (TP=2, PP=2), Qwen2.5-Coder-7B-Instruct (TP=2, PP=2) - all passed. User-guide notebooks 18 and 19 added; stored acceptance notebooks and local download files removed.

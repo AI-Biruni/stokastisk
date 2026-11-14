@@ -20,7 +20,7 @@ That downloads the wheel (SDK + vLLM 0.25.1 + CUDA binaries, 38 MB) from the Hug
 
 **2. Install** (one cell): `!pip install stokastisk --extra-index-url https://stokastisk-ai.github.io/stokastisk/simple/`
 
-**3. Run.** vLLM starts its engine in a separate process (spawn), so put engine code in a script with a `__main__` guard:
+**3. Run.** Engine code works in ordinary notebook cells (notebooks 18 and 19) and in scripts; in a **script** keep it under a `__main__` guard, because vLLM starts its engine in a spawned process:
 ```python
 %%writefile demo.py
 import stokastisk
@@ -74,11 +74,14 @@ bfloat16 · FlashAttention/FlashInfer/FlashMLA · native FP8/FP4 · L4/SM89 · *
 | Notebook 19 — Qwen2.5‑Coder‑7B‑Instruct (original unquantized checkpoint, FP16) | TP=2 and PP=2 each generated a Python answer; `TRITON_ATTN` verified; GPUs fully released after each engine — **Kaggle‑tested** (PP=2 stays experimental) |
 Details and limits: [docs/PRODUCTION_READINESS.md](docs/PRODUCTION_READINESS.md), [docs/KAGGLE_ACCEPTANCE.md](docs/KAGGLE_ACCEPTANCE.md).
 
+## Documentation
+Full user guide (Kaggle): **<https://stokastisk-ai.github.io/stokastisk/docs/>** — source in [docs/guide/](docs/guide/index.md): [getting started](docs/guide/getting-started.md) · [configuration](docs/guide/configuration.md) · [LLM engine](docs/guide/engine.md) · [structured output](docs/guide/structured-output.md) · [server](docs/guide/server.md) · [two GPUs](docs/guide/multi-gpu.md) · [diagnostics](docs/guide/diagnostics.md) · [errors](docs/guide/errors.md) · [advanced](docs/guide/advanced.md) · [troubleshooting](docs/guide/troubleshooting.md) · [API reference](docs/guide/api-reference.md).
+
 ## Public API
 `LLM` (`generate`, `chat`, `complete`, `generate_structured`, `close`) · `StokastiskConfig` · `ReplicaPool` · `serving.ServerProcess` · `discover_topology` · `recommend_parallelism` · `check_model`/`check_dtype`/`check_feature` · `validate_json_output` · `prohibited_report` · `LIMITS` · exceptions (`EngineClosedError`, `EngineTimeoutError`, `EngineCloseError`, `StructuredOutputError`, `ServerStartupError`, `ServerHTTPError`, `MissingDependencyError`, …).
 
 ## Repository
-`sdk/` the SDK · `scripts/release/` wheel builder, Flash‑free transform, lock resolver, index generator · `scripts/kaggle/` + `scripts/audit/` acceptance and audit tools · `requirements/` hash‑pinned locks · `notebooks/` Kaggle user‑guide notebooks 18 and 19 · `docs/` · `tests/`. Build from source: [BUILD.md](BUILD.md).
+`sdk/` the SDK · `scripts/release/` wheel builder, Flash‑free transform, lock resolver, index generator · `scripts/kaggle/` + `scripts/audit/` acceptance and audit tools · `requirements/` hash‑pinned locks · `notebooks/` Kaggle user‑guide notebooks 18 and 19 · `docs/guide/` user guide (built into the GitHub Pages site by `scripts/release/build_docs_site.py`) · `docs/` maintainer notes · `tests/`. Build from source: [BUILD.md](BUILD.md).
 
 ## License
 Apache‑2.0. vLLM is Apache‑2.0 © the vLLM project.

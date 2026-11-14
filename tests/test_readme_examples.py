@@ -29,12 +29,21 @@ class ReadmeExamples(unittest.TestCase):
                 self.assertNotIn(g, d.read_text(), f"{d.name} mentions {g}")
 
     def test_every_relative_link_resolves(self):
-        for d in DOCS + list((ROOT / "docs").glob("*.md")):
+        for d in DOCS + list((ROOT / "docs").glob("*.md")) + list((ROOT / "docs/guide").glob("*.md")):
             for target in re.findall(r"\]\(([^)#\s]+)\)", d.read_text()):
                 if target.startswith(("http", "mailto")):
                     continue
                 base = ROOT if d.parent == ROOT else d.parent
                 self.assertTrue((base / target).exists() or (ROOT / target).exists(), f"{d.name}: broken link {target}")
+
+
+    def test_guide_pages_exist_and_api_reference_is_current(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("build_docs_site", ROOT / "scripts/release/build_docs_site.py")
+        m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+        for name in m.ORDER:
+            self.assertTrue((ROOT / "docs/guide" / f"{name}.md").exists(), name)
+        self.assertEqual(m.api_reference(), (ROOT / "docs/guide/api-reference.md").read_text(), "run scripts/release/build_docs_site.py to regenerate the API reference")
 
 
 if __name__ == "__main__":
