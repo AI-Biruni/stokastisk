@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-14 - build 3 withdrawn; repository cleaned
+* **Build 3 withdrawn** by the owner: it is no longer an install target and has no rollback instructions; build 4 is the only published build (`RELEASE.json`, key `withdrawn_builds` keeps its identity). The Kaggle runs were made on build 3 and their evidence stays archived in `evidence/kaggle/`; build 4's executed code paths are byte-identical to it.
+* **Removed** the bundle-based Kaggle tooling that only served build 3: `scripts/kaggle/` (installer, bundle verifier, notebook-15 stage scripts), `scripts/release/assemble_build3_release.py`, `scripts/release/make_notebook15_build3.py` and their tests (`test_bundle_discovery`, `test_installer_integrated`, `test_stage_scripts`, `test_stage_status`, `test_inventory`). They remain in git history. `build_wheel_release.py` no longer needs a reference wheel; the CPU CI no longer downloads build 3.
+
 ## 2026-11-14 - build 4: compatibility evidence corrected (wheel build tag 4)
 * **Why:** build 3's SDK still reported build-time evidence after the Kaggle runs: the OpenAI server, streaming, `/metrics` and structured output as "unknown / verification pending", chat generation as a failed build-2 run, offline generation as Qwen2.5-0.5B/1.5B only, every `Qwen2ForCausalLM` checkpoint as `SUPPORTED`, and the `stokastisk.serving` docstring as "not yet verified on Kaggle".
 * **What:** `stokastisk/compat.py` records the evidence from the notebook 15 acceptance (server 21/21, engine 44/44, parallel 23/23) and notebooks 16, 18, 19; new exact-model registry `MODEL_EVIDENCE` (Qwen2.5-0.5B-Instruct, Qwen2.5-3B-Instruct, Qwen2.5-Coder-7B-Instruct); `check_model()` separates `architecture_status` from `model_status`, adds `tested_modes`, `evidence`, `limitations`, `mode_status`, and still refuses Mistral-family models, bfloat16 and unsupported quantization; the `serving` docstring is corrected. The wheel description is now `README.wheel.md` (hash-free).

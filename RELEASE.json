@@ -8,19 +8,10 @@
    "size": 38057512,
    "sha256": "052156d71adc6ad9966901565f86dbded9ff41c620c782db4ff377a1a2b4f62e",
    "url": "https://huggingface.co/waqasm86/stokastisk/resolve/main/wheels/stokastisk-0.1.0-4-cp313-cp313-linux_x86_64.whl",
-   "role": "current",
+   "role": "current (only published build)",
    "changes_vs_build_3": "SDK compatibility-evidence correction only (stokastisk/compat.py, docstring of stokastisk/serving.py) plus METADATA/WHEEL/RECORD; vLLM tree, native binaries and dependency pins byte-identical",
    "executed_on_kaggle": false,
-   "kaggle_evidence": "inherited from build 3 for the unchanged implementation (see evidence/kaggle/evidence-manifest.json); not itself run on Kaggle"
-  },
-  "3": {
-   "filename": "stokastisk-0.1.0-3-cp313-cp313-linux_x86_64.whl",
-   "size": 38056944,
-   "sha256": "72039ca4044e48fdf5edca8051dcb48b42fe61a69e07715fa8803e029581fe12",
-   "url": "https://huggingface.co/waqasm86/stokastisk/resolve/main/wheels/stokastisk-0.1.0-3-cp313-cp313-linux_x86_64.whl",
-   "role": "rollback",
-   "executed_on_kaggle": true,
-   "kaggle_evidence": "notebook 15 acceptance on b31588c9... (differs from this wheel only in METADATA/RECORD); notebooks 16, 18, 19 ran the published install"
+   "kaggle_evidence": "inherited from the withdrawn build 3 for the unchanged implementation (see evidence/kaggle/evidence-manifest.json); not itself run on Kaggle"
   }
  },
  "base_vllm_wheel": {
@@ -29,5 +20,13 @@
   "sha256": "cc3bcafb6516791990ca302073ae153a08465d3df1e460d666e3ec09b4e98f5e",
   "source": "https://github.com/stokastisk-ai/stokastisk/releases/tag/v0.1.0"
  },
- "pip_index": "https://stokastisk-ai.github.io/stokastisk/simple/"
+ "pip_index": "https://stokastisk-ai.github.io/stokastisk/simple/",
+ "withdrawn_builds": {
+  "3": {
+   "filename": "stokastisk-0.1.0-3-cp313-cp313-linux_x86_64.whl",
+   "sha256": "72039ca4044e48fdf5edca8051dcb48b42fe61a69e07715fa8803e029581fe12",
+   "status": "withdrawn by the owner; no longer a supported or documented install target",
+   "note": "the notebook 15 acceptance and notebooks 16, 18, 19 ran on this build; that evidence is kept in evidence/kaggle/"
+  }
+ }
 }

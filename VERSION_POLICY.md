@@ -20,7 +20,7 @@ The single authoritative declaration is the file [`VERSION`](VERSION) (content `
 
 ## Project version vs. wheel build tag
 
-The **project version** is `0.1.0` and never changes. The PEP 427 **build tag** in the wheel file name (`stokastisk-0.1.0-<build>-cp313-cp313-linux_x86_64.whl`) numbers rebuilds of the same project version: build 1 and 2 were superseded candidates, build 3 is the Kaggle-accepted wheel, build 4 corrects the compatibility reporting. A new build tag is created only when shipped SDK content must change; it is never derived from the version, never overwrites an earlier wheel (older builds stay available for rollback), and its identity is recorded in `RELEASE.json`. The Git tag and GitHub release stay `v0.1.0`; a build-specific release, if one is ever made, uses a build identifier such as `integrated-0.1.0-build4`, not a new semantic version.
+The **project version** is `0.1.0` and never changes. The PEP 427 **build tag** in the wheel file name (`stokastisk-0.1.0-<build>-cp313-cp313-linux_x86_64.whl`) numbers rebuilds of the same project version: build 1 and 2 were superseded candidates, build 3 is the Kaggle-accepted wheel, build 4 corrects the compatibility reporting. A new build tag is created only when shipped SDK content must change; it is never derived from the version, never overwrites an earlier wheel (an older build may later be withdrawn, as build 3 was), and its identity is recorded in `RELEASE.json`. The Git tag and GitHub release stay `v0.1.0`; a build-specific release, if one is ever made, uses a build identifier such as `integrated-0.1.0-build4`, not a new semantic version.
 
 ## Permanent lock
 
@@ -34,9 +34,8 @@ Only a direct, explicit instruction from the project owner to change the project
 
 * No release script, CI job or packaging tool may increment, derive or guess a project version.
 * Version derivation from Git tags (setuptools-scm, versioneer, `git describe`, bump-version tools, semantic-release) is forbidden.
-* `scripts/release/assemble_build3_release.py` asserts that `VERSION` says `0.1.0` before building, names every artifact `0.1.0`, and verifies the built wheel (`scripts/audit/verify_integrated_wheel.py`).
+* `scripts/release/build_integrated_wheel.py` asserts that `VERSION` says `0.1.0` before building and names every artifact `0.1.0`; `scripts/audit/verify_integrated_wheel.py` verifies the built wheel.
 * `scripts/release/verify_project_version.py` carries its own `LOCKED_VERSION` constant, so editing only `VERSION` makes it fail. CI (`.github/workflows/version-lock.yml`) and `tests/test_version_policy.py` run it on every push and pull request.
-* The Kaggle installer (`scripts/kaggle/02_install_integrated.py`) installs the Stokastisk wheel with `--force-reinstall --no-deps --no-index`, so an already-installed distribution with a different version is replaced, and it fails unless the installed version is exactly `0.1.0`.
 
 ## Project version vs. dependency versions
 
@@ -48,6 +47,6 @@ The project version identifies Stokastisk itself. These are **platform and depen
 
 Only after the owner explicitly instructs a project-version change, in one reviewed commit:
 
-1. Update `VERSION`, `sdk/stokastisk/_version.py`, and `LOCKED_VERSION` / `LOCKED` in `scripts/release/verify_project_version.py`, `scripts/release/assemble_build3_release.py`, `scripts/kaggle/02_install_integrated.py`, and `tests/test_version_policy.py`.
+1. Update `VERSION`, `sdk/stokastisk/_version.py`, and `LOCKED_VERSION` / `LOCKED` in `scripts/release/verify_project_version.py` and `tests/test_version_policy.py`.
 2. Update the release name and directory, the user-guide notebooks in `notebooks/`, README, RELEASE, INSTALL, `docs/` (including `docs/HUB_README.md`, the Hugging Face model card) and the package index (`scripts/release/make_pip_index.py`).
 3. Run the verifier and the full test suite, rebuild the release, and record the owner's instruction in the commit message.

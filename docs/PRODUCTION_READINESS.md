@@ -6,7 +6,7 @@
 |---|---|
 | Project version | **0.1.0** (locked; `v0.1.0` tag and GitHub release unchanged) |
 | Current wheel | build tag **4** — `stokastisk-0.1.0-4-cp313-cp313-linux_x86_64.whl`, 38,057,512 bytes, SHA256 `052156d71adc6ad9966901565f86dbded9ff41c620c782db4ff377a1a2b4f62e` |
-| Rollback wheel | build tag 3, 38,056,944 bytes, SHA256 `72039ca4044e48fdf5edca8051dcb48b42fe61a69e07715fa8803e029581fe12` (kept on Hugging Face) |
+| Earlier build | build tag 3 (SHA256 `72039ca4044e48fdf5edca8051dcb48b42fe61a69e07715fa8803e029581fe12`) was the build the Kaggle runs used; it has been **withdrawn** and is not an install target |
 | Bundled vLLM | 0.25.1, from the byte-pinned base wheel SHA256 `cc3bcafb6516791990ca302073ae153a08465d3df1e460d666e3ec09b4e98f5e` (natives compiled once for `sm_75`, CUDA 13.0) |
 | Runtime target | Python 3.13 · CUDA 13.0 · PyTorch 2.11.0+cu130 · Triton 3.6.0 · 2 × Tesla T4 (SM75) · FP16 · `TRITON_ATTN` only |
 | Machine-readable identities | [RELEASE.json](../RELEASE.json) |
@@ -16,7 +16,7 @@
 ## Evidence — three separate classes
 1. **Build 3, Kaggle acceptance (notebook 15, 2026-11-13).** installer 32/32, static 79/79, engine 44/44, parallel 23/23, server 21/21, summary 15/15, run on the acceptance wheel `b31588c9b5f0d5ae103903283c7cfc25a9d7ef6c00112c3d46bb7b9ee84b023a` with Qwen2.5-0.5B-Instruct. Raw reports and the executed notebook: `evidence/kaggle/2026-11-13-notebook-15-build3-acceptance/` (the two original ZIP archives are not in the repository; their SHA256 values are in `evidence/kaggle/evidence-manifest.json`). The published build-3 wheel differs from the acceptance wheel only in `METADATA`/`RECORD` (2,580 of 2,582 members byte-identical).
 2. **Build 3, end-user notebooks 16, 18, 19 (2026-11-13/14).** The published install, then inference. Python 3.13.16, PyTorch 2.11.0+cu130, CUDA 13.0, Triton 3.6.0, two Tesla T4 (SM75). Executed notebooks with outputs: `evidence/kaggle/`.
-3. **Build 4, CPU only.** Independent wheel audit (21 checks), member-by-member delta against build 3, reproducible rebuild, unit and documentation-consistency tests. **Build 4 was not separately run on Kaggle.**
+3. **Build 4, CPU only.** Independent wheel audit (21 checks), member-by-member delta against build 3 (when it was still published), reproducible rebuild, unit and documentation-consistency tests. **Build 4 was not separately run on Kaggle.**
 
 ### Exact verified models (what `stokastisk.check_model()` reports)
 | Model id | Dtype | Modes run | Max `max_model_len` | Evidence |

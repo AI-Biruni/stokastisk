@@ -14,10 +14,7 @@ Raw artifacts are in `evidence/kaggle/` (executed notebooks with outputs, the no
 
 Notebooks 18 and 19 (in `notebooks/`, outputs stripped) are the end-user pattern: one `pip install` cell, then ordinary cells. They are not throughput benchmarks; on two PCIe-connected T4s TP=1 is fastest for any model that fits one card.
 
-## Running notebook 15 (maintainers only; the notebook is regenerated, not stored)
-1. `python3.13 scripts/release/assemble_build3_release.py` builds the wheel and `dist/wheel-build3/stokastisk-0.1.0-build3-kaggle-t4-sm75-kaggle-input.zip` and regenerates the notebook pinned to the wheel, ZIP and `SHA256SUMS` hashes.
-2. Upload the ZIP **unchanged** as a Kaggle Dataset and attach it (Kaggle extracts it). Import the notebook; *GPU T4 x 2*, *Internet ON*; *Run All*.
-3. Cell 1 finds and verifies the attached bundle (no silent download; a stale or different bundle is refused). The notebook prints a per-stage table and fails unless every stage is `PASS`; `/kaggle/working/15-stokastisk-build3-acceptance.zip` is written even on failure.
+## What the notebook 15 stages proved (build 3; the harness is no longer part of the repository, its reports are in `evidence/kaggle/`)
 
 | Stage | Proves |
 |---|---|

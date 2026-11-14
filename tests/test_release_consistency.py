@@ -7,7 +7,8 @@ import make_pip_index as mpi  # noqa: E402
 
 REL = json.loads((ROOT / "RELEASE.json").read_text())
 CUR = REL["builds"][str(REL["current_build"])]
-OLD = REL["builds"]["3"]
+WITHDRAWN = REL["withdrawn_builds"]["3"]
+BUILD3_SHA = "72039ca4044e48fdf5edca8051dcb48b42fe61a69e07715fa8803e029581fe12"     # historical: the build the Kaggle evidence was produced on
 PIN = f'python -m pip install --index-url https://pypi.org/simple "stokastisk @ {CUR["url"]}#sha256={CUR["sha256"]}"'
 DOCS = ["README.md", "INSTALL.md", "docs/HUB_README.md", "docs/guide/getting-started.md"]
 
@@ -15,8 +16,8 @@ DOCS = ["README.md", "INSTALL.md", "docs/HUB_README.md", "docs/guide/getting-sta
 class ReleaseConsistency(unittest.TestCase):
     def test_project_version_and_build_tags(self):
         self.assertEqual(REL["project_version"], "0.1.0"); self.assertEqual((ROOT / "VERSION").read_text(), "0.1.0\n")
-        self.assertRegex(CUR["filename"], r"^stokastisk-0\.1\.0-4-cp313-cp313-linux_x86_64\.whl$"); self.assertRegex(OLD["filename"], r"^stokastisk-0\.1\.0-3-cp313")
-        self.assertEqual(OLD["sha256"], "72039ca4044e48fdf5edca8051dcb48b42fe61a69e07715fa8803e029581fe12")        # build 3 is never replaced
+        self.assertRegex(CUR["filename"], r"^stokastisk-0\.1\.0-4-cp313-cp313-linux_x86_64\.whl$"); self.assertEqual(list(REL["builds"]), ["4"])
+        self.assertEqual(WITHDRAWN["sha256"], BUILD3_SHA); self.assertIn("withdrawn", WITHDRAWN["status"])
         self.assertEqual(REL["base_vllm_wheel"]["sha256"], "cc3bcafb6516791990ca302073ae153a08465d3df1e460d666e3ec09b4e98f5e")
         self.assertTrue(CUR["url"].endswith("/" + CUR["filename"])); self.assertEqual(re.fullmatch(r"[0-9a-f]{64}", CUR["sha256"]) is not None, True)
 
@@ -32,26 +33,29 @@ class ReleaseConsistency(unittest.TestCase):
             for m in re.finditer(r"^(?:!)?(?:python -m )?pip install stokastisk --extra-index-url", t, re.M):
                 self.fail(f"{d} uses --extra-index-url as its install command")
 
+    def test_no_document_offers_the_withdrawn_build_as_an_install_or_rollback(self):
+        for d in ("README.md", "INSTALL.md", "RELEASE.md", "docs/HUB_README.md", "docs/guide/getting-started.md", "docs/guide/troubleshooting.md"):
+            t = (ROOT / d).read_text()
+            self.assertNotIn("stokastisk-0.1.0-3-cp313-cp313-linux_x86_64.whl#sha256", t, d); self.assertNotRegex(t, r"(?i)roll back to build 3|rollback wheel|stays (on hugging face|available) for rollback", d)
+
     def test_hash_and_size_tables_agree(self):
         for d in ("RELEASE.md", "docs/HUB_README.md", "docs/PRODUCTION_READINESS.md", "INSTALL.md"):
             t = (ROOT / d).read_text()
-            self.assertIn(CUR["sha256"], t, d); self.assertIn(OLD["sha256"], t, d)
+            self.assertIn(CUR["sha256"], t, d)
         for d in ("RELEASE.md", "docs/HUB_README.md", "docs/PRODUCTION_READINESS.md"):
-            t = (ROOT / d).read_text()
-            for w in (CUR, OLD):
-                self.assertIn(f"{w['size']:,}", t, d)
+            self.assertIn(f"{CUR['size']:,}", (ROOT / d).read_text(), d)
         self.assertIn(REL["pip_index"], (ROOT / "scripts/release/make_pip_index.py").read_text())
         self.assertEqual(mpi.INDEX, REL["pip_index"]); self.assertEqual(mpi.HF + CUR["filename"], CUR["url"])
 
     def test_build4_is_never_called_kaggle_executed(self):
-        self.assertFalse(CUR["executed_on_kaggle"]); self.assertTrue(OLD["executed_on_kaggle"])
+        self.assertFalse(CUR["executed_on_kaggle"])
         for d in ("README.md", "RELEASE.md", "docs/PRODUCTION_READINESS.md", "docs/HUB_README.md"):
             t = (ROOT / d).read_text()
             self.assertRegex(t, r"(?i)not (itself )?(separately )?(been )?(run|executed)( on Kaggle)?|not run", d)
 
     def test_wheel_description_has_no_hash(self):
         t = (ROOT / "README.wheel.md").read_text()
-        self.assertNotIn(CUR["sha256"], t); self.assertNotIn(OLD["sha256"], t); self.assertIn('readme = "README.wheel.md"', (ROOT / "pyproject.toml").read_text())
+        self.assertNotIn(CUR["sha256"], t); self.assertNotIn(BUILD3_SHA, t); self.assertIn('readme = "README.wheel.md"', (ROOT / "pyproject.toml").read_text())
 
 
 if __name__ == "__main__":
@@ -72,7 +76,7 @@ class ArchivedBuildReport(unittest.TestCase):
         self.assertTrue(v["inference_code_equivalent_to_build3"]["proven_by_delta_audit"])
         self.assertEqual((v["cpu_verification"]["wheel_audit"], v["cpu_verification"]["delta_audit"], v["cpu_verification"]["reproducible_build"]), ("PASS", "PASS", True))
         self.assertEqual(m["publication"]["huggingface_wheel"]["remote_redownloaded_sha256"], CUR["sha256"])
-        self.assertEqual(m["audits"]["delta_vs_reference"]["reference"]["sha256"], OLD["sha256"])
+        self.assertEqual(m["audits"]["delta_vs_reference"]["reference"]["sha256"], BUILD3_SHA)          # archived audit of the time, against the then-published build 3
 
     def test_delta_report_shows_only_the_approved_changes(self):
         d = json.loads((self.D / "reports/delta-vs-reference.json").read_text())

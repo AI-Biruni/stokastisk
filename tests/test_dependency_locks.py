@@ -1,7 +1,7 @@
 """Dependency-lock completeness and the root causes found in the failed build-2 Kaggle run. CPU only; the closure files are the audit trail of scripts/release/lock_closure.py."""
 import ast, importlib.util, json, pathlib, re, sys, unittest, zipfile
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "sdk")); sys.path.insert(0, str(ROOT / "scripts/kaggle")); sys.path.insert(0, str(ROOT / "scripts/audit")); sys.path.insert(0, str(ROOT / "scripts/release"))
+sys.path.insert(0, str(ROOT / "sdk")); sys.path.insert(0, str(ROOT / "scripts/audit")); sys.path.insert(0, str(ROOT / "scripts/release"))
 from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name as cn
 from stokastisk import dependencies as dep

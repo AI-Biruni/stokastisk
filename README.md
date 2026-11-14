@@ -10,7 +10,7 @@ That downloads the wheel (SDK + vLLM 0.25.1 + CUDA binaries, 38 MB) from the Hug
 
 | | |
 |---|---|
-| Project version | **0.1.0** (locked — [VERSION_POLICY.md](VERSION_POLICY.md)); current wheel build tag **4** (build 3 stays on Hugging Face for rollback — [INSTALL.md](INSTALL.md)) |
+| Project version | **0.1.0** (locked — [VERSION_POLICY.md](VERSION_POLICY.md)); current wheel build tag **4** (build 3, on which the Kaggle runs were made, is withdrawn — [RELEASE.md](RELEASE.md)) |
 | Runtime | Python 3.13 · vLLM 0.25.1 · PyTorch 2.11.0+cu130 · Triton 3.6.0 · CUDA 13.0 · 2 × Tesla T4 |
 | Attention | `TRITON_ATTN` only — no FlashAttention / FlashInfer / FlashMLA code is shipped (requesting one raises `ProhibitedBackendError`) |
 | Structured output | xgrammar 0.2.3, pinned (never `auto`); every output validated against its schema |
@@ -81,7 +81,7 @@ Full user guide (Kaggle): **<https://stokastisk-ai.github.io/stokastisk/docs/>**
 `LLM` (`generate`, `chat`, `complete`, `generate_structured`, `close`) · `StokastiskConfig` · `ReplicaPool` · `serving.ServerProcess` · `discover_topology` · `recommend_parallelism` · `check_model`/`check_dtype`/`check_feature` · `validate_json_output` · `prohibited_report` · `LIMITS` · exceptions (`EngineClosedError`, `EngineTimeoutError`, `EngineCloseError`, `StructuredOutputError`, `ServerStartupError`, `ServerHTTPError`, `MissingDependencyError`, …).
 
 ## Repository
-`sdk/` the SDK · `scripts/release/` wheel builder, Flash‑free transform, lock resolver, index generator · `scripts/kaggle/` + `scripts/audit/` acceptance and audit tools · `requirements/` hash‑pinned locks · `notebooks/` Kaggle user‑guide notebooks 18 and 19 · `evidence/kaggle/` archived Kaggle reports and executed notebooks · `docs/guide/` user guide (built into the GitHub Pages site by `scripts/release/build_docs_site.py`) · `docs/` maintainer notes · `tests/`. Build from source: [BUILD.md](BUILD.md).
+`sdk/` the SDK · `scripts/release/` wheel builder, Flash‑free transform, lock resolver, index generator · `scripts/audit/` wheel audit, delta and evidence tools · `requirements/` hash‑pinned locks · `notebooks/` Kaggle user‑guide notebooks 18 and 19 · `evidence/kaggle/` archived Kaggle reports and executed notebooks · `docs/guide/` user guide (built into the GitHub Pages site by `scripts/release/build_docs_site.py`) · `docs/` maintainer notes · `tests/`. Build from source: [BUILD.md](BUILD.md).
 
 ## License
 Apache‑2.0. vLLM is Apache‑2.0 © the vLLM project.

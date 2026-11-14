@@ -23,7 +23,7 @@ jobs:
       - name: Tests that need no torch, GPU or the large vLLM wheel
         run: |
           python -m pip install -r requirements/ci.txt
-          CUDA_VISIBLE_DEVICES= python -m pytest -q -p no:cacheprovider tests/test_version_policy.py tests/test_bundle_discovery.py tests/test_inventory.py tests/test_stage_status.py tests/test_installer_integrated.py tests/test_prohibited_policy.py tests/test_config_strict.py tests/test_readme_examples.py tests/test_compat_evidence.py tests/test_release_consistency.py
+          CUDA_VISIBLE_DEVICES= python -m pytest -q -p no:cacheprovider tests/test_version_policy.py tests/test_prohibited_policy.py tests/test_config_strict.py tests/test_readme_examples.py tests/test_compat_evidence.py tests/test_release_consistency.py
       - name: Wheel metadata must say the locked version
         run: |
           python -m build --wheel --no-isolation -o /tmp/w .

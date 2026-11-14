@@ -25,13 +25,12 @@ if __name__ == "__main__":
 ```
 then `!python demo.py` (in a script keep engine code under a `__main__` guard; plain notebook cells work too). Structured output, the OpenAI‑compatible server, tensor/pipeline parallelism and replicas: see the GitHub README user guide.
 
-## Files
+## File
 | File | Size | SHA256 | Role |
 |---|---|---|---|
 | `wheels/stokastisk-0.1.0-4-cp313-cp313-linux_x86_64.whl` | 38,057,512 B | `052156d71adc6ad9966901565f86dbded9ff41c620c782db4ff377a1a2b4f62e` | **current** (build 4) |
-| `wheels/stokastisk-0.1.0-3-cp313-cp313-linux_x86_64.whl` | 38,056,944 B | `72039ca4044e48fdf5edca8051dcb48b42fe61a69e07715fa8803e029581fe12` | rollback (build 3) |
 
-Both files belong to project version 0.1.0 (locked); only the PEP 427 build tag differs. Rollback command: [INSTALL.md](https://github.com/stokastisk-ai/stokastisk/blob/main/INSTALL.md).
+The wheel belongs to project version 0.1.0 (locked); its PEP 427 build tag is 4. Build 3, on which the Kaggle runs below were made, has been withdrawn.
 
 ## Status — what was run where
 * **Build 3 on Kaggle 2 × T4:** notebook 15 acceptance (installer 32/32, static 79/79, engine 44/44, parallel 23/23, server 21/21, summary 15/15) on a wheel that differs from the published build‑3 file only in `METADATA`/`RECORD`; end‑user notebooks 16, 18, 19 ran the published install with Qwen2.5‑0.5B‑Instruct (TP=1), Qwen2.5‑3B‑Instruct (TP=2, PP=2) and Qwen2.5‑Coder‑7B‑Instruct (TP=2, PP=2), FP16, `TRITON_ATTN`.
