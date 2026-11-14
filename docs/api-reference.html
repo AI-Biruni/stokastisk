@@ -1,0 +1,1530 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>API reference · Stokastisk 0.1.0</title><link rel="stylesheet" href="style.css"></head><body><div class="wrap"><nav><h1>Stokastisk</h1><div class="v">0.1.0 · Kaggle 2 × T4 · Python 3.13</div><a class="" href="index.html">Overview</a><a class="" href="getting-started.html">1. Getting started</a><a class="" href="configuration.html">2. Configuration</a><a class="" href="engine.html">3. The LLM engine</a><a class="" href="structured-output.html">4. Structured output</a><a class="" href="server.html">5. OpenAI-compatible server</a><a class="" href="multi-gpu.html">6. Using both GPUs</a><a class="" href="diagnostics.html">7. Checks and diagnostics</a><a class="" href="errors.html">8. Errors</a><a class="" href="advanced.html">9. Advanced modules</a><a class="" href="troubleshooting.html">10. Troubleshooting</a><a class="cur" href="api-reference.html">API reference</a><div class="ext"><a href="https://github.com/stokastisk-ai/stokastisk">GitHub</a><a href="https://huggingface.co/waqasm86/stokastisk">Hugging Face</a><a href="../">Package index</a></div></nav><main><h1>API reference</h1>
+<p>Every Python module of the <code>stokastisk</code> package and its public names. Generated from the source by <code>scripts/release/build_docs_site.py</code>.</p>
+<p>Names exported at the top level (<code>import stokastisk</code>) are in <code>stokastisk.__all__</code>; submodule names are imported as shown, e.g. <code>from stokastisk.serving import ServerProcess</code>.</p>
+<h2><code>stokastisk</code></h2>
+<p>Stokastisk: dual-Tesla-T4 (SM75, CUDA 13.0) SDK around the bundled vLLM 0.25.1 engine.</p>
+<h2><code>stokastisk.benchmarks</code></h2>
+<p>Reproducible dual-GPU benchmarks (import lazily: they need vLLM / CUDA only when run).</p>
+<h2><code>stokastisk.benchmarks.baseline</code></h2>
+<p>Shared engine benchmark: identical workload for every strategy, ALL runs recorded (median/p95/min/max, never only the best).</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>class Workload</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  Workload.prompts(self)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>def measure(llm, workload: Workload, sampler_interval: float=0.5)</code></td>
+  <td>Time <code>workload</code> on an already-loaded engine. Warm-up runs are discarded; every measured repeat is kept.</td>
+</tr>
+<tr>
+  <td><code>def run_engine(config, model: str, workloads: 'Workload | list[Workload]', *, label: str | None=None, sampler_interval: float=0.5)</code></td>
+  <td>Load ONE in-process stokastisk.LLM and measure every workload on it. Call from a <code>__main__</code>-guarded script (vLLM spawns).</td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.benchmarks.communication</code></h2>
+<p>Transfer-size sweep: host-staged (torch / native C++) vs NCCL send/recv. NCCL runs inside a 2-rank torchrun job.</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>def bench_host_staged(src: int=0, dst: int=1, *, sizes=SIZES, iters: int=20, warmup: int=5, chunk_bytes: int=4 &lt;&lt; 20, n_buffers: int=2, native=None)</code></td>
+  <td>Verifies the payload (byte-exact) on every size, then times <code>iters</code> transfers. <code>native</code> = NativeHostStaged class to use C++ instead.</td>
+</tr>
+<tr>
+  <td><code>def bench_nccl(rank: int, *, sizes=SIZES, iters: int=20, warmup: int=5)</code></td>
+  <td>Inside an initialised 2-rank NCCL group. Each rank returns its own view; rank 1 (receiver) completion time is the transfer latency.</td>
+</tr>
+<tr>
+  <td><code>def compare(host_staged: dict, nccl: dict)</code></td>
+  <td>Per size: ratio of median latencies and which transport wins. Decision rule: host-staged is integrated nowhere unless it wins.</td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.benchmarks.gpu_balance</code></h2>
+<p>Compute / communication / idle accounting and imbalance for replica runs.</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>def from_replica_record(rec: dict[str, Any], workload: str)</code></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.benchmarks.pipeline_parallel</code></h2>
+<p>PP=2 (experimental). Stage-level compute/communication times are NOT exposed by vLLM's public API: they are reported as NOT_MEASURED</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>def config_for(**kw)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>def run(model: str, workloads, **kw)</code></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.benchmarks.replica_parallel</code></h2>
+<p>Independent TP=1 replicas vs one engine. Offline batch generation reports BATCH completion latency (individual request completion</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>def run(model: str, workloads, devices=(0, 1), **kw)</code></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.benchmarks.report</code></h2>
+<p>Combine benchmark records into one JSON + a markdown table. Missing strategies are listed as NOT_RUN, never omitted silently.</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>def comparison_table(records: dict[str, dict[str, Any]], workload: str)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>def relative_to(records: dict[str, dict[str, Any]], workload: str, base: str='tp1')</code></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.benchmarks.tensor_parallel</code></h2>
+<p>TP=1 vs TP=2 on an identical workload.</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>def config_for(tp: int, **kw)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>def run(model: str, workloads, tp: int, **kw)</code></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.communication</code></h2>
+<p>EXPERIMENTAL communication layer: host-staged transport, NCCL timing helpers, transport registry. Not used by the vLLM engine.</p>
+<h2><code>stokastisk.communication.cuda_transport</code></h2>
+<p>EXPERIMENTAL host-staged GPU-&gt;GPU transfer for platforms without CUDA peer access.</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>class HostStagedTransport</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  HostStagedTransport.<strong>init</strong>(self, src_device: int, dst_device: int, *, chunk_bytes: int=4 &lt;&lt; 20, n_buffers: int=2)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  HostStagedTransport.transfer(self, src_tensor, dst_tensor)</code></td>
+  <td>Copy <code>src_tensor</code> (on src device) into <code>dst_tensor</code> (on dst device); returns timing. Blocks until complete.</td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.communication.native</code></h2>
+<p>Optional ctypes loader for <code>native/host_staged_xfer.cpp</code> (C++ / CUDA Runtime). Built on demand with nvcc; absence is not an error.</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>def build_native(src: str | os.PathLike, out_dir: str | os.PathLike, arch: str='sm_75')</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>def load_native(path: str | os.PathLike | None=None)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>class NativeHostStaged</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  NativeHostStaged.<strong>init</strong>(self, src_device: int, dst_device: int, *, chunk_bytes: int=4 &lt;&lt; 20, n_buffers: int=2, lib=None)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  NativeHostStaged.transfer(self, src_tensor, dst_tensor)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  NativeHostStaged.close(self)</code></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.communication.nccl</code></h2>
+<p>NCCL timing helpers for a torchrun/<code>torch.distributed</code> process group (2 ranks). NCCL is the reference transport; it is never replaced.</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>def time_p2p(nbytes: int, rank: int, *, iters: int=20, warmup: int=5)</code></td>
+  <td>rank 0 sends <code>nbytes</code> to rank 1 (NCCL send/recv). Returns per-iteration seconds measured on this rank (barrier-aligned).</td>
+</tr>
+<tr>
+  <td><code>def time_allreduce(nbytes: int, *, iters: int=20, warmup: int=5)</code></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.communication.pinned_memory</code></h2>
+<p>A small ring of page-locked host buffers (cudaHostAlloc via PyTorch's pinned allocator).</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>class PinnedBufferRing</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  PinnedBufferRing.<strong>init</strong>(self, n_buffers: int, nbytes: int)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  PinnedBufferRing.host_bytes(self)</code></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.communication.synchronization</code></h2>
+<p>Buffer ownership tracking for the host-staged pipeline.</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>class BufferTicket</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  BufferTicket.<strong>init</strong>(self)</code></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.communication.transport_registry</code></h2>
+<p>Registry of known transports with an honest status. Nothing is selected automatically.</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>def list_transports()</code></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.compat</code></h2>
+<p>Static Tesla T4 / SM75 / TRITON_ATTN compatibility inspection of the bundled vLLM 0.25.1.</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>def feature_matrix()</code></td>
+  <td>A copy of the feature table (safe to mutate).</td>
+</tr>
+<tr>
+  <td><code>def get_feature(name: str)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>def check_feature(name: str)</code></td>
+  <td>Return the feature record, or raise if the feature cannot work on this build. UNKNOWN_REQUIRES_EVIDENCE is returned, not raised: it is untested, not forbidden.</td>
+</tr>
+<tr>
+  <td><code>def check_dtype(dtype: str | None, capability: tuple[int, int]=SM75)</code></td>
+  <td>Reject an explicit bfloat16 below SM80 with the same reasoning as vllm/platforms/cuda.py, but before an engine is started.</td>
+</tr>
+<tr>
+  <td><code>def check_quantization(method: str | None, capability: tuple[int, int]=SM75)</code></td>
+  <td>Compare a vLLM quantization method with the minimum capability declared in the source. Unknown methods are reported UNKNOWN_REQUIRES_EVIDENCE, never assumed to work.</td>
+</tr>
+<tr>
+  <td><code>def read_registry(package_root: str | pathlib.Path | None=None)</code></td>
+  <td>architecture name -&gt; (module, class) from vllm/model_executor/models/registry.py, read with ast (no import).</td>
+</tr>
+<tr>
+  <td><code>def uses_removed_backend(module_file: pathlib.Path, root: pathlib.Path)</code></td>
+  <td>True if the architecture's OWN module imports names from the Flash-family placeholder module at import time, i.e. the model is built on a removed backend.</td>
+</tr>
+<tr>
+  <td><code>def find_missing_imports(module_file: pathlib.Path, root: pathlib.Path, *, max_depth: int=6)</code></td>
+  <td>Chains of unconditional vllm imports from <code>module_file</code> that end in a module absent from the shipped package.</td>
+</tr>
+<tr>
+  <td><code>def check_model(model: str | None=None, *, architectures: Iterable[str] | None=None, package_root: str | pathlib.Path | None=None, capability: tuple[int, int]=SM75, dtype: str | None='half', quantization: str | None=None)</code></td>
+  <td>Static pre-flight for a model on the T4 build. <code>model</code> may be a local directory with config.json; otherwise pass <code>architectures=[...]</code>.</td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.config</code></h2>
+<p>Typed configuration with T4-safe defaults and environment overrides.</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>class StokastiskConfig</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  StokastiskConfig.strategy(self)</code></td>
+  <td>Effective strategy. <code>None</code> keeps the baseline meaning: TP=2 -&gt; tensor_parallel, otherwise single_gpu (PP&gt;1 -&gt; pipeline_parallel).</td>
+</tr>
+<tr>
+  <td><code>  StokastiskConfig.world_size(self)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  StokastiskConfig.is_experimental(self)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  StokastiskConfig.validate(self)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  StokastiskConfig.from_env(cls, prefix: str='STOKASTISK_')</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  StokastiskConfig.apply_environment(self)</code></td>
+  <td>Export NCCL settings (never overriding values the user already set).</td>
+</tr>
+<tr>
+  <td><code>  StokastiskConfig.engine_kwargs(self)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  StokastiskConfig.as_dict(self)</code></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.cuda</code></h2>
+<p>Optional CUDA stream/event/memory helpers (PyTorch-backed). Not used by the vLLM engine path.</p>
+<h2><code>stokastisk.cuda.device</code></h2>
+<p>Thin, optional CUDA device helpers on top of PyTorch. They NEVER touch vLLM's internal streams or contexts.</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>def device_count()</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>def on_device(index: int)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>def synchronize(index: int | None=None)</code></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.cuda.events</code></h2>
+<p>Event helpers: dependency edges between streams (also across devices) and GPU-side timing.</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>def new_event(*, timing: bool=False)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>def record(event, stream=None)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>def make_wait(stream, event)</code></td>
+  <td>cudaStreamWaitEvent: <code>stream</code> will not run later work until <code>event</code> completes (event may belong to another device).</td>
+</tr>
+<tr>
+  <td><code>def elapsed_ms(start, end)</code></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.cuda.memory</code></h2>
+<p>Memory helpers: free/total per device, pinned allocation, timed async copies.</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>def mem_info(device: int)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>def pinned_empty(nbytes: int)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>def timed_copy(dst, src, stream)</code></td>
+  <td>Async copy on <code>stream</code> timed with CUDA events on the stream's device.</td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.cuda.streams</code></h2>
+<p>Stream helpers. Create your own streams; do not enqueue onto vLLM's streams from outside vLLM.</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>def create_stream(device: int, *, priority: int=0)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>def stream_synchronize(stream)</code></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.dependencies</code></h2>
+<p>Feature -&gt; third-party import names. The single registry that the SDK (<code>serving</code>, <code>engine</code>), the Kaggle installer and the unit tests share.</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>def missing(names: Iterable[str])</code></td>
+  <td>Import names that cannot be found (<code>find_spec</code> returning None, or raising for a half-installed namespace).</td>
+</tr>
+<tr>
+  <td><code>def required_imports(*profiles: str)</code></td>
+  <td>Locked + baseline import names for the given profiles (order preserved, no duplicates).</td>
+</tr>
+<tr>
+  <td><code>def missing_for(*profiles: str)</code></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.diagnostics</code></h2>
+<p>Runtime diagnostics. torch is imported lazily so this module works on CPU-only hosts.</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>def discover_gpus()</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>def peer_access_matrix()</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>def check_native_extensions()</code></td>
+  <td>Import every bundled extension; value is 'ok' or the error text.</td>
+</tr>
+<tr>
+  <td><code>def flash_attn_native_loaded()</code></td>
+  <td>FlashAttention native modules present in this process (expected: none).</td>
+</tr>
+<tr>
+  <td><code>def prohibited_report()</code></td>
+  <td>Detect FlashAttention / FlashInfer / FlashMLA distributions, importable modules and shipped files (expected: all empty).</td>
+</tr>
+<tr>
+  <td><code>def validate_environment(*, require_gpus: int=2, strict_torch: bool=True)</code></td>
+  <td>Validate the runtime against the SDK build target (CUDA 13.0 / SM75 / torch 2.11 cu130).</td>
+</tr>
+<tr>
+  <td><code>def report()</code></td>
+  <td>Non-raising environment report (safe on CPU hosts).</td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.engine</code></h2>
+<p>LLM facade over the bundled vLLM engine (Tesla T4 / SM75 / TRITON_ATTN / fp16).</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>class LLM</code></td>
+  <td>Thin wrapper: applies the T4 defaults (NCCL configured not to depend on peer access, TRITON_ATTN, pinned structured-output backend), then delegates to <code>vllm.LLM</code>.</td>
+</tr>
+<tr>
+  <td><code>  LLM.<strong>init</strong>(self, model: str, *, config: StokastiskConfig | None=None, **kwargs: Any)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  LLM.selected_attention_backend(self)</code></td>
+  <td>Backend recorded in the live engine's VllmConfig (config-level evidence; the worker's own log line and the Triton cache are the kernel-level evidence).</td>
+</tr>
+<tr>
+  <td><code>  LLM.verify_attention_backend(self)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  LLM.structured_output_backend(self)</code></td>
+  <td>The structured-output backend recorded in the live engine's VllmConfig (pinned to 'xgrammar'; never 'auto').</td>
+</tr>
+<tr>
+  <td><code>  LLM.verify_structured_output_backend(self)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  LLM.engine(self)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  LLM.closed(self)</code></td>
+  <td>True once :meth:<code>close</code> has run, or when the engine failed to start.</td>
+</tr>
+<tr>
+  <td><code>  LLM.generate(self, prompts, sampling_params=None, *, timeout: float | None=None, **kwargs)</code></td>
+  <td>Pass-through to <code>vllm.LLM.generate</code>. An empty prompt list returns <code>[]</code> without touching the engine; non-str or empty prompts raise <code>TypeError</code> /</td>
+</tr>
+<tr>
+  <td><code>  LLM.chat(self, messages, sampling_params=None, *, timeout: float | None=None, **kwargs)</code></td>
+  <td>Pass-through to <code>vllm.LLM.chat</code> (the chat template is applied by vLLM). <code>messages</code> is a list of <code>{&quot;role&quot;, &quot;content&quot;}</code> dicts or a list of such lists.</td>
+</tr>
+<tr>
+  <td><code>  LLM.complete(self, prompt: str, *, max_tokens: int=64, temperature: float=0.0, timeout: float | None=None)</code></td>
+  <td>Generate one completion for <code>prompt</code> and return its text.</td>
+</tr>
+<tr>
+  <td><code>  LLM.generate_structured(self, prompts, schema, *, max_tokens: int=64, temperature: float=0.0, timeout: float | None=None)</code></td>
+  <td>Generate JSON constrained to <code>schema</code> by the engine's pinned structured-output backend, then validate every output against the schema.</td>
+</tr>
+<tr>
+  <td><code>  LLM.close(self)</code></td>
+  <td>Shut the engine (and, for TP&gt;1, its worker processes) down explicitly, then release cached CUDA memory. Idempotent.</td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.errors</code></h2>
+<p>Stokastisk exception hierarchy.</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>class StokastiskError</code></td>
+  <td>Base class for all SDK errors.</td>
+</tr>
+<tr>
+  <td><code>class EnvironmentValidationError</code></td>
+  <td>The runtime does not match the SDK build target.</td>
+</tr>
+<tr>
+  <td><code>class GPUDiscoveryError</code></td>
+  <td>Required GPUs are missing or have the wrong architecture.</td>
+</tr>
+<tr>
+  <td><code>class EngineError</code></td>
+  <td>vLLM engine failed to initialise or generate.</td>
+</tr>
+<tr>
+  <td><code>class ConfigurationError</code></td>
+  <td>Invalid Stokastisk configuration (e.g. a FlashAttention backend was requested).</td>
+</tr>
+<tr>
+  <td><code>class AttentionBackendError</code></td>
+  <td>The engine did not end up with the requested Triton attention backend.</td>
+</tr>
+<tr>
+  <td><code>class EngineClosedError</code></td>
+  <td>The engine was closed (explicitly, or because it never started); create a new <code>stokastisk.LLM</code>.</td>
+</tr>
+<tr>
+  <td><code>class EngineTimeoutError</code></td>
+  <td>A generation call did not finish within the caller's timeout. The request may still be running inside the engine.</td>
+</tr>
+<tr>
+  <td><code>class EngineCloseError</code></td>
+  <td>The engine shut down with an error. The SDK still released everything it could; <code>__cause__</code> carries the original failure.</td>
+</tr>
+<tr>
+  <td><code>class StructuredOutputError</code></td>
+  <td>A structured-output request failed, or its output violated the schema that was requested.</td>
+</tr>
+<tr>
+  <td><code>class MissingDependencyError</code></td>
+  <td>A third-party package needed by the requested feature is not importable. <code>missing</code> lists the import names; <code>feature</code> names the feature.</td>
+</tr>
+<tr>
+  <td><code>  MissingDependencyError.<strong>init</strong>(self, feature: str, missing, hint: str='')</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>class ServerError</code></td>
+  <td>Base class for failures of the OpenAI-compatible server process.</td>
+</tr>
+<tr>
+  <td><code>class ServerStartupError</code></td>
+  <td>The server process exited, or did not become ready, before <code>wait_ready</code> returned.</td>
+</tr>
+<tr>
+  <td><code>  ServerStartupError.<strong>init</strong>(self, reason: str, *, exit_code, command, log_path, log_excerpt: str, timeout=None, waited=None)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>class ServerHTTPError</code></td>
+  <td>The server answered an API request with an error status or an unparsable body. <code>status</code> is the HTTP status (None for a transport failure).</td>
+</tr>
+<tr>
+  <td><code>  ServerHTTPError.<strong>init</strong>(self, message: str, *, status=None, body: str='')</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>class ServerShutdownError</code></td>
+  <td>The server process could not be stopped cleanly (it had to be killed, or children survived).</td>
+</tr>
+<tr>
+  <td><code>class UnsupportedParallelismError</code></td>
+  <td>The requested TP/PP/replica combination is not valid for the two-T4 target.</td>
+</tr>
+<tr>
+  <td><code>class InsufficientMemoryError</code></td>
+  <td>The model (weights + KV cache) does not fit the requested GPU layout.</td>
+</tr>
+<tr>
+  <td><code>class TopologyError</code></td>
+  <td>GPU topology could not be determined or does not match the requested layout.</td>
+</tr>
+<tr>
+  <td><code>class ReplicaError</code></td>
+  <td>A replica worker failed to start, died, or returned an error.</td>
+</tr>
+<tr>
+  <td><code>class StokastiskCompatibilityError</code></td>
+  <td>A model, dtype, quantization method or vLLM feature cannot work on the Tesla T4 / SM75 / TRITON_ATTN build.</td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.limits</code></h2>
+<p>Hard resource limits of the Kaggle target and helpers that enforce / report them.</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>class KaggleLimits</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>def available_cpus()</code></td>
+  <td>CPUs this process may really use (affinity-aware; equals <code>nproc</code>), never more than the Kaggle budget of 4 for planning.</td>
+</tr>
+<tr>
+  <td><code>def cpu_budget()</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>def threads_per_worker(tensor_parallel_size: int)</code></td>
+  <td>Split the CPU budget across the TP worker processes (4 cores, TP=2 -&gt; 2 threads each) so CPU-side libraries never oversubscribe.</td>
+</tr>
+<tr>
+  <td><code>def cpu_thread_env(tensor_parallel_size: int)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>def system_ram_gib()</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>def dir_size_bytes(path: str | os.PathLike)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>def working_dir_status(path: str | None=None)</code></td>
+  <td>Usage of the (quota-limited) output directory against the 20 GiB Kaggle limit.</td>
+</tr>
+<tr>
+  <td><code>def check_resources()</code></td>
+  <td>Compare the host with the Kaggle limits. Never raises. Statuses: PASS (within the limit) / WARNING (host differs from the Kaggle design).</td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.nccl</code></h2>
+<p>NCCL validation helpers (launch with <code>python -m torch.distributed.run --standalone --nproc_per_node=2</code>).</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>def run_collective_selftest(expected_world: int=2)</code></td>
+  <td>Run all-reduce / all-gather / reduce-scatter / broadcast / barrier over the torchrun world. Never raises.</td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.parallel</code></h2>
+<p>Application-level parallelism: independent GPU replicas, token-aware scheduling, rule-based recommendations.</p>
+<h2><code>stokastisk.parallel.memory</code></h2>
+<p>Weight / KV-cache memory estimation from a model's config.json (an ESTIMATE, labelled as such everywhere it is shown).</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>class ModelSpec</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  ModelSpec.head_dim_(self)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  ModelSpec.params(self)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  ModelSpec.weight_mib(self)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  ModelSpec.kv_mib(self, tokens: int)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  ModelSpec.unsupported_reason(self)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  ModelSpec.to_dict(self)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  ModelSpec.from_hf_config(cls, name: str, cfg: dict[str, Any], **kw)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>def load_model_spec(model: 'str | ModelSpec', *, local_files_only: bool=False)</code></td>
+  <td>ModelSpec from a ModelSpec, a local model directory, or a Hub repo id (downloads ONLY config.json).</td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.parallel.queue</code></h2>
+<p>Request records and a deterministic FIFO queue.</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>def estimate_tokens(text: str)</code></td>
+  <td>Cheap, deterministic input-token estimate (~4 characters per token). Replace with a tokenizer when exactness matters.</td>
+</tr>
+<tr>
+  <td><code>class Request</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  Request.cost(self)</code></td>
+  <td>Token-aware work estimate: prompt tokens (prefill) + requested output tokens (decode).</td>
+</tr>
+<tr>
+  <td><code>class RequestQueue</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  RequestQueue.<strong>init</strong>(self, maxsize: int | None=None)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  RequestQueue.put(self, r: Request, *, front: bool=False)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  RequestQueue.get(self)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  RequestQueue.pending_tokens(self)</code></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.parallel.recommender</code></h2>
+<p>Rule-based, deterministic parallelism recommendation. It only RECOMMENDS: the caller decides (<code>Recommendation.to_config()</code>).</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>class Recommendation</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  Recommendation.to_dict(self)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  Recommendation.to_config(self, **kw)</code></td>
+  <td>A validated StokastiskConfig for this recommendation. Raises for non-runnable outcomes.</td>
+</tr>
+<tr>
+  <td><code>def default_recommendation(topology)</code></td>
+  <td>Model-independent summary used by <code>Topology.recommended_parallelism</code>.</td>
+</tr>
+<tr>
+  <td><code>def recommend_parallelism(model, topology=None, workload: str='latency', *, max_model_len: int=4096, gpu_memory_utilization: float=0.88, min_concurrent_seqs: int=1)</code></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.parallel.replica</code></h2>
+<p>ReplicaPool: independent TP=1 vLLM engines, one per GPU, behind a deterministic token-aware scheduler.</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>class ReplicaPool</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  ReplicaPool.<strong>init</strong>(self, model: str, devices: list[int] | tuple[int, ...]=(0, 1), *, config: StokastiskConfig | None=None, ready_timeout: float=900.0, max_attempts: int=2, engine_kwargs: dict[str, Any] | None=None)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  ReplicaPool.restart_dead(self, timeout: float=900.0)</code></td>
+  <td>Restart every worker that has exited. Never called implicitly.</td>
+</tr>
+<tr>
+  <td><code>  ReplicaPool.generate(self, prompts: list[str], *, max_tokens: int=64, temperature: float=0.0, timeout: float=1800.0)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  ReplicaPool.close(self, timeout: float=60.0)</code></td>
+  <td>Stop every worker. Always completes the whole cleanup (shutdown message, join, terminate, kill, queue close); then, if any worker had to be terminated, exited</td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.parallel.routing</code></h2>
+<p>Weighted least-loaded routing (deterministic; ties go to the lowest worker id).</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>class WorkerLoad</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  WorkerLoad.available(self)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>def effective_speed(w: WorkerLoad, reference_speed: float | None=None)</code></td>
+  <td>Speed used for routing. An observed speed is tokens/s; the default 1.0 is unit-less, so an unobserved worker is</td>
+</tr>
+<tr>
+  <td><code>def projected_load(w: WorkerLoad, extra_tokens: int, reference_speed: float | None=None)</code></td>
+  <td>Estimated time-to-drain (arbitrary units): queued tokens + the new work, divided by the worker's speed.</td>
+</tr>
+<tr>
+  <td><code>def choose_worker(workers: list[WorkerLoad], cost_tokens: int)</code></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.parallel.scheduler</code></h2>
+<p>Deterministic, token-aware, weighted least-loaded scheduler. Pure Python: no CUDA, no processes (the pool owns those).</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>class Decision</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>class Scheduler</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  Scheduler.<strong>init</strong>(self, workers: list[WorkerLoad], *, max_attempts: int=2, speed_alpha: float=0.3)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  Scheduler.assign(self, req: Request)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  Scheduler.assign_batch(self, reqs: list[Request], *, longest_first: bool=True)</code></td>
+  <td>Greedy LPT (longest-processing-time-first) placement; deterministic. Returns worker id -&gt; requests; unplaceable ones under key -1.</td>
+</tr>
+<tr>
+  <td><code>  Scheduler.complete(self, req_id: int, *, seconds: float | None=None)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  Scheduler.mark_dead(self, worker_id: int)</code></td>
+  <td>Mark a worker dead and return its in-flight requests that may still be retried elsewhere.</td>
+</tr>
+<tr>
+  <td><code>  Scheduler.revive(self, worker_id: int)</code></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.parallel.worker</code></h2>
+<p>One replica worker process: one physical GPU, one TP=1 vLLM engine, one full copy of the weights.</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>def gpu_identity(physical_index: int)</code></td>
+  <td>uuid + memory.used of a PHYSICAL GPU via nvidia-smi (independent of CUDA_VISIBLE_DEVICES, no CUDA context).</td>
+</tr>
+<tr>
+  <td><code>def worker_main(worker_id: int, device: int, model: str, config_dict: dict, engine_kwargs: dict, in_q, out_q)</code></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.prohibited</code></h2>
+<p>Policy and scanners for the Stokastisk &quot;no FlashAttention / FlashInfer / FlashMLA&quot; rule.</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>def is_prohibited_path(path: str)</code></td>
+  <td>True if any component of <code>path</code> (a <code>/</code>-separated path inside a wheel or tree) names a Flash-family module or package.</td>
+</tr>
+<tr>
+  <td><code>def is_binary(path: str)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>def native_markers(data: bytes)</code></td>
+  <td>Flash-family markers present in a native object's bytes.</td>
+</tr>
+<tr>
+  <td><code>def scan_members(names: Iterable[str], read)</code></td>
+  <td>Scan a set of archive/tree members. <code>read(name) -&gt; bytes</code> is only called for files whose content must be inspected.</td>
+</tr>
+<tr>
+  <td><code>def scan_wheel(path: str | pathlib.Path)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>def scan_tree(root: str | pathlib.Path)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>def flash_in_maps(lines: Iterable[str])</code></td>
+  <td>Flash-family shared objects in the lines of <code>/proc/&lt;pid&gt;/maps</code> (path column only).</td>
+</tr>
+<tr>
+  <td><code>def loaded_flash_libraries(pid: int | str='self')</code></td>
+  <td>Flash-family shared objects mapped by process <code>pid</code> (empty list = none; unreadable maps raise OSError, never silently pass).</td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.serving</code></h2>
+<p>OpenAI-compatible serving for the T4 build: launch the bundled <code>vllm serve</code> with the Stokastisk T4 defaults, wait for /health, read /metrics, stream tokens.</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>def check_server_requirements(names: Sequence[str] | None=None)</code></td>
+  <td>Return the import names that cannot be found (empty list = nothing missing). Uses find_spec only (no import side effects).</td>
+</tr>
+<tr>
+  <td><code>def validate_model_id(model: Any)</code></td>
+  <td>A Hugging Face id (<code>org/name</code>) or a path. Rejects empty strings, whitespace/control characters and anything that vLLM's argument parser would read as an option.</td>
+</tr>
+<tr>
+  <td><code>def validate_host(host: Any)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>def validate_port(port: Any)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>def port_is_free(host: str, port: int)</code></td>
+  <td>True if nothing is listening on (host, port) and the address can be bound.</td>
+</tr>
+<tr>
+  <td><code>def find_free_port(host: str='127.0.0.1')</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>def build_serve_command(model: str, config: StokastiskConfig | None=None, *, host: str='127.0.0.1', port: int=8000, served_model_name: str | None=None, quantization: str | None=None, extra_args: Sequence[str]=(), python: str | None=None)</code></td>
+  <td>The exact argv that ServerProcess runs. Pure function: no process, no import of vllm.</td>
+</tr>
+<tr>
+  <td><code>class ServerProcess</code></td>
+  <td>Supervise one <code>vllm serve</code> child. Use as a context manager. Never started implicitly, never left running by <code>with</code>.</td>
+</tr>
+<tr>
+  <td><code>  ServerProcess.<strong>init</strong>(self, model: str, config: StokastiskConfig | None=None, *, host: str='127.0.0.1', port: int=8000, served_model_name: str | None=None, quantization: str | None=None, extra_args: Sequence[str]=(), cuda_visible_devices: str | None=None, log_path: str | None=None, python: str | None=None)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  ServerProcess.base_url(self)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  ServerProcess.pid(self)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  ServerProcess.running(self)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  ServerProcess.log_tail(self, max_lines: int=40)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  ServerProcess.start(self)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  ServerProcess.health(self, timeout: float=5.0)</code></td>
+  <td>True if <code>GET /health</code> answers 200 right now.</td>
+</tr>
+<tr>
+  <td><code>  ServerProcess.wait_ready(self, timeout: float=600.0, interval: float=2.0)</code></td>
+  <td>Poll <code>GET /health</code> until HTTP 200. Raises :class:<code>ServerStartupError</code> if the child exits first or the timeout passes (with the exit code, the command,</td>
+</tr>
+<tr>
+  <td><code>  ServerProcess.start_and_wait(self, timeout: float=600.0)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  ServerProcess.restart(self, timeout: float=600.0)</code></td>
+  <td>Stop the server (graceful first) and start a fresh one on the same port; returns once it is healthy.</td>
+</tr>
+<tr>
+  <td><code>  ServerProcess.stop(self, grace: float=30.0)</code></td>
+  <td>SIGINT the process group (vLLM's own graceful shutdown), then SIGTERM, then SIGKILL; then make sure no process of the group survives.</td>
+</tr>
+<tr>
+  <td><code>def chat(base_url: str, model: str, messages: list[dict[str, str]], *, max_tokens: int=64, temperature: float=0.0, timeout: float=120.0)</code></td>
+  <td>Non-streaming /v1/chat/completions; returns the assistant text.</td>
+</tr>
+<tr>
+  <td><code>def stream_chat(base_url: str, model: str, messages: list[dict[str, str]], *, max_tokens: int=64, temperature: float=0.0, timeout: float=120.0)</code></td>
+  <td>Yield content deltas from /v1/chat/completions with stream=true (server-sent events: <code>data: {...}</code> lines, terminated by <code>data: [DONE]</code>).</td>
+</tr>
+<tr>
+  <td><code>def list_models(base_url: str, timeout: float=10.0)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>def fetch_metrics(base_url: str, timeout: float=10.0)</code></td>
+  <td>Parse the Prometheus text at /metrics into {sample_name{labels}: value} (comment lines skipped; non-numeric samples ignored).</td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.structured</code></h2>
+<p>Structured (JSON-schema) output helpers: pure validation that needs no GPU, plus the sampling-parameter builder.</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>def check_schema(schema: Any)</code></td>
+  <td>Return <code>schema</code> (a dict, or a JSON string parsed to one) if it is a valid JSON Schema, else raise :class:<code>StructuredOutputError</code>.</td>
+</tr>
+<tr>
+  <td><code>def validate_json_output(text: str, schema: Any)</code></td>
+  <td>Parse <code>text</code> as JSON and validate it against <code>schema</code>. Returns the parsed object; raises :class:<code>StructuredOutputError</code> (never returns invalid data).</td>
+</tr>
+<tr>
+  <td><code>def json_schema_params(schema: Any, *, max_tokens: int=64, temperature: float=0.0)</code></td>
+  <td><code>vllm.SamplingParams</code> that constrain the output to <code>schema</code>. The backend is the engine's (pinned) one; a request cannot choose another.</td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.telemetry</code></h2>
+<p>Optional GPU / communication / worker telemetry. Every probe degrades to an explicit 'unavailable'.</p>
+<h2><code>stokastisk.telemetry.communication_profiler</code></h2>
+<p>Wall-clock + CUDA-event timing for communication/compute segments. Segments are recorded; nothing is inferred.</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>class SegmentTimer</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  SegmentTimer.<strong>init</strong>(self)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  SegmentTimer.wall(self, name: str)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  SegmentTimer.cuda(self, name: str, stream=None)</code></td>
+  <td>GPU-side duration via CUDA events (synchronises the stream when the block exits).</td>
+</tr>
+<tr>
+  <td><code>  SegmentTimer.totals(self)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  SegmentTimer.report(self)</code></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.telemetry.cuda_profiler</code></h2>
+<p>Nsight availability probe. Nsight is never required: an unusable profiler is an explicit SKIPPED.</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>def nsight_status()</code></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.telemetry.metrics</code></h2>
+<p>Pure statistics + latency helpers (no GPU needed).</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>def percentile(values: Sequence[float], q: float)</code></td>
+  <td>Linear-interpolated percentile (q in [0,100]); raises on empty input.</td>
+</tr>
+<tr>
+  <td><code>def summarize(values: Sequence[float])</code></td>
+  <td>min / median / p95 / max / mean over ALL runs (never only the best one).</td>
+</tr>
+<tr>
+  <td><code>def imbalance_percent(t0: float, t1: float)</code></td>
+  <td>abs(T0 - T1) / max(T0, T1) * 100. 0 = perfectly balanced; 0.0 when both are 0.</td>
+</tr>
+<tr>
+  <td><code>def throughput(tokens: int, seconds: float)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>def token_latencies(first_token_s: float | None, total_s: float, n_tokens: int)</code></td>
+  <td>TTFT and mean inter-token latency from a single request's timing.</td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.telemetry.nvml</code></h2>
+<p>GPU sampling: NVML if present, else nvidia-smi, else an explicit 'unavailable'. Counters Kaggle does not expose stay <code>None</code>.</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>def sample_once()</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>def pcie_throughput_kib_s()</code></td>
+  <td>PCIe RX/TX in KiB/s per GPU via NVML, or None when NVML / the counter is unavailable.</td>
+</tr>
+<tr>
+  <td><code>class GpuSampler</code></td>
+  <td>Background sampler: <code>with GpuSampler(0.5) as s: ...; s.summary()</code>. Overhead = one nvidia-smi call per interval.</td>
+</tr>
+<tr>
+  <td><code>  GpuSampler.<strong>init</strong>(self, interval: float=0.5)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  GpuSampler.summary(self)</code></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.telemetry.report</code></h2>
+<p>Local JSON evidence + optional OpenTelemetry spans. All metrics are available as JSON without any network telemetry.</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>def write_json(path: str | pathlib.Path, obj: Any)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>def span(name: str, **attrs: Any)</code></td>
+  <td>OpenTelemetry span if <code>opentelemetry</code> is installed AND a provider is configured; otherwise a no-op. Never required.</td>
+</tr>
+<tr>
+  <td><code>def provenance()</code></td>
+  <td>Versions + identity every benchmark records.</td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.telemetry.worker_metrics</code></h2>
+<p>Per-worker accounting used by the balance benchmark: compute vs communication vs idle, and queue wait.</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>class WorkerMetrics</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  WorkerMetrics.idle_s(self)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  WorkerMetrics.to_dict(self)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>def balance_report(w0: WorkerMetrics, w1: WorkerMetrics)</code></td>
+  <td>Imbalance on compute time and on total busy time, reported separately (utilisation alone does not prove balance).</td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.topology</code></h2>
+<p>GPU topology discovery (torch / NVML / nvidia-smi / sysfs; all but torch optional).</p>
+<h2><code>stokastisk.topology.discovery</code></h2>
+<p>discover_topology(): torch -&gt; NVML -&gt; nvidia-smi -&gt; sysfs, every layer optional. Nothing is hardcoded to Kaggle's PHB.</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>def discover_topology(*, with_recommendation: bool=True)</code></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.topology.gpu_capabilities</code></h2>
+<p>Basic GPU properties from PyTorch (the primary provider). cuda-python is an optional, never-required refinement.</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>def torch_devices()</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>def cuda_python_version()</code></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.topology.models</code></h2>
+<p>Plain, JSON-serialisable topology records. A value that could not be measured is <code>None</code> — never invented.</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>class DeviceInfo</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>class PeerAccess</code></td>
+  <td>CUDA peer access per ordered pair. <code>matrix[src][dst]</code> is <code>torch.cuda.can_device_access_peer(src, dst)</code> (None = not measured).</td>
+</tr>
+<tr>
+  <td><code>  PeerAccess.can_access(self, src: int, dst: int)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  PeerAccess.all_pairs_available(self)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  PeerAccess.any_pair_available(self)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>class Topology</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  Topology.gpu_count(self)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  Topology.pair_link(self, a: int, b: int)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>  Topology.to_dict(self)</code></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.topology.nvml</code></h2>
+<p>Optional NVML (<code>pynvml</code> / <code>nvidia-ml-py</code>) and <code>nvidia-smi</code> helpers. Neither is required: every function degrades to <code>None</code>.</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>def nvml_devices()</code></td>
+  <td>Per-GPU dict from NVML, or None when NVML is unusable.</td>
+</tr>
+<tr>
+  <td><code>def smi_query(fields: str)</code></td>
+  <td>Rows of <code>nvidia-smi --query-gpu=&lt;fields&gt;</code>, or None when nvidia-smi is missing/fails.</td>
+</tr>
+<tr>
+  <td><code>def smi_topo_matrix()</code></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.topology.pcie</code></h2>
+<p>PCIe / link classification from <code>nvidia-smi topo -m</code> text, and PCIe link speed from sysfs.</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>def classify_cell(cell: str)</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>def parse_topo_matrix(text: str)</code></td>
+  <td><code>{&quot;0-1&quot;: &quot;PHB&quot;}</code> (lower index first). Unknown / unparsable cells become UNKNOWN; an unparsable matrix yields <code>{}</code>.</td>
+</tr>
+<tr>
+  <td><code>def pcie_sysfs(pci_bus_id: str | None)</code></td>
+  <td>Current/max PCIe generation + width from /sys (no root needed). Missing files -&gt; missing keys.</td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.topology.peer_access</code></h2>
+<p>CUDA peer access, measured with <code>torch.cuda.can_device_access_peer</code> in BOTH directions. Never forced, never assumed.</p>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>def measure_peer_access(device_count: int | None=None)</code></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+<footer>Stokastisk 0.1.0 · Apache-2.0 · <a href="https://github.com/stokastisk-ai/stokastisk/blob/main/docs/guide/api-reference.md">edit this page on GitHub</a></footer></main></div></body></html>

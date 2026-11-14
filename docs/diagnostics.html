@@ -1,0 +1,84 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>7. Checks and diagnostics · Stokastisk 0.1.0</title><link rel="stylesheet" href="style.css"></head><body><div class="wrap"><nav><h1>Stokastisk</h1><div class="v">0.1.0 · Kaggle 2 × T4 · Python 3.13</div><a class="" href="index.html">Overview</a><a class="" href="getting-started.html">1. Getting started</a><a class="" href="configuration.html">2. Configuration</a><a class="" href="engine.html">3. The LLM engine</a><a class="" href="structured-output.html">4. Structured output</a><a class="" href="server.html">5. OpenAI-compatible server</a><a class="" href="multi-gpu.html">6. Using both GPUs</a><a class="cur" href="diagnostics.html">7. Checks and diagnostics</a><a class="" href="errors.html">8. Errors</a><a class="" href="advanced.html">9. Advanced modules</a><a class="" href="troubleshooting.html">10. Troubleshooting</a><a class="" href="api-reference.html">API reference</a><div class="ext"><a href="https://github.com/stokastisk-ai/stokastisk">GitHub</a><a href="https://huggingface.co/waqasm86/stokastisk">Hugging Face</a><a href="../">Package index</a></div></nav><main><h1>7. Checks and diagnostics</h1>
+<p>Everything on this page is safe to run <strong>before</strong> starting an engine, and most of it works without a GPU.</p>
+<h2>Environment</h2>
+<div class="hl"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">stokastisk</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">stokastisk</span><span class="o">.</span><span class="n">report</span><span class="p">())</span>                  <span class="c1"># never raises; safe on CPU hosts</span>
+<span class="n">stokastisk</span><span class="o">.</span><span class="n">validate_environment</span><span class="p">()</span>           <span class="c1"># raises EnvironmentValidationError on a mismatch</span>
+</pre></div>
+<table>
+<thead>
+<tr>
+  <th>Function</th>
+  <th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>report()</code></td>
+  <td>non-raising summary of Python, torch, CUDA, GPUs, native extensions</td>
+</tr>
+<tr>
+  <td><code>validate_environment(*, require_gpus=2, strict_torch=True)</code></td>
+  <td>checks the build target: CUDA 13.0, SM75, torch 2.11 cu130. <code>validate_kaggle_t4</code> is an alias</td>
+</tr>
+<tr>
+  <td><code>discover_gpus()</code></td>
+  <td>list of visible GPUs (name, capability, memory)</td>
+</tr>
+<tr>
+  <td><code>check_native_extensions()</code></td>
+  <td>imports each bundled extension; value is <code>&quot;ok&quot;</code> or the error text</td>
+</tr>
+</tbody>
+</table>
+<h2>Backend policy</h2>
+<div class="hl"><pre><span></span><span class="n">rep</span> <span class="o">=</span> <span class="n">stokastisk</span><span class="o">.</span><span class="n">prohibited_report</span><span class="p">()</span>
+<span class="k">assert</span> <span class="n">rep</span><span class="p">[</span><span class="s2">"clean"</span><span class="p">],</span> <span class="n">rep</span>
+</pre></div>
+<p>Keys: <code>distributions</code>, <code>modules</code>, <code>files</code>, <code>native_hits</code>, <code>binaries</code>, <code>clean</code>. All lists are empty when the install is Flash-free (as verified in every Kaggle notebook). Requesting a Flash backend raises <code>ConfigurationError</code> (SDK) or <code>ProhibitedBackendError</code> (an <code>ImportError</code> from the bundled vLLM).</p>
+<p><code>stokastisk.prohibited</code> holds the scanners used to audit a wheel or tree (<code>scan_wheel</code>, <code>scan_tree</code>, <code>is_prohibited_path</code>, <code>loaded_flash_libraries</code>).</p>
+<h2>Is my model supported? — <code>check_model</code></h2>
+<div class="hl"><pre><span></span><span class="n">stokastisk</span><span class="o">.</span><span class="n">check_model</span><span class="p">(</span><span class="s2">"Qwen/Qwen2.5-Coder-7B-Instruct"</span><span class="p">,</span> <span class="n">architectures</span><span class="o">=</span><span class="p">[</span><span class="s2">"Qwen2ForCausalLM"</span><span class="p">])</span>
+</pre></div>
+<p><code>check_model</code> is <strong>offline</strong>: it never downloads the model; it reads the model registry of the <em>installed</em> package (so run it after <code>pip install stokastisk</code>). Therefore:</p>
+<ul>
+<li>pass <code>architectures=[...]</code> (read it from the model's <code>config.json</code> → <code>architectures</code>), <strong>or</strong> pass a local directory containing <code>config.json</code>;</li>
+<li>without either, the status is <code>UNKNOWN_REQUIRES_EVIDENCE</code> and the note tells you to pass the architecture.</li>
+</ul>
+<p>Result keys: <code>model</code>, <code>dtype</code>, <code>quantization</code>, <code>architectures</code>, <code>note</code>, <code>status</code>.</p>
+<table>
+<thead>
+<tr>
+  <th>Status</th>
+  <th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>SUPPORTED</code></td>
+  <td>the architecture is shipped and has been run on Kaggle</td>
+</tr>
+<tr>
+  <td><code>UNKNOWN_REQUIRES_EVIDENCE</code></td>
+  <td>shipped or unknown, but never run on Kaggle</td>
+</tr>
+</tbody>
+</table>
+<p>It raises <code>StokastiskCompatibilityError</code> when the architecture's module is missing from this wheel, the dtype is bfloat16, or the quantization cannot work on SM75 (Mistral-family models are refused).</p>
+<div class="callout">
+
+<p>The evidence note on <code>Qwen2ForCausalLM</code> was written at build time and names only the 0.5B/1.5B runs. The 3B and Coder-7B runs described in this guide happened afterwards; the shipped wheel (frozen at 0.1.0) was not rebuilt to mention them.</p>
+</div>
+
+<p>Related: <code>check_dtype(dtype)</code>, <code>check_quantization(method)</code>, <code>check_feature(name)</code>, <code>feature_matrix()</code> (a copy of the feature table: <code>SUPPORTED</code>, <code>SUPPORTED_WITH_CONDITIONS</code>, <code>UNKNOWN_REQUIRES_EVIDENCE</code>, <code>EXCLUDED_FLASH_DEPENDENCY</code>, …). Feature evidence strings reflect the state when the wheel was built; for example the OpenAI server is marked &quot;unknown&quot; in the table although it later passed the Kaggle server stage (21/21) — see <a href="https://github.com/stokastisk-ai/stokastisk/blob/main/docs/KAGGLE_ACCEPTANCE.md">KAGGLE_ACCEPTANCE.md</a>.</p>
+<h2>Kaggle limits</h2>
+<div class="hl"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">stokastisk</span><span class="o">.</span><span class="n">LIMITS</span><span class="p">)</span>                    <span class="c1"># 4 CPU, 30 GiB RAM, 20 GiB /kaggle/working, 2 × T4 (SM75, ~15 GiB)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">stokastisk</span><span class="o">.</span><span class="n">check_resources</span><span class="p">())</span>         <span class="c1"># PASS / WARNING per limit; never raises</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">stokastisk</span><span class="o">.</span><span class="n">working_dir_status</span><span class="p">())</span>      <span class="c1"># /kaggle/working usage vs the 20 GiB quota</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">stokastisk</span><span class="o">.</span><span class="n">cpu_budget</span><span class="p">())</span>              <span class="c1"># CPU cores to plan with</span>
+</pre></div>
+<p>Model downloads go to the Hugging Face cache; large models can fill <code>/kaggle/working</code> if you save outputs there.</p>
+<h2>Dependencies</h2>
+<p><code>stokastisk.dependencies</code> lists which third-party imports each feature needs (<code>LOCKED</code>, <code>BASELINE</code>, <code>PROFILES</code>), and <code>missing_for(&quot;core&quot;, &quot;serving&quot;)</code> returns the import names that cannot be found. Useful when an import fails.</p>
+<p>Next: <a href="errors.html">Errors</a>.</p>
+<footer>Stokastisk 0.1.0 · Apache-2.0 · <a href="https://github.com/stokastisk-ai/stokastisk/blob/main/docs/guide/diagnostics.md">edit this page on GitHub</a></footer></main></div></body></html>

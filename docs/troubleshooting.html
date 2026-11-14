@@ -1,0 +1,78 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>10. Troubleshooting · Stokastisk 0.1.0</title><link rel="stylesheet" href="style.css"></head><body><div class="wrap"><nav><h1>Stokastisk</h1><div class="v">0.1.0 · Kaggle 2 × T4 · Python 3.13</div><a class="" href="index.html">Overview</a><a class="" href="getting-started.html">1. Getting started</a><a class="" href="configuration.html">2. Configuration</a><a class="" href="engine.html">3. The LLM engine</a><a class="" href="structured-output.html">4. Structured output</a><a class="" href="server.html">5. OpenAI-compatible server</a><a class="" href="multi-gpu.html">6. Using both GPUs</a><a class="" href="diagnostics.html">7. Checks and diagnostics</a><a class="" href="errors.html">8. Errors</a><a class="" href="advanced.html">9. Advanced modules</a><a class="cur" href="troubleshooting.html">10. Troubleshooting</a><a class="" href="api-reference.html">API reference</a><div class="ext"><a href="https://github.com/stokastisk-ai/stokastisk">GitHub</a><a href="https://huggingface.co/waqasm86/stokastisk">Hugging Face</a><a href="../">Package index</a></div></nav><main><h1>10. Troubleshooting</h1>
+<table>
+<thead>
+<tr>
+  <th>Symptom</th>
+  <th>Cause / fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>No matching distribution found for stokastisk</code></td>
+  <td>the notebook is not Python 3.13, or Internet is OFF, or the old index address is used — use <code>https://stokastisk-ai.github.io/stokastisk/simple/</code></td>
+</tr>
+<tr>
+  <td>pip wants to change torch / transformers</td>
+  <td>should never happen; report it with the full <code>pip install</code> log</td>
+</tr>
+<tr>
+  <td>Engine start fails, no GPU</td>
+  <td>Accelerator is not <em>GPU T4 × 2</em></td>
+</tr>
+<tr>
+  <td><code>ProhibitedBackendError</code> (an <code>ImportError</code> raised by the bundled vLLM) or <code>ConfigurationError</code> mentioning Flash</td>
+  <td>a Flash backend was requested; only <code>TRITON_ATTN</code> exists</td>
+</tr>
+<tr>
+  <td><code>bfloat16</code> error</td>
+  <td>use <code>dtype=&quot;half&quot;</code></td>
+</tr>
+<tr>
+  <td>Out of memory at start-up</td>
+  <td>lower <code>max_model_len</code> (e.g. 2048), lower <code>gpu_memory_utilization</code>, or use <code>tensor_parallel_size=2</code></td>
+</tr>
+<tr>
+  <td>Out of memory after an earlier experiment</td>
+  <td>the previous engine is still alive: <code>close()</code> it, <code>gc.collect()</code>, check <code>torch.cuda.mem_get_info(i)</code></td>
+</tr>
+<tr>
+  <td>Engine code hangs or re-runs in a script</td>
+  <td>add <code>if __name__ == &quot;__main__&quot;:</code> (vLLM spawns processes that re-import the script)</td>
+</tr>
+<tr>
+  <td><code>Triton kernel JIT compilation during inference</code></td>
+  <td>one-time warm-up warning on the first request; harmless</td>
+</tr>
+<tr>
+  <td><code>unauthenticated requests to the HF Hub</code></td>
+  <td>informational; add an <code>HF_TOKEN</code> Kaggle secret for faster downloads</td>
+</tr>
+<tr>
+  <td><code>ProcessGroupNCCL … unbatched P2P op</code> (PP=2)</td>
+  <td>harmless warning</td>
+</tr>
+<tr>
+  <td><code>UNKNOWN_REQUIRES_EVIDENCE</code> from <code>check_model</code></td>
+  <td>pass <code>architectures=[...]</code> or a local directory — see <a href="diagnostics.html">Checks</a></td>
+</tr>
+<tr>
+  <td><code>StructuredOutputError: truncated</code></td>
+  <td>bound the schema fields and/or raise <code>max_tokens</code></td>
+</tr>
+<tr>
+  <td><code>ServerStartupError</code></td>
+  <td>read <code>e.log_excerpt</code> and <code>e.log_path</code>; a second server on the same port also causes this</td>
+</tr>
+<tr>
+  <td>Slow with TP=2 / PP=2</td>
+  <td>expected for a model that fits one T4 (PCIe, no NVLink); use TP=1 or <code>ReplicaPool</code></td>
+</tr>
+<tr>
+  <td>Disk full on <code>/kaggle/working</code></td>
+  <td>quota is 20 GiB; check <code>stokastisk.working_dir_status()</code></td>
+</tr>
+</tbody>
+</table>
+<p>To start clean: <code>llm.close()</code>, then restart the Kaggle session.</p>
+<p>Report problems at <a href="https://github.com/stokastisk-ai/stokastisk/issues">https://github.com/stokastisk-ai/stokastisk/issues</a> with the output of <code>stokastisk.report()</code>.</p>
+<footer>Stokastisk 0.1.0 · Apache-2.0 · <a href="https://github.com/stokastisk-ai/stokastisk/blob/main/docs/guide/troubleshooting.md">edit this page on GitHub</a></footer></main></div></body></html>

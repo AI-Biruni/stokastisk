@@ -1,0 +1,85 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>1. Getting started · Stokastisk 0.1.0</title><link rel="stylesheet" href="style.css"></head><body><div class="wrap"><nav><h1>Stokastisk</h1><div class="v">0.1.0 · Kaggle 2 × T4 · Python 3.13</div><a class="" href="index.html">Overview</a><a class="cur" href="getting-started.html">1. Getting started</a><a class="" href="configuration.html">2. Configuration</a><a class="" href="engine.html">3. The LLM engine</a><a class="" href="structured-output.html">4. Structured output</a><a class="" href="server.html">5. OpenAI-compatible server</a><a class="" href="multi-gpu.html">6. Using both GPUs</a><a class="" href="diagnostics.html">7. Checks and diagnostics</a><a class="" href="errors.html">8. Errors</a><a class="" href="advanced.html">9. Advanced modules</a><a class="" href="troubleshooting.html">10. Troubleshooting</a><a class="" href="api-reference.html">API reference</a><div class="ext"><a href="https://github.com/stokastisk-ai/stokastisk">GitHub</a><a href="https://huggingface.co/waqasm86/stokastisk">Hugging Face</a><a href="../">Package index</a></div></nav><main><h1>1. Getting started</h1>
+<h2>Notebook settings</h2>
+<table>
+<thead>
+<tr>
+  <th>Setting</th>
+  <th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Accelerator</td>
+  <td><strong>GPU T4 × 2</strong></td>
+</tr>
+<tr>
+  <td>Internet</td>
+  <td><strong>ON</strong></td>
+</tr>
+<tr>
+  <td>Python</td>
+  <td>3.13 image</td>
+</tr>
+</tbody>
+</table>
+<h2>Install</h2>
+<p>One cell:</p>
+<div class="hl"><pre><span></span><span class="err">!</span><span class="n">pip</span> <span class="n">install</span> <span class="n">stokastisk</span> <span class="o">--</span><span class="n">extra</span><span class="o">-</span><span class="n">index</span><span class="o">-</span><span class="n">url</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">stokastisk</span><span class="o">-</span><span class="n">ai</span><span class="o">.</span><span class="n">github</span><span class="o">.</span><span class="n">io</span><span class="o">/</span><span class="n">stokastisk</span><span class="o">/</span><span class="n">simple</span><span class="o">/</span>
+</pre></div>
+<p>pip reads a small index page, downloads the 38 MB wheel from the Hugging Face CDN, verifies its SHA256, and installs 19 pinned dependencies. Kaggle's own PyTorch 2.11.0+cu130 and Triton 3.6.0 are never touched.</p>
+<div class="callout">
+
+<p><code>--extra-index-url</code> also searches PyPI. The name <code>stokastisk</code> is not registered there today.</p>
+</div>
+
+<h2>Check the install</h2>
+<div class="hl"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">stokastisk</span><span class="o">,</span><span class="w"> </span><span class="nn">json</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">stokastisk</span><span class="o">.</span><span class="n">__version__</span><span class="p">)</span>                           <span class="c1"># 0.1.0</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">stokastisk</span><span class="o">.</span><span class="n">prohibited_report</span><span class="p">(),</span> <span class="n">indent</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>   <span class="c1"># "clean": true</span>
+</pre></div>
+<p><code>clean: true</code> means no FlashAttention, FlashInfer or FlashMLA code is present.</p>
+<h2>First generation</h2>
+<p>Engine code runs in an ordinary notebook cell:</p>
+<div class="hl"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">stokastisk</span><span class="w"> </span><span class="kn">import</span> <span class="n">LLM</span><span class="p">,</span> <span class="n">StokastiskConfig</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="n">StokastiskConfig</span><span class="p">(</span><span class="n">max_model_len</span><span class="o">=</span><span class="mi">2048</span><span class="p">)</span>           <span class="c1"># one T4, FP16, TRITON_ATTN</span>
+
+<span class="k">with</span> <span class="n">LLM</span><span class="p">(</span><span class="s2">"Qwen/Qwen2.5-0.5B-Instruct"</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span> <span class="k">as</span> <span class="n">llm</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">llm</span><span class="o">.</span><span class="n">verify_attention_backend</span><span class="p">())</span>               <span class="c1"># TRITON_ATTN</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">llm</span><span class="o">.</span><span class="n">complete</span><span class="p">(</span><span class="s2">"The capital of France is"</span><span class="p">,</span> <span class="n">max_tokens</span><span class="o">=</span><span class="mi">16</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">llm</span><span class="o">.</span><span class="n">chat</span><span class="p">([{</span><span class="s2">"role"</span><span class="p">:</span> <span class="s2">"user"</span><span class="p">,</span> <span class="s2">"content"</span><span class="p">:</span> <span class="s2">"Say hello in five words."</span><span class="p">}])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+</pre></div>
+<p><code>with</code> releases the GPUs on exit. If you do not use <code>with</code>, call <code>llm.close()</code>.</p>
+<h3>Running as a script</h3>
+<p>vLLM starts its engine in a separate (spawned) process. In a <strong>script</strong> (<code>!python demo.py</code>), keep engine code under a guard:</p>
+<div class="hl"><pre><span></span><span class="o">%%</span><span class="n">writefile</span> <span class="n">demo</span><span class="o">.</span><span class="n">py</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">stokastisk</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
+    <span class="k">with</span> <span class="n">stokastisk</span><span class="o">.</span><span class="n">LLM</span><span class="p">(</span><span class="s2">"Qwen/Qwen2.5-0.5B-Instruct"</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">stokastisk</span><span class="o">.</span><span class="n">StokastiskConfig</span><span class="p">(</span><span class="n">max_model_len</span><span class="o">=</span><span class="mi">2048</span><span class="p">))</span> <span class="k">as</span> <span class="n">llm</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">llm</span><span class="o">.</span><span class="n">complete</span><span class="p">(</span><span class="s2">"Hello"</span><span class="p">,</span> <span class="n">max_tokens</span><span class="o">=</span><span class="mi">8</span><span class="p">))</span>
+</pre></div>
+<p>Both forms ran successfully on Kaggle (plain cells in notebooks 18 and 19, script in notebook 16).</p>
+<h2>Which model fits?</h2>
+<p>Each T4 has about 15 GiB. FP16 weights take about 2 bytes per parameter, plus KV cache.</p>
+<table>
+<thead>
+<tr>
+  <th>Model size</th>
+  <th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>up to about 3B</td>
+  <td>one GPU, <code>tensor_parallel_size=1</code> (fastest)</td>
+</tr>
+<tr>
+  <td>about 7B (14 GiB of weights)</td>
+  <td>both GPUs: <code>tensor_parallel_size=2</code></td>
+</tr>
+</tbody>
+</table>
+<p>Ask the SDK: <code>stokastisk.recommend_parallelism(&quot;Qwen/Qwen2.5-Coder-7B-Instruct&quot;)</code> — see <a href="multi-gpu.html">Using both GPUs</a>.</p>
+<p>Next: <a href="configuration.html">Configuration</a>.</p>
+<footer>Stokastisk 0.1.0 · Apache-2.0 · <a href="https://github.com/stokastisk-ai/stokastisk/blob/main/docs/guide/getting-started.md">edit this page on GitHub</a></footer></main></div></body></html>

@@ -1,0 +1,93 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>3. The LLM engine · Stokastisk 0.1.0</title><link rel="stylesheet" href="style.css"></head><body><div class="wrap"><nav><h1>Stokastisk</h1><div class="v">0.1.0 · Kaggle 2 × T4 · Python 3.13</div><a class="" href="index.html">Overview</a><a class="" href="getting-started.html">1. Getting started</a><a class="" href="configuration.html">2. Configuration</a><a class="cur" href="engine.html">3. The LLM engine</a><a class="" href="structured-output.html">4. Structured output</a><a class="" href="server.html">5. OpenAI-compatible server</a><a class="" href="multi-gpu.html">6. Using both GPUs</a><a class="" href="diagnostics.html">7. Checks and diagnostics</a><a class="" href="errors.html">8. Errors</a><a class="" href="advanced.html">9. Advanced modules</a><a class="" href="troubleshooting.html">10. Troubleshooting</a><a class="" href="api-reference.html">API reference</a><div class="ext"><a href="https://github.com/stokastisk-ai/stokastisk">GitHub</a><a href="https://huggingface.co/waqasm86/stokastisk">Hugging Face</a><a href="../">Package index</a></div></nav><main><h1>3. The LLM engine</h1>
+<p><code>stokastisk.LLM</code> wraps the bundled vLLM engine with the T4 defaults and adds lifecycle safety.</p>
+<div class="hl"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">stokastisk</span><span class="w"> </span><span class="kn">import</span> <span class="n">LLM</span><span class="p">,</span> <span class="n">StokastiskConfig</span>
+<span class="n">llm</span> <span class="o">=</span> <span class="n">LLM</span><span class="p">(</span><span class="s2">"Qwen/Qwen2.5-0.5B-Instruct"</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">StokastiskConfig</span><span class="p">(</span><span class="n">max_model_len</span><span class="o">=</span><span class="mi">2048</span><span class="p">))</span>
+</pre></div>
+<ul>
+<li><code>model</code>: a Hugging Face id or a local path (non-empty string).</li>
+<li><code>config</code>: a <code>StokastiskConfig</code>; default <code>StokastiskConfig.from_env()</code>.</li>
+<li>Extra keyword arguments go to vLLM and override config defaults, <strong>except</strong> a different attention backend or structured-output backend, which raise <code>StokastiskCompatibilityError</code>.</li>
+<li><code>execution_strategy=&quot;auto&quot;</code> and <code>&quot;replica_parallel&quot;</code> are refused here (use <code>recommend_parallelism</code> / <a href="multi-gpu.html"><code>ReplicaPool</code></a>).</li>
+<li>After start-up the SDK confirms the attention backend; a mismatch raises <code>AttentionBackendError</code>.</li>
+<li>Engine start-up failures raise <code>EngineError</code>.</li>
+</ul>
+<p>Use it as a context manager so the GPUs are always released.</p>
+<h2>Methods</h2>
+<table>
+<thead>
+<tr>
+  <th>Method</th>
+  <th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>generate(prompts, sampling_params=None, *, timeout=None, **kw)</code></td>
+  <td>vLLM <code>generate</code>. <code>prompts</code> is a list of non-empty strings; an empty list returns <code>[]</code>.</td>
+</tr>
+<tr>
+  <td><code>chat(messages, sampling_params=None, *, timeout=None, **kw)</code></td>
+  <td>vLLM <code>chat</code>; the model's chat template is applied. <code>messages</code> is a list of <code>{&quot;role&quot;, &quot;content&quot;}</code> dicts (or a list of such lists).</td>
+</tr>
+<tr>
+  <td><code>complete(prompt, *, max_tokens=64, temperature=0.0, timeout=None)</code></td>
+  <td>One prompt in, text out.</td>
+</tr>
+<tr>
+  <td><code>generate_structured(prompts, schema, *, max_tokens=64, temperature=0.0, timeout=None)</code></td>
+  <td>JSON that satisfies <code>schema</code>. See <a href="structured-output.html">Structured output</a>.</td>
+</tr>
+<tr>
+  <td><code>verify_attention_backend()</code></td>
+  <td>Returns <code>&quot;TRITON_ATTN&quot;</code> (raises otherwise).</td>
+</tr>
+<tr>
+  <td><code>selected_attention_backend</code></td>
+  <td>The backend recorded in the live engine configuration.</td>
+</tr>
+<tr>
+  <td><code>verify_structured_output_backend()</code> / <code>structured_output_backend</code></td>
+  <td>Same for the pinned <code>xgrammar</code>.</td>
+</tr>
+<tr>
+  <td><code>close()</code></td>
+  <td>Stops the engine and its workers, frees cached CUDA memory. Idempotent.</td>
+</tr>
+<tr>
+  <td><code>closed</code></td>
+  <td><code>True</code> after <code>close()</code>.</td>
+</tr>
+<tr>
+  <td><code>engine</code></td>
+  <td>The underlying vLLM object (advanced use).</td>
+</tr>
+</tbody>
+</table>
+<h2>Sampling</h2>
+<p><code>generate</code> and <code>chat</code> return vLLM <code>RequestOutput</code> objects; the text is <code>out[0].outputs[0].text</code>.</p>
+<div class="hl"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">stokastisk</span><span class="w"> </span><span class="kn">import</span> <span class="n">SamplingParams</span>        <span class="c1"># lazy import from the bundled vLLM</span>
+
+<span class="n">params</span> <span class="o">=</span> <span class="n">SamplingParams</span><span class="p">(</span><span class="n">temperature</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">max_tokens</span><span class="o">=</span><span class="mi">96</span><span class="p">)</span>
+<span class="n">outs</span> <span class="o">=</span> <span class="n">llm</span><span class="o">.</span><span class="n">generate</span><span class="p">([</span><span class="s2">"Explain TCP in two sentences."</span><span class="p">],</span> <span class="n">params</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">outs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+</pre></div>
+<p>Qwen models ship a <code>generation_config.json</code>; vLLM applies its defaults (e.g. <code>temperature=0.7</code>, <code>repetition_penalty</code>) unless you pass your own <code>SamplingParams</code>. Use <code>temperature=0.0</code> for repeatable output.</p>
+<h2>Timeouts and concurrency</h2>
+<ul>
+<li>Calls are serialised: one engine call at a time per <code>LLM</code>.</li>
+<li><code>timeout=</code> (seconds) raises <code>EngineTimeoutError</code>. Offline generation <strong>cannot be cancelled</strong>: the request keeps running and later calls wait for it.</li>
+<li>Calls after <code>close()</code> raise <code>EngineClosedError</code>.</li>
+</ul>
+<h2>Closing</h2>
+<p><code>close()</code> always runs every cleanup step. If the engine's own shutdown failed it raises <code>EngineCloseError</code> <em>after</em> cleaning up; the engine is closed either way. In Kaggle runs both T4s returned to 14.46 of 14.56 GiB free after <code>close()</code>.</p>
+<h2>Example: chat with a system prompt</h2>
+<div class="hl"><pre><span></span><span class="k">with</span> <span class="n">LLM</span><span class="p">(</span><span class="s2">"Qwen/Qwen2.5-0.5B-Instruct"</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">StokastiskConfig</span><span class="p">(</span><span class="n">max_model_len</span><span class="o">=</span><span class="mi">2048</span><span class="p">))</span> <span class="k">as</span> <span class="n">llm</span><span class="p">:</span>
+    <span class="n">reply</span> <span class="o">=</span> <span class="n">llm</span><span class="o">.</span><span class="n">chat</span><span class="p">([</span>
+        <span class="p">{</span><span class="s2">"role"</span><span class="p">:</span> <span class="s2">"system"</span><span class="p">,</span> <span class="s2">"content"</span><span class="p">:</span> <span class="s2">"You are a concise assistant."</span><span class="p">},</span>
+        <span class="p">{</span><span class="s2">"role"</span><span class="p">:</span> <span class="s2">"user"</span><span class="p">,</span> <span class="s2">"content"</span><span class="p">:</span> <span class="s2">"Five practical uses of Python for data analysis."</span><span class="p">},</span>
+    <span class="p">])</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">reply</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+</pre></div>
+<p>You may see <code>Triton kernel JIT compilation during inference</code> warnings on the first request. They are informational (a one-time latency spike).</p>
+<p>Next: <a href="structured-output.html">Structured output</a>.</p>
+<footer>Stokastisk 0.1.0 · Apache-2.0 · <a href="https://github.com/stokastisk-ai/stokastisk/blob/main/docs/guide/engine.md">edit this page on GitHub</a></footer></main></div></body></html>

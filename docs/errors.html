@@ -1,0 +1,115 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>8. Errors · Stokastisk 0.1.0</title><link rel="stylesheet" href="style.css"></head><body><div class="wrap"><nav><h1>Stokastisk</h1><div class="v">0.1.0 · Kaggle 2 × T4 · Python 3.13</div><a class="" href="index.html">Overview</a><a class="" href="getting-started.html">1. Getting started</a><a class="" href="configuration.html">2. Configuration</a><a class="" href="engine.html">3. The LLM engine</a><a class="" href="structured-output.html">4. Structured output</a><a class="" href="server.html">5. OpenAI-compatible server</a><a class="" href="multi-gpu.html">6. Using both GPUs</a><a class="" href="diagnostics.html">7. Checks and diagnostics</a><a class="cur" href="errors.html">8. Errors</a><a class="" href="advanced.html">9. Advanced modules</a><a class="" href="troubleshooting.html">10. Troubleshooting</a><a class="" href="api-reference.html">API reference</a><div class="ext"><a href="https://github.com/stokastisk-ai/stokastisk">GitHub</a><a href="https://huggingface.co/waqasm86/stokastisk">Hugging Face</a><a href="../">Package index</a></div></nav><main><h1>8. Errors</h1>
+<p>All SDK exceptions derive from <code>StokastiskError</code> (a <code>RuntimeError</code>). Import from <code>stokastisk</code>.</p>
+<pre><code>StokastiskError
+├── EnvironmentValidationError
+│   ├── GPUDiscoveryError
+│   └── TopologyError
+├── EngineError
+│   ├── AttentionBackendError
+│   ├── EngineClosedError
+│   ├── EngineTimeoutError
+│   ├── EngineCloseError
+│   ├── StructuredOutputError
+│   └── ServerError
+│       ├── ServerStartupError
+│       ├── ServerHTTPError
+│       └── ServerShutdownError
+├── MissingDependencyError
+├── ReplicaError
+└── ConfigurationError (also a ValueError)
+    ├── UnsupportedParallelismError
+    ├── InsufficientMemoryError
+    └── StokastiskCompatibilityError
+</code></pre><table>
+<thead>
+<tr>
+  <th>Exception</th>
+  <th>Typical cause</th>
+  <th>What to do</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>ConfigurationError</code></td>
+  <td>invalid <code>StokastiskConfig</code> value</td>
+  <td>read the message; it names the field</td>
+</tr>
+<tr>
+  <td><code>UnsupportedParallelismError</code></td>
+  <td>TP×PP &gt; 2, strategy/size mismatch</td>
+  <td>use TP=2 <strong>or</strong> PP=2, not both</td>
+</tr>
+<tr>
+  <td><code>StokastiskCompatibilityError</code></td>
+  <td>Flash backend, bfloat16, unsupported model/quantization</td>
+  <td>use <code>TRITON_ATTN</code>, <code>dtype=&quot;half&quot;</code></td>
+</tr>
+<tr>
+  <td><code>InsufficientMemoryError</code></td>
+  <td>estimate exceeds GPU memory</td>
+  <td>smaller <code>max_model_len</code>, TP=2, smaller model</td>
+</tr>
+<tr>
+  <td><code>EngineError</code></td>
+  <td>vLLM failed to start or rejected a request</td>
+  <td>read <code>__cause__</code> and the log above it</td>
+</tr>
+<tr>
+  <td><code>AttentionBackendError</code></td>
+  <td>engine is not on <code>TRITON_ATTN</code></td>
+  <td>should never happen; report it</td>
+</tr>
+<tr>
+  <td><code>EngineClosedError</code></td>
+  <td>method called after <code>close()</code></td>
+  <td>create a new <code>LLM</code></td>
+</tr>
+<tr>
+  <td><code>EngineTimeoutError</code></td>
+  <td><code>timeout=</code> expired (request keeps running)</td>
+  <td>wait, or raise the timeout</td>
+</tr>
+<tr>
+  <td><code>EngineCloseError</code></td>
+  <td>engine shutdown raised (cleanup still completed)</td>
+  <td>check GPU memory with <code>mem_get_info</code></td>
+</tr>
+<tr>
+  <td><code>StructuredOutputError</code></td>
+  <td>invalid/truncated/non-conforming JSON</td>
+  <td>bound the schema, raise <code>max_tokens</code></td>
+</tr>
+<tr>
+  <td><code>MissingDependencyError</code></td>
+  <td>a required package is not installed</td>
+  <td>reinstall <code>stokastisk</code>; the message lists names</td>
+</tr>
+<tr>
+  <td><code>ServerStartupError</code></td>
+  <td><code>vllm serve</code> exited or timed out</td>
+  <td>read <code>.log_excerpt</code>, <code>.log_path</code>, <code>.command</code></td>
+</tr>
+<tr>
+  <td><code>ServerHTTPError</code></td>
+  <td>non-200 or truncated stream</td>
+  <td>read the status/body in the message</td>
+</tr>
+<tr>
+  <td><code>ServerShutdownError</code></td>
+  <td>a server process could not be killed</td>
+  <td>rare; restart the notebook</td>
+</tr>
+<tr>
+  <td><code>ReplicaError</code></td>
+  <td>worker died, timed out, or had to be killed on close</td>
+  <td><code>restart_dead()</code> or recreate the pool</td>
+</tr>
+<tr>
+  <td><code>EnvironmentValidationError</code> / <code>GPUDiscoveryError</code> / <code>TopologyError</code></td>
+  <td>wrong runtime or no GPU</td>
+  <td>set Accelerator to <em>GPU T4 × 2</em></td>
+</tr>
+</tbody>
+</table>
+<p>Catch broadly with <code>except stokastisk.StokastiskError</code>.</p>
+<footer>Stokastisk 0.1.0 · Apache-2.0 · <a href="https://github.com/stokastisk-ai/stokastisk/blob/main/docs/guide/errors.md">edit this page on GitHub</a></footer></main></div></body></html>

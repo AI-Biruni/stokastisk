@@ -1,0 +1,135 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>5. OpenAI-compatible server · Stokastisk 0.1.0</title><link rel="stylesheet" href="style.css"></head><body><div class="wrap"><nav><h1>Stokastisk</h1><div class="v">0.1.0 · Kaggle 2 × T4 · Python 3.13</div><a class="" href="index.html">Overview</a><a class="" href="getting-started.html">1. Getting started</a><a class="" href="configuration.html">2. Configuration</a><a class="" href="engine.html">3. The LLM engine</a><a class="" href="structured-output.html">4. Structured output</a><a class="cur" href="server.html">5. OpenAI-compatible server</a><a class="" href="multi-gpu.html">6. Using both GPUs</a><a class="" href="diagnostics.html">7. Checks and diagnostics</a><a class="" href="errors.html">8. Errors</a><a class="" href="advanced.html">9. Advanced modules</a><a class="" href="troubleshooting.html">10. Troubleshooting</a><a class="" href="api-reference.html">API reference</a><div class="ext"><a href="https://github.com/stokastisk-ai/stokastisk">GitHub</a><a href="https://huggingface.co/waqasm86/stokastisk">Hugging Face</a><a href="../">Package index</a></div></nav><main><h1>5. OpenAI-compatible server</h1>
+<p><code>stokastisk.serving</code> runs the bundled <code>vllm serve</code> as a supervised child process with the T4 defaults, and offers small client helpers. Use it from a notebook cell or script.</p>
+<div class="hl"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">stokastisk</span><span class="w"> </span><span class="kn">import</span> <span class="n">serving</span>
+
+<span class="k">with</span> <span class="n">serving</span><span class="o">.</span><span class="n">ServerProcess</span><span class="p">(</span><span class="s2">"Qwen/Qwen2.5-0.5B-Instruct"</span><span class="p">)</span> <span class="k">as</span> <span class="n">srv</span><span class="p">:</span>
+    <span class="n">srv</span><span class="o">.</span><span class="n">wait_ready</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">serving</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="n">srv</span><span class="o">.</span><span class="n">base_url</span><span class="p">,</span> <span class="n">srv</span><span class="o">.</span><span class="n">served_model_name</span><span class="p">,</span> <span class="p">[{</span><span class="s2">"role"</span><span class="p">:</span> <span class="s2">"user"</span><span class="p">,</span> <span class="s2">"content"</span><span class="p">:</span> <span class="s2">"Hi"</span><span class="p">}]))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">serving</span><span class="o">.</span><span class="n">stream_chat</span><span class="p">(</span><span class="n">srv</span><span class="o">.</span><span class="n">base_url</span><span class="p">,</span> <span class="n">srv</span><span class="o">.</span><span class="n">served_model_name</span><span class="p">,</span>
+                                      <span class="p">[{</span><span class="s2">"role"</span><span class="p">:</span> <span class="s2">"user"</span><span class="p">,</span> <span class="s2">"content"</span><span class="p">:</span> <span class="s2">"Count to five."</span><span class="p">}])))</span>
+</pre></div>
+<p>Leaving the <code>with</code> block stops the server (it is never started implicitly or left running).</p>
+<h2><code>ServerProcess(model, config=None, *, ...)</code></h2>
+<table>
+<thead>
+<tr>
+  <th>Argument</th>
+  <th>Default</th>
+  <th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>model</code></td>
+  <td>—</td>
+  <td>model id or path</td>
+</tr>
+<tr>
+  <td><code>config</code></td>
+  <td><code>StokastiskConfig()</code></td>
+  <td>T4 defaults; <code>replica_parallel</code> is refused</td>
+</tr>
+<tr>
+  <td><code>host</code>, <code>port</code></td>
+  <td><code>127.0.0.1</code>, <code>8000</code></td>
+  <td><code>find_free_port()</code> gives a free one</td>
+</tr>
+<tr>
+  <td><code>served_model_name</code></td>
+  <td><code>model</code></td>
+  <td>name clients send</td>
+</tr>
+<tr>
+  <td><code>quantization</code></td>
+  <td><code>None</code></td>
+  <td>refused if the method needs a GPU newer than SM75</td>
+</tr>
+<tr>
+  <td><code>extra_args</code></td>
+  <td><code>()</code></td>
+  <td>additional <code>vllm serve</code> arguments</td>
+</tr>
+<tr>
+  <td><code>cuda_visible_devices</code></td>
+  <td><code>None</code></td>
+  <td>e.g. <code>&quot;0&quot;</code></td>
+</tr>
+<tr>
+  <td><code>log_path</code></td>
+  <td>temp file</td>
+  <td>server output; kept after <code>stop()</code></td>
+</tr>
+</tbody>
+</table>
+<p>Always passed: <code>--attention-backend TRITON_ATTN</code>, FP16, pinned xgrammar.</p>
+<table>
+<thead>
+<tr>
+  <th>Member</th>
+  <th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>start()</code> / <code>wait_ready(timeout=600)</code> / <code>start_and_wait()</code></td>
+  <td>start, poll <code>/health</code> until 200</td>
+</tr>
+<tr>
+  <td><code>health()</code></td>
+  <td><code>True</code> if <code>/health</code> answers now</td>
+</tr>
+<tr>
+  <td><code>restart()</code></td>
+  <td>graceful stop then fresh start on the same port</td>
+</tr>
+<tr>
+  <td><code>stop(grace=30)</code></td>
+  <td>SIGINT → SIGTERM → SIGKILL on the process group; returns the exit code</td>
+</tr>
+<tr>
+  <td><code>base_url</code>, <code>pid</code>, <code>running</code>, <code>command</code>, <code>log_path</code>, <code>served_model_name</code></td>
+  <td>state</td>
+</tr>
+<tr>
+  <td><code>log_tail(max_lines)</code></td>
+  <td>last lines of the server log</td>
+</tr>
+<tr>
+  <td><code>shutdown_report</code></td>
+  <td>which signals were needed, whether children survived</td>
+</tr>
+</tbody>
+</table>
+<p>If start-up fails, <code>ServerStartupError</code> carries the exit code, the exact command, the log path and the last log lines.</p>
+<h2>Client helpers</h2>
+<table>
+<thead>
+<tr>
+  <th>Function</th>
+  <th>Returns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>chat(base_url, model, messages, *, max_tokens=64, temperature=0.0, timeout=120)</code></td>
+  <td>assistant text</td>
+</tr>
+<tr>
+  <td><code>stream_chat(...)</code></td>
+  <td>generator of text deltas; a truncated stream raises <code>ServerHTTPError</code></td>
+</tr>
+<tr>
+  <td><code>list_models(base_url)</code></td>
+  <td><code>/v1/models</code> response</td>
+</tr>
+<tr>
+  <td><code>fetch_metrics(base_url)</code></td>
+  <td>Prometheus <code>/metrics</code> parsed to <code>{sample: value}</code></td>
+</tr>
+</tbody>
+</table>
+<p>You can also call the server with any OpenAI client using <code>base_url=f&quot;{srv.base_url}/v1&quot;</code> and any API key.</p>
+<h2>Utilities</h2>
+<p><code>build_serve_command(model, config, ...)</code> returns the exact argv (pure function, nothing started). <code>find_free_port()</code>, <code>port_is_free(host, port)</code>, <code>check_server_requirements()</code> (lists missing serving packages), <code>validate_model_id</code>, <code>validate_host</code>, <code>validate_port</code>.</p>
+<p>Next: <a href="multi-gpu.html">Using both GPUs</a>.</p>
+<footer>Stokastisk 0.1.0 · Apache-2.0 · <a href="https://github.com/stokastisk-ai/stokastisk/blob/main/docs/guide/server.md">edit this page on GitHub</a></footer></main></div></body></html>

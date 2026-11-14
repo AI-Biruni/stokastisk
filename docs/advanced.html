@@ -1,0 +1,106 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>9. Advanced modules · Stokastisk 0.1.0</title><link rel="stylesheet" href="style.css"></head><body><div class="wrap"><nav><h1>Stokastisk</h1><div class="v">0.1.0 · Kaggle 2 × T4 · Python 3.13</div><a class="" href="index.html">Overview</a><a class="" href="getting-started.html">1. Getting started</a><a class="" href="configuration.html">2. Configuration</a><a class="" href="engine.html">3. The LLM engine</a><a class="" href="structured-output.html">4. Structured output</a><a class="" href="server.html">5. OpenAI-compatible server</a><a class="" href="multi-gpu.html">6. Using both GPUs</a><a class="" href="diagnostics.html">7. Checks and diagnostics</a><a class="" href="errors.html">8. Errors</a><a class="cur" href="advanced.html">9. Advanced modules</a><a class="" href="troubleshooting.html">10. Troubleshooting</a><a class="" href="api-reference.html">API reference</a><div class="ext"><a href="https://github.com/stokastisk-ai/stokastisk">GitHub</a><a href="https://huggingface.co/waqasm86/stokastisk">Hugging Face</a><a href="../">Package index</a></div></nav><main><h1>9. Advanced modules</h1>
+<p>These modules are optional. They are import-light, degrade to an explicit &quot;unavailable&quot; instead of failing, and are not needed for normal inference.</p>
+<div class="callout">
+
+<p><code>communication</code> is <strong>experimental</strong> and is not used by the engine. The benchmarks are research tools, not throughput promises: on two PCIe-connected T4s, TP=2/PP=2/replicas are slower than TP=1 for models that fit one T4.</p>
+</div>
+
+<h2><code>stokastisk.telemetry</code></h2>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>nvml.sample_once()</code></td>
+  <td>one GPU sample (NVML if present, else <code>nvidia-smi</code>, else &quot;unavailable&quot;)</td>
+</tr>
+<tr>
+  <td><code>nvml.GpuSampler(interval=0.5)</code></td>
+  <td>background sampler: <code>with GpuSampler() as s: ...; s.summary()</code></td>
+</tr>
+<tr>
+  <td><code>metrics.percentile / summarize / throughput / imbalance_percent / token_latencies</code></td>
+  <td>pure statistics</td>
+</tr>
+<tr>
+  <td><code>communication_profiler.SegmentTimer</code></td>
+  <td><code>wall(name)</code> and <code>cuda(name)</code> context managers, <code>totals()</code>, <code>report()</code></td>
+</tr>
+<tr>
+  <td><code>worker_metrics.WorkerMetrics</code>, <code>balance_report</code></td>
+  <td>compute vs communication vs idle per worker</td>
+</tr>
+<tr>
+  <td><code>report.write_json(path, obj)</code>, <code>report.provenance()</code>, <code>report.span(name)</code></td>
+  <td>JSON evidence; optional OpenTelemetry span (a no-op unless configured)</td>
+</tr>
+<tr>
+  <td><code>cuda_profiler.nsight_status()</code></td>
+  <td>whether Nsight is usable (never required)</td>
+</tr>
+</tbody>
+</table>
+<div class="hl"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">stokastisk.telemetry.nvml</span><span class="w"> </span><span class="kn">import</span> <span class="n">GpuSampler</span>
+<span class="k">with</span> <span class="n">GpuSampler</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span> <span class="k">as</span> <span class="n">s</span><span class="p">:</span>
+    <span class="o">...</span>                       <span class="c1"># run something</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+</pre></div>
+<h2><code>stokastisk.cuda</code></h2>
+<p>Thin PyTorch-backed helpers that never touch vLLM's own streams: <code>device.device_count/on_device/synchronize</code>, <code>streams.create_stream/stream_synchronize</code>, <code>events.new_event/record/make_wait/elapsed_ms</code>, <code>memory.mem_info/pinned_empty/timed_copy</code>.</p>
+<div class="hl"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">stokastisk.cuda.memory</span><span class="w"> </span><span class="kn">import</span> <span class="n">mem_info</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">mem_info</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>            <span class="c1"># free / total for GPU 0</span>
+</pre></div>
+<h2><code>stokastisk.nccl</code> and <code>stokastisk.communication</code></h2>
+<ul>
+<li><code>nccl.run_collective_selftest()</code> — all-reduce, all-gather, reduce-scatter, broadcast, barrier over a 2-rank <code>torch.distributed.run</code> job; never raises, returns a report.</li>
+<li><code>communication.nccl.time_p2p / time_allreduce</code> — NCCL timing helpers.</li>
+<li><code>communication.cuda_transport.HostStagedTransport</code>, <code>pinned_memory.PinnedBufferRing</code>, <code>synchronization.BufferTicket</code>, <code>native.build_native/load_native/NativeHostStaged</code> — an experimental host-staged GPU→GPU copy for machines without peer access (the optional C++ file is <code>native/host_staged_xfer.cpp</code>; needs <code>nvcc</code>).</li>
+<li><code>transport_registry.list_transports()</code> — known transports with an honest status; nothing is selected automatically.</li>
+</ul>
+<h2><code>stokastisk.benchmarks</code></h2>
+<p>Identical workloads for every strategy; all runs are recorded (median/p95/min/max).</p>
+<table>
+<thead>
+<tr>
+  <th>Module</th>
+  <th>Entry points</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>baseline</code></td>
+  <td><code>Workload</code>, <code>measure</code>, <code>run_engine</code></td>
+</tr>
+<tr>
+  <td><code>tensor_parallel</code></td>
+  <td><code>config_for(tp)</code>, <code>run(model, workloads, tp)</code></td>
+</tr>
+<tr>
+  <td><code>pipeline_parallel</code></td>
+  <td><code>config_for</code>, <code>run</code></td>
+</tr>
+<tr>
+  <td><code>replica_parallel</code></td>
+  <td><code>run(model, workloads, devices=(0, 1))</code></td>
+</tr>
+<tr>
+  <td><code>communication</code></td>
+  <td><code>bench_host_staged</code>, <code>bench_nccl</code>, <code>compare</code></td>
+</tr>
+<tr>
+  <td><code>gpu_balance</code></td>
+  <td><code>from_replica_record</code></td>
+</tr>
+<tr>
+  <td><code>report</code></td>
+  <td><code>comparison_table</code>, <code>relative_to</code> — combine records into JSON + a Markdown table; missing strategies are listed as <code>NOT_RUN</code></td>
+</tr>
+</tbody>
+</table>
+<h2><code>stokastisk.parallel</code> internals</h2>
+<p><code>scheduler.Scheduler</code>, <code>routing.choose_worker/WorkerLoad</code>, <code>queue.RequestQueue</code>, <code>memory.load_model_spec/ModelSpec</code>, <code>worker.worker_main</code> implement <code>ReplicaPool</code> and the recommender. They are public but you rarely need them. <code>memory.load_model_spec(model, local_files_only=False)</code> estimates weight and KV-cache MiB from <code>config.json</code>.</p>
+<footer>Stokastisk 0.1.0 · Apache-2.0 · <a href="https://github.com/stokastisk-ai/stokastisk/blob/main/docs/guide/advanced.md">edit this page on GitHub</a></footer></main></div></body></html>

@@ -1,0 +1,107 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>6. Using both GPUs · Stokastisk 0.1.0</title><link rel="stylesheet" href="style.css"></head><body><div class="wrap"><nav><h1>Stokastisk</h1><div class="v">0.1.0 · Kaggle 2 × T4 · Python 3.13</div><a class="" href="index.html">Overview</a><a class="" href="getting-started.html">1. Getting started</a><a class="" href="configuration.html">2. Configuration</a><a class="" href="engine.html">3. The LLM engine</a><a class="" href="structured-output.html">4. Structured output</a><a class="" href="server.html">5. OpenAI-compatible server</a><a class="cur" href="multi-gpu.html">6. Using both GPUs</a><a class="" href="diagnostics.html">7. Checks and diagnostics</a><a class="" href="errors.html">8. Errors</a><a class="" href="advanced.html">9. Advanced modules</a><a class="" href="troubleshooting.html">10. Troubleshooting</a><a class="" href="api-reference.html">API reference</a><div class="ext"><a href="https://github.com/stokastisk-ai/stokastisk">GitHub</a><a href="https://huggingface.co/waqasm86/stokastisk">Hugging Face</a><a href="../">Package index</a></div></nav><main><h1>6. Using both GPUs</h1>
+<p>The two T4s share a PCIe host bridge (no NVLink). <strong>For a model that fits one T4, TP=1 is fastest.</strong> Use two GPUs when the model does not fit one.</p>
+<table>
+<thead>
+<tr>
+  <th>Strategy</th>
+  <th>Config</th>
+  <th>Use for</th>
+  <th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Single GPU</td>
+  <td><code>StokastiskConfig()</code></td>
+  <td>models up to about 3B in FP16</td>
+  <td>Kaggle-tested</td>
+</tr>
+<tr>
+  <td>Tensor parallel</td>
+  <td><code>tensor_parallel_size=2</code></td>
+  <td>a model too large for one T4 (e.g. 7B)</td>
+  <td>Kaggle-tested</td>
+</tr>
+<tr>
+  <td>Pipeline parallel</td>
+  <td><code>pipeline_parallel_size=2</code></td>
+  <td>same, layer-split</td>
+  <td>Kaggle-tested, <strong>experimental</strong></td>
+</tr>
+<tr>
+  <td>Replicas</td>
+  <td><code>ReplicaPool(model, devices=[0, 1])</code></td>
+  <td>throughput: two independent copies</td>
+  <td>Kaggle-tested</td>
+</tr>
+</tbody>
+</table>
+<p>TP and PP are alternatives, not a combination: TP=2 × PP=2 would need four GPUs and raises <code>UnsupportedParallelismError</code>.</p>
+<h2>Tensor parallel (7B example)</h2>
+<div class="hl"><pre><span></span><span class="n">cfg</span> <span class="o">=</span> <span class="n">StokastiskConfig</span><span class="p">(</span><span class="n">tensor_parallel_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">max_model_len</span><span class="o">=</span><span class="mi">2048</span><span class="p">,</span> <span class="n">gpu_memory_utilization</span><span class="o">=</span><span class="mf">0.88</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">LLM</span><span class="p">(</span><span class="s2">"Qwen/Qwen2.5-Coder-7B-Instruct"</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">cfg</span><span class="p">)</span> <span class="k">as</span> <span class="n">llm</span><span class="p">:</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">llm</span><span class="o">.</span><span class="n">chat</span><span class="p">([{</span><span class="s2">"role"</span><span class="p">:</span> <span class="s2">"user"</span><span class="p">,</span> <span class="s2">"content"</span><span class="p">:</span> <span class="s2">"Write a Python function that parses JSON Lines."</span><span class="p">}])</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+</pre></div>
+<p>Between experiments, close the previous engine first (the <code>with</code> block does this) so GPU memory is free.</p>
+<h2>Pipeline parallel</h2>
+<div class="hl"><pre><span></span><span class="n">cfg</span> <span class="o">=</span> <span class="n">StokastiskConfig</span><span class="p">(</span><span class="n">pipeline_parallel_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">max_model_len</span><span class="o">=</span><span class="mi">2048</span><span class="p">)</span>
+</pre></div>
+<p>A warning says it is experimental and slower than TP=1 for models that fit one T4. NCCL may print an &quot;unbatched P2P op&quot; warning; it is harmless.</p>
+<h2><code>ReplicaPool</code></h2>
+<p>Two independent TP=1 engines, one per GPU, behind a token-aware scheduler. Each GPU holds a full copy of the weights.</p>
+<div class="hl"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">stokastisk</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReplicaPool</span>
+
+<span class="n">pool</span> <span class="o">=</span> <span class="n">ReplicaPool</span><span class="p">(</span><span class="s2">"Qwen/Qwen2.5-0.5B-Instruct"</span><span class="p">,</span> <span class="n">devices</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                   <span class="n">config</span><span class="o">=</span><span class="n">StokastiskConfig</span><span class="p">(</span><span class="n">max_model_len</span><span class="o">=</span><span class="mi">2048</span><span class="p">))</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">texts</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">generate</span><span class="p">([</span><span class="s2">"Hello"</span><span class="p">,</span> <span class="s2">"Bonjour"</span><span class="p">,</span> <span class="s2">"Hola"</span><span class="p">,</span> <span class="s2">"Ciao"</span><span class="p">],</span> <span class="n">max_tokens</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">texts</span><span class="p">,</span> <span class="n">pool</span><span class="o">.</span><span class="n">last_stats</span><span class="p">[</span><span class="s2">"output_tok_per_s"</span><span class="p">])</span>
+<span class="k">finally</span><span class="p">:</span>
+    <span class="n">pool</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+<table>
+<thead>
+<tr>
+  <th>Member</th>
+  <th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>ReplicaPool(model, devices=(0, 1), *, config=None, ready_timeout=900, max_attempts=2, engine_kwargs=None)</code></td>
+  <td>spawns one worker per device; <code>config</code> must be TP=1/PP=1</td>
+</tr>
+<tr>
+  <td><code>generate(prompts, *, max_tokens=64, temperature=0.0, timeout=1800)</code></td>
+  <td>list of texts in prompt order</td>
+</tr>
+<tr>
+  <td><code>restart_dead()</code></td>
+  <td>restarts exited workers (never done implicitly)</td>
+</tr>
+<tr>
+  <td><code>close(timeout=60)</code></td>
+  <td>stops all workers, raises <code>ReplicaError</code> if any had to be killed</td>
+</tr>
+<tr>
+  <td><code>info</code>, <code>last_stats</code>, <code>close_report</code>, <code>config</code></td>
+  <td>state; <code>last_stats</code> has wall time, tokens/s, per-GPU busy time</td>
+</tr>
+</tbody>
+</table>
+<p>Failure recovery has been exercised with fake workers on CPU only, not on real GPUs.</p>
+<h2>Topology</h2>
+<div class="hl"><pre><span></span><span class="n">topo</span> <span class="o">=</span> <span class="n">stokastisk</span><span class="o">.</span><span class="n">discover_topology</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">topo</span><span class="o">.</span><span class="n">gpu_count</span><span class="p">,</span> <span class="n">topo</span><span class="o">.</span><span class="n">pair_link</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">topo</span><span class="o">.</span><span class="n">peer_access</span><span class="o">.</span><span class="n">all_pairs_available</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">topo</span><span class="o">.</span><span class="n">to_dict</span><span class="p">())</span>
+</pre></div>
+<p><code>Topology</code> fields include <code>devices</code> (name, UUID, compute capability, VRAM, PCIe generation/width), <code>peer_access</code>, <code>link_class</code> (<code>NVLINK</code>, <code>PIX</code>, <code>PXB</code>, <code>PHB</code>, <code>NODE</code>, <code>SYS</code>, <code>UNKNOWN</code>), <code>nccl_available</code>, <code>cuda_runtime_version</code>, <code>driver_version</code>, <code>cpu_count</code>, RAM, <code>notes</code>, <code>recommended_parallelism</code>. A value that could not be measured is <code>None</code>, never invented. Peer access varies between Kaggle VMs, so the SDK does not rely on it.</p>
+<h2>Recommender</h2>
+<div class="hl"><pre><span></span><span class="n">rec</span> <span class="o">=</span> <span class="n">stokastisk</span><span class="o">.</span><span class="n">recommend_parallelism</span><span class="p">(</span><span class="s2">"Qwen/Qwen2.5-Coder-7B-Instruct"</span><span class="p">,</span> <span class="n">workload</span><span class="o">=</span><span class="s2">"latency"</span><span class="p">,</span> <span class="n">max_model_len</span><span class="o">=</span><span class="mi">2048</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">strategy</span><span class="p">,</span> <span class="n">rec</span><span class="o">.</span><span class="n">reason</span><span class="p">,</span> <span class="n">rec</span><span class="o">.</span><span class="n">warnings</span><span class="p">,</span> <span class="n">rec</span><span class="o">.</span><span class="n">estimates</span><span class="p">)</span>
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">to_config</span><span class="p">()</span>                 <span class="c1"># a validated StokastiskConfig; raises if nothing can run</span>
+</pre></div>
+<p><code>workload</code> is <code>&quot;latency&quot;</code> or <code>&quot;throughput&quot;</code>. Strategies include <code>single_gpu</code>, <code>tensor_parallel</code>, <code>pipeline_parallel</code>, <code>replica_parallel</code>, and the non-runnable <code>insufficient_memory</code>, <code>unsupported_architecture</code>, <code>no_gpu</code>. Memory numbers are <strong>estimates</strong> from the model's <code>config.json</code>. It only recommends; you decide.</p>
+<p>Next: <a href="diagnostics.html">Checks and diagnostics</a>.</p>
+<footer>Stokastisk 0.1.0 · Apache-2.0 · <a href="https://github.com/stokastisk-ai/stokastisk/blob/main/docs/guide/multi-gpu.md">edit this page on GitHub</a></footer></main></div></body></html>

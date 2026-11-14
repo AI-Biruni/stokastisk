@@ -1,0 +1,150 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>2. Configuration · Stokastisk 0.1.0</title><link rel="stylesheet" href="style.css"></head><body><div class="wrap"><nav><h1>Stokastisk</h1><div class="v">0.1.0 · Kaggle 2 × T4 · Python 3.13</div><a class="" href="index.html">Overview</a><a class="" href="getting-started.html">1. Getting started</a><a class="cur" href="configuration.html">2. Configuration</a><a class="" href="engine.html">3. The LLM engine</a><a class="" href="structured-output.html">4. Structured output</a><a class="" href="server.html">5. OpenAI-compatible server</a><a class="" href="multi-gpu.html">6. Using both GPUs</a><a class="" href="diagnostics.html">7. Checks and diagnostics</a><a class="" href="errors.html">8. Errors</a><a class="" href="advanced.html">9. Advanced modules</a><a class="" href="troubleshooting.html">10. Troubleshooting</a><a class="" href="api-reference.html">API reference</a><div class="ext"><a href="https://github.com/stokastisk-ai/stokastisk">GitHub</a><a href="https://huggingface.co/waqasm86/stokastisk">Hugging Face</a><a href="../">Package index</a></div></nav><main><h1>2. Configuration</h1>
+<p><code>StokastiskConfig</code> is a validated dataclass. Invalid values raise <code>ConfigurationError</code> at construction, before any GPU work.</p>
+<div class="hl"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">stokastisk</span><span class="w"> </span><span class="kn">import</span> <span class="n">StokastiskConfig</span>
+
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">StokastiskConfig</span><span class="p">(</span><span class="n">tensor_parallel_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">max_model_len</span><span class="o">=</span><span class="mi">2048</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">strategy</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">world_size</span><span class="p">)</span>      <span class="c1"># tensor_parallel 2</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">as_dict</span><span class="p">())</span>
+</pre></div>
+<h2>Fields</h2>
+<table>
+<thead>
+<tr>
+  <th>Field</th>
+  <th>Default</th>
+  <th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>tensor_parallel_size</code></td>
+  <td><code>1</code></td>
+  <td>1 or 2. TP=2 splits each layer over both T4s (traffic over PCIe, no NVLink).</td>
+</tr>
+<tr>
+  <td><code>pipeline_parallel_size</code></td>
+  <td><code>1</code></td>
+  <td>1 or 2. PP=2 puts half the layers on each GPU. <strong>Experimental.</strong></td>
+</tr>
+<tr>
+  <td><code>execution_strategy</code></td>
+  <td><code>None</code></td>
+  <td><code>single_gpu</code>, <code>tensor_parallel</code>, <code>pipeline_parallel</code>, <code>replica_parallel</code>, <code>auto</code>. <code>None</code> is inferred from TP/PP. <code>auto</code> only works with <code>recommend_parallelism</code>.</td>
+</tr>
+<tr>
+  <td><code>replica_devices</code></td>
+  <td><code>None</code></td>
+  <td>GPU indices for <code>replica_parallel</code> (set by <code>ReplicaPool</code>).</td>
+</tr>
+<tr>
+  <td><code>dtype</code></td>
+  <td><code>&quot;half&quot;</code></td>
+  <td>FP16. bfloat16 is refused (T4 has no bf16).</td>
+</tr>
+<tr>
+  <td><code>kv_cache_dtype</code></td>
+  <td><code>&quot;auto&quot;</code></td>
+  <td>Passed to vLLM.</td>
+</tr>
+<tr>
+  <td><code>attention_backend</code></td>
+  <td><code>&quot;TRITON_ATTN&quot;</code></td>
+  <td>The only allowed value. Any Flash-style name raises.</td>
+</tr>
+<tr>
+  <td><code>enforce_eager</code></td>
+  <td><code>True</code></td>
+  <td>No CUDA graphs / <code>torch.compile</code>.</td>
+</tr>
+<tr>
+  <td><code>disable_custom_all_reduce</code></td>
+  <td><code>True</code></td>
+  <td>Custom all-reduce needs peer access, which varies between Kaggle VMs.</td>
+</tr>
+<tr>
+  <td><code>gpu_memory_utilization</code></td>
+  <td><code>0.88</code></td>
+  <td>Fraction of each GPU vLLM may use, within 0.1–0.98.</td>
+</tr>
+<tr>
+  <td><code>max_model_len</code></td>
+  <td><code>4096</code></td>
+  <td>Context length, <code>None</code> or an int ≥ 16. Lower it to save KV-cache memory.</td>
+</tr>
+<tr>
+  <td><code>structured_output_backend</code></td>
+  <td><code>&quot;xgrammar&quot;</code></td>
+  <td>Pinned. <code>&quot;auto&quot;</code> is refused because it silently falls back between backends.</td>
+</tr>
+<tr>
+  <td><code>apply_nccl_env</code> / <code>nccl_env</code></td>
+  <td><code>True</code> / see below</td>
+  <td>NCCL settings that do not rely on peer access.</td>
+</tr>
+</tbody>
+</table>
+<p>Combinations are checked: <code>TP × PP</code> may not exceed 2; <code>single_gpu</code> needs TP=1/PP=1; <code>tensor_parallel</code> needs TP=2; <code>pipeline_parallel</code> needs PP=2. Violations raise <code>UnsupportedParallelismError</code>.</p>
+<h2>Properties and methods</h2>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Returns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>strategy</code></td>
+  <td>the effective strategy string</td>
+</tr>
+<tr>
+  <td><code>world_size</code></td>
+  <td><code>tensor_parallel_size × pipeline_parallel_size</code></td>
+</tr>
+<tr>
+  <td><code>is_experimental</code></td>
+  <td><code>True</code> for <code>pipeline_parallel</code> and <code>replica_parallel</code></td>
+</tr>
+<tr>
+  <td><code>validate()</code></td>
+  <td>re-checks the object (raises on error)</td>
+</tr>
+<tr>
+  <td><code>as_dict()</code></td>
+  <td>plain dict of all fields</td>
+</tr>
+<tr>
+  <td><code>engine_kwargs()</code></td>
+  <td>the keyword arguments handed to the engine</td>
+</tr>
+<tr>
+  <td><code>apply_environment()</code></td>
+  <td>exports NCCL, thread-count and FlashInfer-off variables; <strong>never overrides</strong> a variable you already set; returns what it set</td>
+</tr>
+<tr>
+  <td><code>StokastiskConfig.from_env(prefix=&quot;STOKASTISK_&quot;)</code></td>
+  <td>builds a config from environment variables</td>
+</tr>
+</tbody>
+</table>
+<h2>Environment variables</h2>
+<p><code>from_env()</code> reads (all optional):</p>
+<p><code>STOKASTISK_TENSOR_PARALLEL_SIZE</code>, <code>STOKASTISK_PIPELINE_PARALLEL_SIZE</code>, <code>STOKASTISK_EXECUTION_STRATEGY</code>, <code>STOKASTISK_GPU_MEMORY_UTILIZATION</code>, <code>STOKASTISK_MAX_MODEL_LEN</code>, <code>STOKASTISK_DTYPE</code>, <code>STOKASTISK_ATTENTION_BACKEND</code>, <code>STOKASTISK_STRUCTURED_OUTPUT_BACKEND</code>, <code>STOKASTISK_ENFORCE_EAGER</code>, <code>STOKASTISK_DISABLE_CUSTOM_ALL_REDUCE</code>.</p>
+<p>Booleans accept <code>1/true/yes/on</code> and <code>0/false/no/off</code>. <code>LLM(model)</code> without a <code>config=</code> uses <code>from_env()</code>.</p>
+<div class="hl"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">"STOKASTISK_MAX_MODEL_LEN"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"2048"</span>
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">StokastiskConfig</span><span class="o">.</span><span class="n">from_env</span><span class="p">()</span>
+</pre></div>
+<h2>What <code>apply_environment()</code> sets</h2>
+<ul>
+<li>NCCL: <code>NCCL_P2P_DISABLE=1</code>, <code>NCCL_IB_DISABLE=1</code>, <code>NCCL_CUMEM_ENABLE=0</code></li>
+<li><code>VLLM_USE_FLASHINFER_SAMPLER=0</code>, <code>VLLM_ALLREDUCE_USE_FLASHINFER=0</code></li>
+<li><code>OMP_NUM_THREADS</code>, <code>MKL_NUM_THREADS</code>, <code>OPENBLAS_NUM_THREADS</code>, <code>NUMEXPR_NUM_THREADS</code> = 4 CPU cores ÷ <code>world_size</code></li>
+</ul>
+<h2>Presets</h2>
+<div class="hl"><pre><span></span><span class="n">one_gpu</span>  <span class="o">=</span> <span class="n">StokastiskConfig</span><span class="p">(</span><span class="n">max_model_len</span><span class="o">=</span><span class="mi">2048</span><span class="p">)</span>                              <span class="c1"># small model</span>
+<span class="n">two_gpu</span>  <span class="o">=</span> <span class="n">StokastiskConfig</span><span class="p">(</span><span class="n">tensor_parallel_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">max_model_len</span><span class="o">=</span><span class="mi">2048</span><span class="p">)</span>      <span class="c1"># 7B</span>
+<span class="n">pipeline</span> <span class="o">=</span> <span class="n">StokastiskConfig</span><span class="p">(</span><span class="n">pipeline_parallel_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">max_model_len</span><span class="o">=</span><span class="mi">2048</span><span class="p">)</span>    <span class="c1"># experimental</span>
+</pre></div>
+<p>Next: <a href="engine.html">The LLM engine</a>.</p>
+<footer>Stokastisk 0.1.0 · Apache-2.0 · <a href="https://github.com/stokastisk-ai/stokastisk/blob/main/docs/guide/configuration.md">edit this page on GitHub</a></footer></main></div></body></html>

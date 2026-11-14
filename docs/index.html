@@ -1,0 +1,105 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Overview · Stokastisk 0.1.0</title><link rel="stylesheet" href="style.css"></head><body><div class="wrap"><nav><h1>Stokastisk</h1><div class="v">0.1.0 · Kaggle 2 × T4 · Python 3.13</div><a class="cur" href="index.html">Overview</a><a class="" href="getting-started.html">1. Getting started</a><a class="" href="configuration.html">2. Configuration</a><a class="" href="engine.html">3. The LLM engine</a><a class="" href="structured-output.html">4. Structured output</a><a class="" href="server.html">5. OpenAI-compatible server</a><a class="" href="multi-gpu.html">6. Using both GPUs</a><a class="" href="diagnostics.html">7. Checks and diagnostics</a><a class="" href="errors.html">8. Errors</a><a class="" href="advanced.html">9. Advanced modules</a><a class="" href="troubleshooting.html">10. Troubleshooting</a><a class="" href="api-reference.html">API reference</a><div class="ext"><a href="https://github.com/stokastisk-ai/stokastisk">GitHub</a><a href="https://huggingface.co/waqasm86/stokastisk">Hugging Face</a><a href="../">Package index</a></div></nav><main><h1>Stokastisk 0.1.0 — User Guide</h1>
+<p>Stokastisk is a Python 3.13 SDK for <strong>Kaggle's 2 × Tesla T4 GPUs</strong> (SM75, CUDA 13.0). It bundles vLLM 0.25.1, runs attention only through the Triton backend (<code>TRITON_ATTN</code>), and installs with one <code>pip</code> line.</p>
+<div class="callout">
+
+<p>This guide is for people running notebooks on Kaggle. Maintainer material (building the wheel, acceptance suite) is in <a href="https://github.com/stokastisk-ai/stokastisk/blob/main/BUILD.md">BUILD.md</a> and <a href="https://github.com/stokastisk-ai/stokastisk/blob/main/docs/KAGGLE_ACCEPTANCE.md">KAGGLE_ACCEPTANCE.md</a>.</p>
+</div>
+
+<h2>Contents</h2>
+<table>
+<thead>
+<tr>
+  <th>#</th>
+  <th>Page</th>
+  <th>What you learn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>1</td>
+  <td><a href="getting-started.html">Getting started</a></td>
+  <td>Notebook settings, install, first generation</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><a href="configuration.html">Configuration</a></td>
+  <td><code>StokastiskConfig</code>, defaults, <code>STOKASTISK_*</code> environment variables</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><a href="engine.html">The LLM engine</a></td>
+  <td><code>LLM</code>: <code>generate</code>, <code>chat</code>, <code>complete</code>, <code>close</code></td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><a href="structured-output.html">Structured output</a></td>
+  <td>JSON-schema constrained generation and validation</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><a href="server.html">OpenAI-compatible server</a></td>
+  <td><code>ServerProcess</code>, <code>chat</code>, <code>stream_chat</code>, metrics</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><a href="multi-gpu.html">Using both GPUs</a></td>
+  <td>TP, PP, <code>ReplicaPool</code>, topology, recommender</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><a href="diagnostics.html">Checks and diagnostics</a></td>
+  <td><code>check_model</code>, environment report, Kaggle limits, backend policy</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><a href="errors.html">Errors</a></td>
+  <td>Exception hierarchy and what to do</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><a href="advanced.html">Advanced modules</a></td>
+  <td>Benchmarks, telemetry, CUDA helpers, NCCL (experimental)</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><a href="troubleshooting.html">Troubleshooting</a></td>
+  <td>Symptoms and fixes</td>
+</tr>
+<tr>
+  <td>—</td>
+  <td><a href="api-reference.html">API reference</a></td>
+  <td>Every module and public name</td>
+</tr>
+</tbody>
+</table>
+<h2>Verified on Kaggle</h2>
+<table>
+<thead>
+<tr>
+  <th>Run</th>
+  <th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Qwen2.5-0.5B-Instruct, TP=1</td>
+  <td>completion, chat, structured JSON</td>
+</tr>
+<tr>
+  <td>Qwen2.5-3B-Instruct, TP=2 and PP=2</td>
+  <td>completion and chat on both GPUs</td>
+</tr>
+<tr>
+  <td>Qwen2.5-Coder-7B-Instruct (FP16, original checkpoint), TP=2 and PP=2</td>
+  <td>Python code generated on both GPUs</td>
+</tr>
+<tr>
+  <td>All runs</td>
+  <td><code>TRITON_ATTN</code> confirmed; both T4s fully released after <code>close()</code></td>
+</tr>
+</tbody>
+</table>
+<p>Details: <a href="https://github.com/stokastisk-ai/stokastisk/blob/main/docs/KAGGLE_ACCEPTANCE.md">KAGGLE_ACCEPTANCE.md</a>. Ready-made notebooks: <a href="https://github.com/stokastisk-ai/stokastisk/blob/main/notebooks/18_stokastisk_qwen25_t4.ipynb">18</a> and <a href="https://github.com/stokastisk-ai/stokastisk/blob/main/notebooks/19_stokastisk_qwen25_coder_7b_dual_t4.ipynb">19</a>.</p>
+<h2>Not supported</h2>
+<p>bfloat16 · FlashAttention / FlashInfer / FlashMLA · native FP8/FP4 · L4 / SM89 · Mistral-family models · OpenTelemetry exporters · calling <code>vllm.LLM</code> or <code>vllm serve</code> directly.</p>
+<footer>Stokastisk 0.1.0 · Apache-2.0 · <a href="https://github.com/stokastisk-ai/stokastisk/blob/main/docs/guide/index.md">edit this page on GitHub</a></footer></main></div></body></html>

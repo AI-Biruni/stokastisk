@@ -1,0 +1,53 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>4. Structured output · Stokastisk 0.1.0</title><link rel="stylesheet" href="style.css"></head><body><div class="wrap"><nav><h1>Stokastisk</h1><div class="v">0.1.0 · Kaggle 2 × T4 · Python 3.13</div><a class="" href="index.html">Overview</a><a class="" href="getting-started.html">1. Getting started</a><a class="" href="configuration.html">2. Configuration</a><a class="" href="engine.html">3. The LLM engine</a><a class="cur" href="structured-output.html">4. Structured output</a><a class="" href="server.html">5. OpenAI-compatible server</a><a class="" href="multi-gpu.html">6. Using both GPUs</a><a class="" href="diagnostics.html">7. Checks and diagnostics</a><a class="" href="errors.html">8. Errors</a><a class="" href="advanced.html">9. Advanced modules</a><a class="" href="troubleshooting.html">10. Troubleshooting</a><a class="" href="api-reference.html">API reference</a><div class="ext"><a href="https://github.com/stokastisk-ai/stokastisk">GitHub</a><a href="https://huggingface.co/waqasm86/stokastisk">Hugging Face</a><a href="../">Package index</a></div></nav><main><h1>4. Structured output</h1>
+<p>Make the model produce JSON that matches a JSON Schema. The backend is <strong>xgrammar 0.2.3</strong>, pinned for the whole engine; there is no fallback to another backend.</p>
+<h2>Generate</h2>
+<div class="hl"><pre><span></span><span class="n">schema</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"object"</span><span class="p">,</span>
+    <span class="s2">"required"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"city"</span><span class="p">,</span> <span class="s2">"population"</span><span class="p">],</span>
+    <span class="s2">"additionalProperties"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="s2">"properties"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"city"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"string"</span><span class="p">,</span> <span class="s2">"maxLength"</span><span class="p">:</span> <span class="mi">40</span><span class="p">},</span>
+        <span class="s2">"population"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"integer"</span><span class="p">,</span> <span class="s2">"minimum"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"maximum"</span><span class="p">:</span> <span class="mi">100000000</span><span class="p">},</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+
+<span class="k">with</span> <span class="n">LLM</span><span class="p">(</span><span class="s2">"Qwen/Qwen2.5-0.5B-Instruct"</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">StokastiskConfig</span><span class="p">(</span><span class="n">max_model_len</span><span class="o">=</span><span class="mi">2048</span><span class="p">))</span> <span class="k">as</span> <span class="n">llm</span><span class="p">:</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">llm</span><span class="o">.</span><span class="n">generate_structured</span><span class="p">([</span><span class="s2">"Describe Paris."</span><span class="p">],</span> <span class="n">schema</span><span class="p">,</span> <span class="n">max_tokens</span><span class="o">=</span><span class="mi">96</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>       <span class="c1"># [{'city': 'Paris', 'population': 20000000}]</span>
+</pre></div>
+<p><code>generate_structured</code> returns one parsed object per prompt, <strong>already validated</strong> against the schema.</p>
+<table>
+<thead>
+<tr>
+  <th>Raises</th>
+  <th>When</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>StructuredOutputError</code></td>
+  <td>an output is not valid JSON, violates the schema, or was cut off at <code>max_tokens</code></td>
+</tr>
+<tr>
+  <td><code>EngineError</code></td>
+  <td>the backend rejected the schema or request</td>
+</tr>
+<tr>
+  <td><code>TypeError</code> / <code>ValueError</code></td>
+  <td>prompts that are not non-empty strings</td>
+</tr>
+</tbody>
+</table>
+<h2>Bound open-ended fields</h2>
+<p>A grammar keeps the model inside the schema but cannot make it stop. An unbounded integer or string can run to <code>max_tokens</code>, and the output is then reported as truncated. Always set <code>maxLength</code>, <code>maximum</code>, <code>maxItems</code>.</p>
+<h2>Validation helpers (no GPU needed)</h2>
+<div class="hl"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">stokastisk</span><span class="w"> </span><span class="kn">import</span> <span class="n">validate_json_output</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">stokastisk.structured</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_schema</span><span class="p">,</span> <span class="n">json_schema_params</span>
+
+<span class="n">check_schema</span><span class="p">(</span><span class="n">schema</span><span class="p">)</span>                                     <span class="c1"># returns the schema or raises StructuredOutputError</span>
+<span class="n">obj</span> <span class="o">=</span> <span class="n">validate_json_output</span><span class="p">(</span><span class="s1">'{"city": "Rome", "population": 2800000}'</span><span class="p">,</span> <span class="n">schema</span><span class="p">)</span>
+<span class="n">params</span> <span class="o">=</span> <span class="n">json_schema_params</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span> <span class="n">max_tokens</span><span class="o">=</span><span class="mi">96</span><span class="p">)</span>      <span class="c1"># vllm SamplingParams for llm.generate(...)</span>
+</pre></div>
+<p><code>validate_json_output</code> never returns invalid data: it raises <code>StructuredOutputError</code>.</p>
+<p>Next: <a href="server.html">OpenAI-compatible server</a>.</p>
+<footer>Stokastisk 0.1.0 · Apache-2.0 · <a href="https://github.com/stokastisk-ai/stokastisk/blob/main/docs/guide/structured-output.md">edit this page on GitHub</a></footer></main></div></body></html>
