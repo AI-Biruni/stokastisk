@@ -23,7 +23,7 @@ Install (build 5, pinned by URL and SHA256, PyPI as the only index): see [INSTAL
 | **Build 5** — CPU only | independent wheel audit (RECORD, Flash-free, natives = pinned vLLM), member delta vs build 4, reproducible rebuild, `check_model`/feature-matrix unit tests, documentation consistency tests | **verified on CPU** |
 | **Build 5 on Kaggle** | — | **not run** (no further T4 verification was requested); its inference, server and native code is byte-identical to build 4, which was byte-identical to build 3 there, so build 3's Kaggle evidence is inherited for those paths |
 
-Archived audits: `evidence/release/build-5/` for the current wheel (release manifest, 21-check verification, member-by-member delta against build 4, Flash scan, transform report) and `evidence/release/build-4/` for the withdrawn build 4 (delta against the then-published build 3). It also records the verified publication (Hugging Face file re-downloaded and hashed, pip index, documentation site) and that GitHub Actions rebuilt the wheel from source with an identical SHA256.
+Archived audit of the current wheel (release manifest, 21-check verification, member-by-member delta against build 4, Flash scan, transform report): `evidence/release/build-5/`. It also records the verified publication (Hugging Face file re-downloaded and hashed, pip index, documentation site) and that GitHub Actions rebuilt the wheel from source with an identical SHA256.
 
 **Builds 3 and 4 withdrawn.** Their files are no longer supported install targets (identities kept in `RELEASE.json` under `withdrawn_builds`). The Kaggle evidence recorded below was produced on build 3 and remains archived in `evidence/kaggle/`; the code paths that ran there are byte-identical in build 5.
 

@@ -32,8 +32,7 @@
    "filename": "stokastisk-0.1.0-4-cp313-cp313-linux_x86_64.whl",
    "sha256": "052156d71adc6ad9966901565f86dbded9ff41c620c782db4ff377a1a2b4f62e",
    "size": 38057512,
-   "status": "withdrawn (superseded by build 5, which differs only in one error-message string); no longer an install target",
-   "archived_audit": "evidence/release/build-4/"
+   "status": "withdrawn (superseded by build 5, which differs only in one error-message string); no longer an install target"
   }
  }
 }

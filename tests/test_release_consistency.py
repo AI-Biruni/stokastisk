@@ -86,16 +86,5 @@ class ArchivedBuildReport(unittest.TestCase):
         self.assertEqual(json.loads((self.D / "reports/verify.json").read_text())["status"], "PASS")
 
 
-class WithdrawnBuild4Archive(unittest.TestCase):
-    """evidence/release/build-4/ is history: the audit of the withdrawn build 4, still internally consistent and still naming the withdrawn identity."""
-    D = ROOT / "evidence/release/build-4"
-
-    def test_archive_describes_the_withdrawn_identity(self):
-        m = json.loads((self.D / "release-manifest.json").read_text()); w = REL["withdrawn_builds"]["4"]
-        self.assertEqual((m["build_tag"], m["wheel"]["sha256"], m["wheel"]["size"], m["wheel"]["filename"]), ("4", w["sha256"], w["size"], w["filename"]))
-        self.assertFalse(m["verification"]["this_build_executed_on_kaggle"])
-        d = json.loads((self.D / "reports/delta-vs-reference.json").read_text()); self.assertEqual((d["status"], d["summary"]["changed"]), ("PASS", 5))
-
-
 if __name__ == "__main__":
     unittest.main()
