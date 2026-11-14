@@ -11,11 +11,7 @@
    "role": "current (only published build)",
    "changes_vs_build_4": "stokastisk/serving.py: the MissingDependencyError remedy text no longer names the removed bundle installer (string constants only, identical AST once strings are blanked); plus WHEEL (build tag) and RECORD. vLLM tree, native binaries, METADATA and every dependency pin byte-identical",
    "executed_on_kaggle": false,
-   "kaggle_evidence": "inherited, through build 4, from the withdrawn build 3 for the unchanged implementation (see evidence/kaggle/evidence-manifest.json); not itself run on Kaggle",
-   "mirrors": {
-    "github_release_asset": "https://github.com/stokastisk-ai/stokastisk/releases/download/v0.1.0/stokastisk-0.1.0-5-cp313-cp313-linux_x86_64.whl",
-    "note": "identical bytes (same SHA256) to the Hugging Face file; the documented install command keeps using Hugging Face"
-   }
+   "kaggle_evidence": "inherited, through build 4, from the withdrawn build 3 for the unchanged implementation (see evidence/kaggle/evidence-manifest.json); not itself run on Kaggle"
   }
  },
  "base_vllm_wheel": {
@@ -39,16 +35,5 @@
    "status": "withdrawn (superseded by build 5, which differs only in one error-message string); no longer an install target",
    "archived_audit": "evidence/release/build-4/"
   }
- },
- "github_release": {
-  "tag": "v0.1.0",
-  "tag_moves": false,
-  "assets": {
-   "wheel": "stokastisk-0.1.0-5-cp313-cp313-linux_x86_64.whl",
-   "source_archive": "stokastisk-0.1.0-5-source.zip",
-   "checksums": "SHA256SUMS",
-   "build_input": "vllm-0.25.1-cp38-abi3-linux_x86_64.whl"
-  },
-  "note": "the auto-generated 'Source code' archives GitHub adds to every release show the tag's original commit; stokastisk-0.1.0-5-source.zip is a git archive of the commit named in the release notes"
  }
 }
