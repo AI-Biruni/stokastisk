@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-11-14 - documentation audit
+* Fixed stale statements: `docs/DEPENDENCY_COMPATIBILITY.md` (structured output and the server are Kaggle-tested; dangling `REMEDIATION.md` and `evidence/` references), `docs/ARCHITECTURE.md` (delivery is the HF wheel + pip index; the bundle is maintainer-only), `VERSION_POLICY.md` (scripts that no longer exist). New `docs/README.md` index. Tests now fail on a document that references a missing repository file, and `.github/workflows/docs.yml` republishes the HTML guide when `docs/guide/` or the SDK source changes.
+
 ## 2026-11-14 - user guide, Hugging Face restored
 * **User guide** for Kaggle users covering every module of the SDK: `docs/guide/` (Markdown) and <https://stokastisk-ai.github.io/stokastisk/docs/> (HTML, built by `scripts/release/build_docs_site.py`).
 * The wheel file on Hugging Face (`wheels/stokastisk-0.1.0-3-...whl`, SHA256 `72039ca4...`) was restored after it had been deleted; the pip index and install line are unchanged.

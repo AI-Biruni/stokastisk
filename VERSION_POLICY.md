@@ -15,7 +15,7 @@ The single authoritative declaration is the file [`VERSION`](VERSION) (content `
 | Python package metadata / wheel / sdist | `pyproject.toml` uses `dynamic = ["version"]` read from `VERSION` |
 | `stokastisk.__version__` | `sdk/stokastisk/_version.py` (verified equal to `VERSION`) |
 | Release name, directory, ZIP | `stokastisk-0.1.0-kaggle-t4-sm75` |
-| Release manifest, `latest.json`, model card, README, notebooks, installer | checked by `scripts/release/verify_project_version.py` |
+| Release manifest, model card, README, notebooks, installer | checked by `scripts/release/verify_project_version.py` |
 | Git tag / GitHub release | `v0.1.0` only |
 
 ## Permanent lock
@@ -30,9 +30,9 @@ Only a direct, explicit instruction from the project owner to change the project
 
 * No release script, CI job or packaging tool may increment, derive or guess a project version.
 * Version derivation from Git tags (setuptools-scm, versioneer, `git describe`, bump-version tools, semantic-release) is forbidden.
-* `scripts/release/assemble_release.py` refuses to build unless `VERSION`, `_version.py` and the built wheel all say `0.1.0`, and it runs the verifier on the finished bundle and ZIP.
+* `scripts/release/assemble_build3_release.py` asserts that `VERSION` says `0.1.0` before building, names every artifact `0.1.0`, and verifies the built wheel (`scripts/audit/verify_build3_wheel.py`).
 * `scripts/release/verify_project_version.py` carries its own `LOCKED_VERSION` constant, so editing only `VERSION` makes it fail. CI (`.github/workflows/version-lock.yml`) and `tests/test_version_policy.py` run it on every push and pull request.
-* The Kaggle installer (`scripts/kaggle/02_install.py`) installs the Stokastisk wheel with `--force-reinstall --no-deps --no-index`, so an already-installed distribution with a different version is replaced, and it fails unless the installed version is exactly `0.1.0`. The Hugging Face release preparation (`scripts/release/prepare_hf_release.py`) runs the same verifier.
+* The Kaggle installer (`scripts/kaggle/02_install_integrated.py`) installs the Stokastisk wheel with `--force-reinstall --no-deps --no-index`, so an already-installed distribution with a different version is replaced, and it fails unless the installed version is exactly `0.1.0`.
 
 ## Project version vs. dependency versions
 
@@ -44,6 +44,6 @@ The project version identifies Stokastisk itself. These are **platform and depen
 
 Only after the owner explicitly instructs a project-version change, in one reviewed commit:
 
-1. Update `VERSION`, `sdk/stokastisk/_version.py`, and `LOCKED_VERSION` / `LOCKED` in `scripts/release/verify_project_version.py`, `scripts/release/assemble_release.py`, `scripts/kaggle/02_install.py`, and `tests/test_version_policy.py`.
-2. Update the release name and directory, notebooks (`scripts/make_notebooks.py`), README, RELEASE, INSTALL, model card and `latest.json`.
+1. Update `VERSION`, `sdk/stokastisk/_version.py`, and `LOCKED_VERSION` / `LOCKED` in `scripts/release/verify_project_version.py`, `scripts/release/assemble_build3_release.py`, `scripts/kaggle/02_install_integrated.py`, and `tests/test_version_policy.py`.
+2. Update the release name and directory, the user-guide notebooks in `notebooks/`, README, RELEASE, INSTALL, `docs/` (including `docs/HUB_README.md`, the Hugging Face model card) and the package index (`scripts/release/make_pip_index.py`).
 3. Run the verifier and the full test suite, rebuild the release, and record the owner's instruction in the commit message.

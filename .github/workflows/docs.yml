@@ -1,0 +1,39 @@
+name: docs
+# Rebuilds the HTML user guide and publishes it to the gh-pages branch under /docs/. Touches nothing else on that branch (the pip index stays as it is).
+on:
+  push:
+    branches: [main]
+    paths: ["docs/guide/**", "sdk/**", "scripts/release/build_docs_site.py", ".github/workflows/docs.yml"]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: docs
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: src
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: site
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: API reference must be current
+        run: |
+          python -m pip install mistune pygments
+          python src/scripts/release/build_docs_site.py /tmp/site-docs
+          git -C src diff --exit-code docs/guide/api-reference.md
+      - name: Publish
+        run: |
+          rm -rf site/docs && cp -r /tmp/site-docs site/docs
+          cd site
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A docs
+          if git diff --cached --quiet; then echo "docs unchanged"; else git commit -m "Publish the user guide (docs build of ${GITHUB_SHA::7})" && git push origin HEAD:gh-pages; fi

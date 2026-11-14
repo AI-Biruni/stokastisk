@@ -140,7 +140,7 @@ def require_installed(stage, modules=("stokastisk", "vllm")):
             check(R, f"import {m}", False, f"{type(e).__name__}: {e}")
     if missing:
         hint = ("Kaggle starts each notebook in a fresh session; install first with "
-                "`python scripts/kaggle/02_install.py <bundle>` (idempotent). The generated notebook 03-06 install cell does this.")
+                "`python scripts/kaggle/02_install_integrated.py <bundle>` (idempotent). The generated notebook 15 install cell does this.")
         print("\n" + hint)
         finish(stage, R, {"missing_modules": missing, "hint": hint, "script": os.path.abspath(sys.argv[0]),
                           "script_sha256": sha256(sys.argv[0])})

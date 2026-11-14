@@ -21,7 +21,7 @@ class ReadmeExamples(unittest.TestCase):
             self.assertIn("0.1.0", t); self.assertIn("Kaggle", t, d.name)
 
     def test_no_document_references_removed_files(self):
-        gone = ("fetch_release.py", "02_install.py", "docs/VLLM_T4_COVERAGE.md", "docs/KAGGLE_T4_VERIFICATION.md", "STOKASTISK_0.1.0_FINAL_RELEASE_REPORT", "notebooks-executed-with-output", "dist-rc")
+        gone = ("fetch_release.py", "02_install.py", "docs/VLLM_T4_COVERAGE.md", "docs/KAGGLE_T4_VERIFICATION.md", "STOKASTISK_0.1.0_FINAL_RELEASE_REPORT", "notebooks-executed-with-output", "dist-rc", "REMEDIATION.md")
         for d in DOCS + list((ROOT / "docs").glob("*.md")) + [ROOT / "BUILD.md", ROOT / "CHANGELOG.md"]:
             for g in gone:
                 if d.name == "CHANGELOG.md":
@@ -36,6 +36,16 @@ class ReadmeExamples(unittest.TestCase):
                 base = ROOT if d.parent == ROOT else d.parent
                 self.assertTrue((base / target).exists() or (ROOT / target).exists(), f"{d.name}: broken link {target}")
 
+
+    def test_referenced_repository_files_exist(self):
+        prefixes = ("scripts/", "docs/", "sdk/", "tests/", "notebooks/", "requirements/", "native/", ".github/")
+        docs = [*ROOT.glob("*.md"), *(ROOT / "docs").glob("*.md"), *(ROOT / "docs/guide").glob("*.md")]
+        for d in docs:
+            if d.name == "CHANGELOG.md":              # history may name files that no longer exist
+                continue
+            for ref in re.findall(r"`((?:%s)[A-Za-z0-9_./-]+)`" % "|".join(re.escape(p) for p in prefixes), d.read_text()):
+                ref = ref.rstrip("/.")
+                self.assertTrue((ROOT / ref).exists(), f"{d.relative_to(ROOT)} references {ref}, which does not exist")
 
     def test_guide_pages_exist_and_api_reference_is_current(self):
         import importlib.util

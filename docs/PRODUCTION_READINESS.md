@@ -8,7 +8,8 @@
 | B dependency integrity | met - four hash-pinned locks resolved against Kaggle's real inventory, 0 conflicts; the wheel pins all 19 new packages exactly; the resolver simulation changes nothing in the image |
 | C package integrity | met - tags, RECORD, byte-equality with the pinned vLLM wheel + documented transform, 0 Flash files / markers / bindings, natives unchanged, reproducible |
 | D delivery | met - one wheel on the Hugging Face CDN, PEP 503 index on GitHub Pages (SHA256 in the link) |
-| E Kaggle GPU verification | **met** (wheel `b31588c9...`; the published wheel differs only in metadata) |
+| E Kaggle GPU verification | **met** (wheel `b31588c9...`; the published wheel differs only in metadata; the published install itself ran on Kaggle, notebooks 16/18/19) |
+| F Documentation | met - user guide for every SDK module ([guide](guide/index.md), also at <https://stokastisk-ai.github.io/stokastisk/docs/>), maintainer notes in this folder; a test fails on a broken link or a stale API reference |
 
 ## Feature labels
 | Feature | Label |
