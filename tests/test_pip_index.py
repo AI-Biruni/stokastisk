@@ -27,9 +27,10 @@ class PipIndex(unittest.TestCase):
         self.assertIn('pypi:repository-version', (self.out / "simple/stokastisk/index.html").read_text())
         p = Links(); p.feed((self.out / "simple/index.html").read_text()); self.assertEqual(p.links[0]["href"], "stokastisk/")
 
-    def test_the_documented_one_liner_matches_the_generated_index(self):
-        for doc in ("README.md", "INSTALL.md", "docs/HUB_README.md"):
-            self.assertIn(f"pip install stokastisk --extra-index-url {mpi.INDEX}", (ROOT / doc).read_text(), doc)
+    def test_the_landing_page_carries_the_pinned_command_and_the_security_note(self):
+        page = (self.out / "index.html").read_text()
+        self.assertIn(f'"stokastisk @ {self.info["url"]}#sha256={self.sha}"', page); self.assertIn("--index-url https://pypi.org/simple", page)
+        self.assertIn("Security trade-off", page); self.assertIn(f"pip install stokastisk --extra-index-url {mpi.INDEX}", page)
 
     def test_wrong_wheel_names_are_refused(self):
         bad = self.td / "stokastisk-0.9.9-1-cp313-cp313-linux_x86_64.whl"; bad.write_bytes(b"x")

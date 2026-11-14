@@ -153,7 +153,7 @@ Static Tesla T4 / SM75 / TRITON_ATTN compatibility inspection of the bundled vLL
 | <code>def read_registry(package_root: str &#124; pathlib.Path &#124; None=None)</code> | architecture name -> (module, class) from vllm/model_executor/models/registry.py, read with ast (no import). |
 | <code>def uses_removed_backend(module_file: pathlib.Path, root: pathlib.Path)</code> | True if the architecture's OWN module imports names from the Flash-family placeholder module at import time, i.e. the model is built on a removed backend. |
 | <code>def find_missing_imports(module_file: pathlib.Path, root: pathlib.Path, *, max_depth: int=6)</code> | Chains of unconditional vllm imports from ``module_file`` that end in a module absent from the shipped package. |
-| <code>def check_model(model: str &#124; None=None, *, architectures: Iterable[str] &#124; None=None, package_root: str &#124; pathlib.Path &#124; None=None, capability: tuple[int, int]=SM75, dtype: str &#124; None='half', quantization: str &#124; None=None)</code> | Static pre-flight for a model on the T4 build. ``model`` may be a local directory with config.json; otherwise pass ``architectures=[...]``. |
+| <code>def check_model(model: str &#124; None=None, *, architectures: Iterable[str] &#124; None=None, package_root: str &#124; pathlib.Path &#124; None=None, capability: tuple[int, int]=SM75, dtype: str &#124; None='half', quantization: str &#124; None=None, mode: str &#124; None=None)</code> | Static, OFFLINE pre-flight for a model on the T4 build (nothing is downloaded and no GPU is touched). |
 
 ## `stokastisk.config`
 

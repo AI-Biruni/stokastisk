@@ -3,7 +3,7 @@
 usage: build_evidence_manifest.py [--archive ORIGINAL_ZIP ...]
 
 Every value is read from a file under evidence/kaggle/: the executed notebooks (outputs intact) and the notebook-15 acceptance reports. A pattern that does not match raises, so a
-missing fact can never be filled in silently. ``--archive`` records the size and SHA256 of an original archive that is kept outside the repository (dist/evidence-archives/)."""
+missing fact can never be filled in silently. ``--archive`` records the size and SHA256 of an original archive that is kept outside the repository (dist/evidence-archives/); without it the archive entries of the existing manifest are kept, so the manifest is reproducible from the repository alone."""
 import hashlib, json, pathlib, re, sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
@@ -84,7 +84,7 @@ def main():
         j = json.loads((d / f"15c_{st}.json").read_text()); a15[st] = {"status": j["status"], "checks": len(j["checks"]), "passed": sum(1 for c in j["checks"] if c["status"] == "PASS")}
     ij = json.loads((d / "prereq-install/02_install_integrated.json").read_text()); a15["installer"] = {"status": ij["status"], "checks": len(ij["checks"]), "passed": sum(1 for c in ij["checks"] if c["status"] == "PASS")}
     ej = json.loads((d / "15c_engine.json").read_text())
-    arch = [{"name": pathlib.Path(n).name, "size": p.stat().st_size, "sha256": sha(p.read_bytes())} for n, p in ((n, pathlib.Path(n)) for n in sys.argv[1:] if n != "--archive") if p.is_file()] if "--archive" in sys.argv else []
+    arch = [{"name": pathlib.Path(n).name, "size": p.stat().st_size, "sha256": sha(p.read_bytes())} for n, p in ((n, pathlib.Path(n)) for n in sys.argv[1:] if n != "--archive") if p.is_file()] if "--archive" in sys.argv else (json.loads((EV / "evidence-manifest.json").read_text()).get("original_archives", []) if (EV / "evidence-manifest.json").exists() else [])
     man = {"schema": 1, "project_version": "0.1.0",
            "statement": "Raw artifacts of the Kaggle 2 x Tesla T4 runs recorded for Stokastisk 0.1.0 build 3. Build 4 was NOT executed on Kaggle; see docs/PRODUCTION_READINESS.md.",
            "notebook_15_acceptance": {"date": "2026-11-13", "acceptance_wheel": prov["wheel"], "acceptance_wheel_sha256": prov["wheel_sha256"], "build": prov["build"], "python": ej["versions"]["python"] if isinstance(ej["versions"], dict) else None,

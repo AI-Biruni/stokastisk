@@ -3,14 +3,14 @@
 **A Python 3.13 SDK for Kaggle's 2 × Tesla T4 (SM75) with a built‑in vLLM 0.25.1, Triton attention (`TRITON_ATTN`) and CUDA 13.0 `sm_75` binaries — installed with one line.**
 
 ```bash
-pip install stokastisk --extra-index-url https://stokastisk-ai.github.io/stokastisk/simple/
+python -m pip install --index-url https://pypi.org/simple "stokastisk @ https://huggingface.co/waqasm86/stokastisk/resolve/main/wheels/stokastisk-0.1.0-4-cp313-cp313-linux_x86_64.whl#sha256=052156d71adc6ad9966901565f86dbded9ff41c620c782db4ff377a1a2b4f62e"
 ```
 
-That downloads the wheel (SDK + vLLM 0.25.1 + CUDA binaries, 38 MB) from the Hugging Face CDN, verifies its SHA256, and installs 19 small pinned dependencies next to Kaggle's own PyTorch 2.11.0+cu130 / Triton 3.6.0 — which it never touches. No dataset upload, no manual wheels.
+That downloads the wheel (SDK + vLLM 0.25.1 + CUDA binaries, 38 MB) from the Hugging Face CDN, **refuses it unless its SHA256 matches**, and installs 19 small pinned dependencies from PyPI next to Kaggle's own PyTorch 2.11.0+cu130 / Triton 3.6.0 — which it never touches. No dataset upload, no manual wheels.
 
 | | |
 |---|---|
-| Project version | **0.1.0** (locked — [VERSION_POLICY.md](VERSION_POLICY.md)); the wheel build tag is 3 |
+| Project version | **0.1.0** (locked — [VERSION_POLICY.md](VERSION_POLICY.md)); current wheel build tag **4** (build 3 stays on Hugging Face for rollback — [INSTALL.md](INSTALL.md)) |
 | Runtime | Python 3.13 · vLLM 0.25.1 · PyTorch 2.11.0+cu130 · Triton 3.6.0 · CUDA 13.0 · 2 × Tesla T4 |
 | Attention | `TRITON_ATTN` only — no FlashAttention / FlashInfer / FlashMLA code is shipped (requesting one raises `ProhibitedBackendError`) |
 | Structured output | xgrammar 0.2.3, pinned (never `auto`); every output validated against its schema |
@@ -18,7 +18,7 @@ That downloads the wheel (SDK + vLLM 0.25.1 + CUDA binaries, 38 MB) from the Hug
 ## User guide (Kaggle)
 **1. Notebook settings:** Accelerator **GPU T4 × 2**, **Internet ON**, a Python 3.13 image.
 
-**2. Install** (one cell): `!pip install stokastisk --extra-index-url https://stokastisk-ai.github.io/stokastisk/simple/`
+**2. Install** (one cell): `!python -m pip install --index-url https://pypi.org/simple "stokastisk @ https://huggingface.co/waqasm86/stokastisk/resolve/main/wheels/stokastisk-0.1.0-4-cp313-cp313-linux_x86_64.whl#sha256=052156d71adc6ad9966901565f86dbded9ff41c620c782db4ff377a1a2b4f62e"`
 
 **3. Run.** Engine code works in ordinary notebook cells (notebooks 18 and 19) and in scripts; in a **script** keep it under a `__main__` guard, because vLLM starts its engine in a spawned process:
 ```python
@@ -53,26 +53,26 @@ If the server fails to start, `ServerStartupError` carries the exit code, the co
 
 | Problem | Cause / fix |
 |---|---|
-| `No matching distribution found for stokastisk` | the notebook is not Python 3.13, or Internet is OFF |
+| `No matching distribution` / `is not a supported wheel` | the notebook is not Python 3.13, or Internet is OFF |
 | `pip` wants to change torch / transformers | should never happen; report it with the `pip install` log |
 | engine start fails with no GPU | accelerator is not *GPU T4 × 2* |
 | `ProhibitedBackendError` | a Flash backend was requested; only `TRITON_ATTN` exists in this build |
 
-**Security note.** `--extra-index-url` searches PyPI as well; the name `stokastisk` is not registered there today. pip verifies the wheel against the SHA256 in the index page. Uninstall: `pip uninstall stokastisk`.
+**Security note.** The command above uses PyPI as its only index and pins the wheel by URL and SHA256. The convenience index (`--extra-index-url https://stokastisk-ai.github.io/stokastisk/simple/`) makes pip also consider PyPI, where a different project of the same name could in principle win; see [INSTALL.md](INSTALL.md). Uninstall: `pip uninstall stokastisk`.
 
 ## Not supported
 bfloat16 · FlashAttention/FlashInfer/FlashMLA · native FP8/FP4 · L4/SM89 · **Mistral‑family models** (`check_model` refuses them) · OpenTelemetry exporters (conflict with Kaggle's protobuf 7) · calling `vllm.LLM` / `vllm serve` directly (it cannot select Flash, but bypasses the SDK's checks).
 
 ## Verification status
+Three separate classes of evidence — details in [RELEASE.md](RELEASE.md), [docs/PRODUCTION_READINESS.md](docs/PRODUCTION_READINESS.md), raw artifacts in [evidence/kaggle/](evidence/kaggle/):
+
 | What | State |
 |---|---|
-| Kaggle 2 × T4 acceptance (notebook 15, 2026‑11‑13): installer 32/32 · static 79/79 · engine 44/44 · parallel 23/23 · server 21/21 · summary 15/15, one wheel SHA throughout | **Kaggle‑tested** (wheel `b31588c9…`) |
-| The published wheel (hash: [RELEASE.md](RELEASE.md)) | differs from that wheel **only** in `METADATA`/`RECORD` (two extra exact pins and this README as description); all 2,580 other members — every line of code and every CUDA binary — are byte‑identical |
-| The one‑line `pip install` on Kaggle (2026‑11‑13/14, notebooks 16, 18, 19; Python 3.13.16, PyTorch 2.11.0+cu130, Triton 3.6.0) | installed `stokastisk` + 19 pinned packages from the published index; `prohibited_report()['clean']` is `True`; **Kaggle‑tested** |
-| Notebook 16 — quickstart script | `TRITON_ATTN`; completion, chat and schema‑constrained JSON returned; engine shut down cleanly — **Kaggle‑tested** |
-| Notebook 18 — Qwen2.5 (FP16, eager, `max_model_len` 2048) | 0.5B‑Instruct TP=1; 3B‑Instruct TP=2 and PP=2: `TRITON_ATTN` verified, completion + chat returned, both T4s back to 14.46 GiB free after close — **Kaggle‑tested** |
-| Notebook 19 — Qwen2.5‑Coder‑7B‑Instruct (original unquantized checkpoint, FP16) | TP=2 and PP=2 each generated a Python answer; `TRITON_ATTN` verified; GPUs fully released after each engine — **Kaggle‑tested** (PP=2 stays experimental) |
-Details and limits: [docs/PRODUCTION_READINESS.md](docs/PRODUCTION_READINESS.md), [docs/KAGGLE_ACCEPTANCE.md](docs/KAGGLE_ACCEPTANCE.md).
+| **Build 3 on Kaggle 2 × T4** — notebook 15 acceptance (2026‑11‑13): installer 32/32 · static 79/79 · engine 44/44 · parallel 23/23 · server 21/21 · summary 15/15 | **Kaggle‑tested** (acceptance wheel `b31588c9…`; the published build‑3 wheel differs only in `METADATA`/`RECORD`) |
+| **Build 3, end‑user notebooks 16, 18, 19** (Python 3.13.16, PyTorch 2.11.0+cu130, Triton 3.6.0): quickstart; Qwen2.5‑0.5B‑Instruct TP=1; Qwen2.5‑3B‑Instruct TP=2 and PP=2; Qwen2.5‑Coder‑7B‑Instruct TP=2 and PP=2 (FP16, `max_model_len` 2048, `TRITON_ATTN`; GPUs back to 14.46 of 14.56 GiB free after each engine) | **Kaggle‑tested** — only these exact models and modes; `stokastisk.check_model()` reports them |
+| **Build 4 (current)** — compatibility‑reporting correction; 2,577 of 2,582 members byte‑identical to build 3 (all vLLM files, all native binaries, every dependency pin) | **verified on CPU** (wheel audit, delta audit, reproducible build, tests). **Not itself run on Kaggle**; build 3's evidence is inherited for the unchanged inference/server code |
+
+A checkpoint that is not in that list — even another Qwen2 model — is reported as `UNKNOWN_REQUIRES_EVIDENCE`. Details and limits: [docs/PRODUCTION_READINESS.md](docs/PRODUCTION_READINESS.md), [docs/KAGGLE_ACCEPTANCE.md](docs/KAGGLE_ACCEPTANCE.md).
 
 ## Documentation
 Full user guide (Kaggle): **<https://stokastisk-ai.github.io/stokastisk/docs/>** — source in [docs/guide/](docs/guide/index.md): [getting started](docs/guide/getting-started.md) · [configuration](docs/guide/configuration.md) · [LLM engine](docs/guide/engine.md) · [structured output](docs/guide/structured-output.md) · [server](docs/guide/server.md) · [two GPUs](docs/guide/multi-gpu.md) · [diagnostics](docs/guide/diagnostics.md) · [errors](docs/guide/errors.md) · [advanced](docs/guide/advanced.md) · [troubleshooting](docs/guide/troubleshooting.md) · [API reference](docs/guide/api-reference.md).
@@ -81,7 +81,7 @@ Full user guide (Kaggle): **<https://stokastisk-ai.github.io/stokastisk/docs/>**
 `LLM` (`generate`, `chat`, `complete`, `generate_structured`, `close`) · `StokastiskConfig` · `ReplicaPool` · `serving.ServerProcess` · `discover_topology` · `recommend_parallelism` · `check_model`/`check_dtype`/`check_feature` · `validate_json_output` · `prohibited_report` · `LIMITS` · exceptions (`EngineClosedError`, `EngineTimeoutError`, `EngineCloseError`, `StructuredOutputError`, `ServerStartupError`, `ServerHTTPError`, `MissingDependencyError`, …).
 
 ## Repository
-`sdk/` the SDK · `scripts/release/` wheel builder, Flash‑free transform, lock resolver, index generator · `scripts/kaggle/` + `scripts/audit/` acceptance and audit tools · `requirements/` hash‑pinned locks · `notebooks/` Kaggle user‑guide notebooks 18 and 19 · `docs/guide/` user guide (built into the GitHub Pages site by `scripts/release/build_docs_site.py`) · `docs/` maintainer notes · `tests/`. Build from source: [BUILD.md](BUILD.md).
+`sdk/` the SDK · `scripts/release/` wheel builder, Flash‑free transform, lock resolver, index generator · `scripts/kaggle/` + `scripts/audit/` acceptance and audit tools · `requirements/` hash‑pinned locks · `notebooks/` Kaggle user‑guide notebooks 18 and 19 · `evidence/kaggle/` archived Kaggle reports and executed notebooks · `docs/guide/` user guide (built into the GitHub Pages site by `scripts/release/build_docs_site.py`) · `docs/` maintainer notes · `tests/`. Build from source: [BUILD.md](BUILD.md).
 
 ## License
 Apache‑2.0. vLLM is Apache‑2.0 © the vLLM project.

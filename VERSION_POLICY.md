@@ -18,6 +18,10 @@ The single authoritative declaration is the file [`VERSION`](VERSION) (content `
 | Release manifest, model card, README, notebooks, installer | checked by `scripts/release/verify_project_version.py` |
 | Git tag / GitHub release | `v0.1.0` only |
 
+## Project version vs. wheel build tag
+
+The **project version** is `0.1.0` and never changes. The PEP 427 **build tag** in the wheel file name (`stokastisk-0.1.0-<build>-cp313-cp313-linux_x86_64.whl`) numbers rebuilds of the same project version: build 1 and 2 were superseded candidates, build 3 is the Kaggle-accepted wheel, build 4 corrects the compatibility reporting. A new build tag is created only when shipped SDK content must change; it is never derived from the version, never overwrites an earlier wheel (older builds stay available for rollback), and its identity is recorded in `RELEASE.json`. The Git tag and GitHub release stay `v0.1.0`; a build-specific release, if one is ever made, uses a build identifier such as `integrated-0.1.0-build4`, not a new semantic version.
+
 ## Permanent lock
 
 The version is **locked**. It must not change because of any ordinary development activity, including: adding a feature, fixing a bug, improving performance, adding a GPU architecture, updating documentation, adding a notebook, changing CUDA or vLLM integration, adding a scheduler, refactoring, publishing files, committing, uploading to Hugging Face, building a release archive, completing a benchmark, or passing more acceptance tests. Semantic-versioning conventions do **not** override this lock.

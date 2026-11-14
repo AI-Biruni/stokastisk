@@ -66,7 +66,7 @@ NB_DIR = ROOT / "notebooks/kaggle-t4-sm75/notebooks"; NB_DIR.mkdir(parents=True,
 created = time.strftime("%FT%T%z")
 manifest = {"name": NAME, "version": "0.1.0", "kind": "integrated-wheel", "created": created, "source_commit": head, "source_tree_dirty_tracked_files": dirty,
             "integrated_wheel": {"filename": whl.name, "sha256": wsha, "size": whl.stat().st_size, "build_tag": tag, "tag": "cp313-cp313-linux_x86_64"},
-            "status": "BUILT, INDEPENDENTLY VERIFIED, CPU-TESTED; KAGGLE VERIFICATION PENDING (notebook 15, build 3)", "kaggle_verified": False,
+            "status": "BUILD 3 ASSEMBLED AND CPU-VERIFIED (historical script: the Kaggle acceptance of build 3 was recorded afterwards in evidence/kaggle/, so this manifest of the freshly built bundle says nothing about it)", "kaggle_verified_at_assembly": False,
             "locks": {"python": "3.13", "vllm": "0.25.1", "cuda": "13.0", "torch": "2.11.0+cu130", "triton": "3.6.0", "gpu": "2x Tesla T4 SM75", "attention": "TRITON_ATTN", "structured_output_backend": "xgrammar"},
             "vllm_tree": "vllm-0.25.1-cp38-abi3-linux_x86_64.whl (cc3bcafb...) through scripts/release/t4_flash_free.py; native objects byte-identical; 28 Flash-family files removed (evidence/flash-free-transform-report.json)",
             "dependency_profiles": {"installed_by_default": ["core", "structured-output", "serving"], "optional": ["models"], "unsupported": ["observability (opentelemetry exporters conflict with Kaggle protobuf 7.x)"]},

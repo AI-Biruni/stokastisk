@@ -53,7 +53,12 @@ Qwen models ship a `generation_config.json`; vLLM applies its defaults (e.g. `te
 
 ## Closing
 
-`close()` always runs every cleanup step. If the engine's own shutdown failed it raises `EngineCloseError` *after* cleaning up; the engine is closed either way. In Kaggle runs both T4s returned to 14.46 of 14.56 GiB free after `close()`.
+`close()` always runs every cleanup step. If the engine's own shutdown failed it raises `EngineCloseError` *after* cleaning up; the engine is closed either way.
+
+What the Kaggle runs showed, kept apart on purpose:
+
+* **GPU memory:** after `close()` both T4s returned to 14.46 of 14.56 GiB free in every run (0.5B TP=1; 3B TP=2 and PP=2; Coder‑7B TP=2 and PP=2).
+* **Log line:** at the end of every TP=2 and PP=2 engine, vLLM's process manager logged `[shutdown] Process manager: force killing remaining processes count=1`. `close()` still completed without raising and the memory was recovered, so it is a warning about one worker that had to be killed, not a leak. It was not seen in the single‑GPU 0.5B run. Check memory yourself between experiments (`torch.cuda.mem_get_info(i)`).
 
 ## Example: chat with a system prompt
 

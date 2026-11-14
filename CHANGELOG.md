@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-14 - build 4: compatibility evidence corrected (wheel build tag 4)
+* **Why:** build 3's SDK still reported build-time evidence after the Kaggle runs: the OpenAI server, streaming, `/metrics` and structured output as "unknown / verification pending", chat generation as a failed build-2 run, offline generation as Qwen2.5-0.5B/1.5B only, every `Qwen2ForCausalLM` checkpoint as `SUPPORTED`, and the `stokastisk.serving` docstring as "not yet verified on Kaggle".
+* **What:** `stokastisk/compat.py` records the evidence from the notebook 15 acceptance (server 21/21, engine 44/44, parallel 23/23) and notebooks 16, 18, 19; new exact-model registry `MODEL_EVIDENCE` (Qwen2.5-0.5B-Instruct, Qwen2.5-3B-Instruct, Qwen2.5-Coder-7B-Instruct); `check_model()` separates `architecture_status` from `model_status`, adds `tested_modes`, `evidence`, `limitations`, `mode_status`, and still refuses Mistral-family models, bfloat16 and unsupported quantization; the `serving` docstring is corrected. The wheel description is now `README.wheel.md` (hash-free).
+* **Unchanged (proved, not assumed):** of 2,582 wheel members 2,577 are byte-identical to build 3 — all `vllm/**` files, all native binaries, every dependency pin; `serving.py` differs in docstrings only. Reproducible build. Wheel `stokastisk-0.1.0-4-cp313-cp313-linux_x86_64.whl`, SHA256 `052156d7...`. Build 3 stays on Hugging Face for rollback.
+* **Not done:** build 4 was **not** run on Kaggle (no further GPU verification was requested); build 3's Kaggle evidence is inherited for the unchanged paths.
+* **Install:** the documented command now pins the wheel by URL and SHA256 with PyPI as the only index (no `--extra-index-url`); the PEP 503 index remains as a convenience and lists build 4.
+* **Evidence archived:** `evidence/kaggle/` (executed notebooks 15, 16, 18, 19 with outputs; notebook-15 reports and logs) and `evidence/kaggle/evidence-manifest.json`; the two original acceptance ZIPs are recorded by hash only. Tooling: `scripts/release/build_wheel_release.py`, `scripts/audit/wheel_delta.py`, `scripts/audit/verify_integrated_wheel.py` (renamed from `verify_build3_wheel.py`).
+
 ## 2026-11-14 - documentation audit
 * Fixed stale statements: `docs/DEPENDENCY_COMPATIBILITY.md` (structured output and the server are Kaggle-tested; dangling `REMEDIATION.md` and `evidence/` references), `docs/ARCHITECTURE.md` (delivery is the HF wheel + pip index; the bundle is maintainer-only), `VERSION_POLICY.md` (scripts that no longer exist). New `docs/README.md` index. Tests now fail on a document that references a missing repository file, and `.github/workflows/docs.yml` republishes the HTML guide when `docs/guide/` or the SDK source changes.
 
@@ -12,6 +20,8 @@
 * Kaggle 2 x T4 runs of the published install: quickstart, Qwen2.5-0.5B (TP=1), Qwen2.5-3B (TP=2, PP=2), Qwen2.5-Coder-7B-Instruct (TP=2, PP=2) - all passed. User-guide notebooks 18 and 19 added; stored acceptance notebooks and local download files removed.
 
 Project version is permanently **0.1.0** (VERSION_POLICY.md). Entries are distinguished by date and wheel build tag, never by version.
+
+**How to read this file (newest first, but the history is chronological):** 2026-11-12 build 2 failed notebook 15 on Kaggle (missing packages, Flash files) → 2026-11-13 morning, build 3 was built with "Kaggle verification pending" → later 2026-11-13 the build-3 acceptance passed on Kaggle (the "production release" entry; the published wheel differs from the accepted one only in `METADATA`/`RECORD`) → 2026-11-13/14 notebooks 16, 18, 19 ran the published install → 2026-11-14 build 4 corrected the compatibility reporting that still carried the "pending" labels. The older entries are history and are not rewritten.
 
 ## 2026-11-13 - production release (build tag 3, GPU stages verified)
 * **Kaggle 2 x T4 acceptance passed** (installer 32/32, static 79/79, engine 44/44, parallel 23/23, server 21/21, summary 15/15). Its findings were fixed first: a raising Flash placeholder in vLLM's unconditional kernel warm-up (now a no-op), unbounded structured-output test schemas (bounded; truncation now explained), stage resilience, a runtime fingerprint in every stage.

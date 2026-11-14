@@ -1,5 +1,5 @@
 name: ci
-# CPU-only checks: no secrets, no GPU, no network beyond pip. Nothing here writes or derives a version.
+# Quick CPU-only checks: no secrets, no GPU, no Kaggle. Nothing here writes or derives a version.
 on:
   push:
     branches: [main]
@@ -12,16 +12,18 @@ jobs:
   verify:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: "3.13"
       - name: Project version lock
         run: python scripts/release/verify_project_version.py ${{ github.ref_type == 'tag' && format('--tag {0}', github.ref_name) || '' }}
       - name: Tests that need no torch, GPU or the large vLLM wheel
         run: |
-          python -m pip install pytest build setuptools packaging jsonschema nbformat
-          CUDA_VISIBLE_DEVICES= python -m pytest -q tests/test_version_policy.py tests/test_bundle_discovery.py tests/test_inventory.py tests/test_stage_status.py tests/test_installer_integrated.py tests/test_prohibited_policy.py tests/test_config_strict.py tests/test_readme_examples.py
+          python -m pip install -r requirements/ci.txt
+          CUDA_VISIBLE_DEVICES= python -m pytest -q -p no:cacheprovider tests/test_version_policy.py tests/test_bundle_discovery.py tests/test_inventory.py tests/test_stage_status.py tests/test_installer_integrated.py tests/test_prohibited_policy.py tests/test_config_strict.py tests/test_readme_examples.py tests/test_compat_evidence.py tests/test_release_consistency.py
       - name: Wheel metadata must say the locked version
         run: |
           python -m build --wheel --no-isolation -o /tmp/w .

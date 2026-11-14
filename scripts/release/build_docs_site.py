@@ -9,9 +9,9 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 GUIDE = ROOT / "docs/guide"
 SDK = ROOT / "sdk/stokastisk"
 BASE = "https://github.com/stokastisk-ai/stokastisk"
-ORDER = ["index", "getting-started", "configuration", "engine", "structured-output", "server", "multi-gpu", "diagnostics", "errors", "advanced", "troubleshooting", "api-reference"]
+ORDER = ["index", "getting-started", "configuration", "engine", "structured-output", "server", "multi-gpu", "diagnostics", "feature-matrix", "errors", "advanced", "troubleshooting", "api-reference"]
 TITLES = {"index": "Overview", "getting-started": "1. Getting started", "configuration": "2. Configuration", "engine": "3. The LLM engine", "structured-output": "4. Structured output",
-          "server": "5. OpenAI-compatible server", "multi-gpu": "6. Using both GPUs", "diagnostics": "7. Checks and diagnostics", "errors": "8. Errors", "advanced": "9. Advanced modules",
+          "server": "5. OpenAI-compatible server", "multi-gpu": "6. Using both GPUs", "diagnostics": "7. Checks and diagnostics", "feature-matrix": "   Feature matrix", "errors": "8. Errors", "advanced": "9. Advanced modules",
           "troubleshooting": "10. Troubleshooting", "api-reference": "API reference"}
 
 
@@ -44,6 +44,24 @@ def api_reference() -> str:
         if rows:
             out += ["| Name | Summary |", "|---|---|"] + [f"| <code>{r[0].replace('|', '&#124;')}</code> | {r[1].replace('|', '&#124;')} |" for r in rows] + [""]
     return "\n".join(out) + "\n"
+
+
+def feature_matrix_page() -> str:
+    """docs/guide/feature-matrix.md, generated from stokastisk.compat so the documentation cannot contradict the SDK."""
+    sys.path.insert(0, str(ROOT / "sdk"))
+    from stokastisk import compat
+    esc = lambda s: str(s).replace("|", "&#124;")  # noqa: E731
+    out = ["# Feature matrix and model evidence", "",
+           "Generated from `stokastisk.compat` (`FEATURES`, `MODEL_EVIDENCE`) by `scripts/release/build_docs_site.py`; do not edit by hand. These are the records the installed SDK reports through `stokastisk.feature_matrix()` and `stokastisk.check_model()`.", "",
+           "**Evidence classes.** `kaggle`: executed on Kaggle 2 × T4 (the *notebooks* column says which: 15 = acceptance suite on build 3, 16/18/19 = end-user notebooks, 01–14 = earlier notebooks). `kaggle-kernel`: a Triton kernel compiled and launched, output not asserted. `cpu-tests`: CPU unit tests only. `static`: source inspection only. Build 4 itself was not executed on Kaggle; its inference code is byte-identical to build 3.", "",
+           "## Features", "", "| Feature | Status | Evidence | Notebooks | Note |", "|---|---|---|---|---|"]
+    for n, r in compat.feature_matrix().items():
+        out.append(f"| `{n}` | {r['status']} | {r['evidence']} | {esc(r['notebooks']) or '—'} | {esc(r['note'])} |")
+    out += ["", "## Models that were run", "", "| Model id | Architecture | Dtype | Max tested `max_model_len` | Modes | Evidence | Limitations |", "|---|---|---|---|---|---|---|"]
+    for mid, r in compat.MODEL_EVIDENCE.items():
+        out.append(f"| `{mid}` | {r['architecture']} | {r['dtype']} | {r['max_tested_model_len']} | {', '.join(r['tested_modes'])} | {esc('; '.join(r['evidence']))} | {esc('; '.join(r['limitations']))} |")
+    out += ["", "Any other checkpoint — including other `Qwen2ForCausalLM` models — is `UNKNOWN_REQUIRES_EVIDENCE` in `check_model()`; see [Checks and diagnostics](diagnostics.md).", ""]
+    return "\n".join(out)
 
 
 CSS = """:root{--bg:#fff;--fg:#1f2328;--mut:#59636e;--bd:#d1d9e0;--ac:#0969da;--code:#f6f8fa;--side:#f6f8fa;--call:#ddf4ff}
@@ -101,5 +119,6 @@ def render(out: pathlib.Path):
 
 if __name__ == "__main__":
     (GUIDE / "api-reference.md").write_text(api_reference())
+    (GUIDE / "feature-matrix.md").write_text(feature_matrix_page())
     render(pathlib.Path(sys.argv[1]))
     print("built", sys.argv[1])

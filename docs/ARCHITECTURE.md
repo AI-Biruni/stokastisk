@@ -1,4 +1,4 @@
-# Architecture (Stokastisk 0.1.0, build 3)
+# Architecture (Stokastisk 0.1.0, wheel build 4; unchanged since build 3 except the compatibility reporting)
 
 ## Target
 Kaggle, Python 3.13, 2 × Tesla T4 (SM75, ~15 GiB each, PCIe host bridge, no NVLink, CUDA peer access varies between VMs), PyTorch 2.11.0+cu130 and Triton 3.6.0 provided by the image and **never replaced**. Kaggle limits baked into `stokastisk.LIMITS`: 4 CPU cores, ~30 GiB RAM, 20 GiB `/kaggle/working`.

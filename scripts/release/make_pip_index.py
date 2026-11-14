@@ -2,6 +2,9 @@
 """Generate the static PEP 503 package index that makes `pip install stokastisk --extra-index-url <INDEX>` work on Kaggle.
 usage: make_pip_index.py WHEEL OUT_DIR [--wheel-url URL]
 
+The index lists exactly the wheel it is given (one build). The recommended install does not use it: INSTALL.md pins the wheel by URL and SHA256 with PyPI as the only index, which cannot
+be confused with another `stokastisk` project. The index remains as a convenience whose security trade-off is stated on its landing page.
+
 PyPI rejects `linux_x86_64` wheels and Hugging Face serves .html files as text/plain (pip refuses those), so the index is a tiny static site (GitHub Pages) whose project page links to the
 wheel on the Hugging Face CDN. The link carries `#sha256=<hash>`, which pip verifies after the download, and `data-requires-python`, which makes pip skip it on other Pythons.
 Output: OUT_DIR/.nojekyll, OUT_DIR/index.html, OUT_DIR/simple/index.html, OUT_DIR/simple/stokastisk/index.html."""
@@ -23,7 +26,7 @@ def build(wheel: pathlib.Path, out: pathlib.Path, wheel_url: str | None = None) 
     (out / ".nojekyll").write_text("")
     (out / "simple" / "stokastisk" / "index.html").write_text(PAGE.format(title="Links for stokastisk", body=f'<h1>Links for stokastisk</h1>\n<a href="{html.escape(url)}#sha256={sha}" data-requires-python="&gt;=3.13,&lt;3.14">{name}</a><br/>'))
     (out / "simple" / "index.html").write_text(PAGE.format(title="Simple index", body='<a href="stokastisk/">stokastisk</a>'))
-    (out / "index.html").write_text(PAGE.format(title="Stokastisk package index", body=f'<h1>Stokastisk 0.1.0 package index</h1>\n<p>Kaggle (2 x Tesla T4, Python 3.13): <code>pip install stokastisk --extra-index-url {INDEX}</code></p>\n<p>Project: <a href="https://github.com/stokastisk-ai/stokastisk">github.com/stokastisk-ai/stokastisk</a> · binaries: <a href="https://huggingface.co/waqasm86/stokastisk">huggingface.co/waqasm86/stokastisk</a></p>\n<p><a href="docs/">User guide</a></p>'))
+    (out / "index.html").write_text(PAGE.format(title="Stokastisk package index", body=f'<h1>Stokastisk 0.1.0 package index</h1>\n<p>Recommended (pins the file and its SHA256; PyPI is the only index):</p>\n<pre>python -m pip install --index-url https://pypi.org/simple "stokastisk @ {url}#sha256={sha}"</pre>\n<p>Convenience (this index): <code>pip install stokastisk --extra-index-url {INDEX}</code>. <b>Security trade-off:</b> <code>--extra-index-url</code> makes pip consider PyPI as well, so a different project named <code>stokastisk</code> published there could be chosen; the name is unregistered on PyPI today. Prefer the pinned command.</p>\n<p>Project: <a href="https://github.com/stokastisk-ai/stokastisk">github.com/stokastisk-ai/stokastisk</a> · binaries: <a href="https://huggingface.co/waqasm86/stokastisk">huggingface.co/waqasm86/stokastisk</a></p>\n<p><a href="docs/">User guide</a></p>'))
     return {"wheel": name, "sha256": sha, "url": url, "index": INDEX}
 
 

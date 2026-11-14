@@ -1,4 +1,6 @@
-# Dependency compatibility — Stokastisk 0.1.0 build 3 (vLLM 0.25.1, Kaggle 2 × T4)
+# Dependency compatibility — Stokastisk 0.1.0 builds 3 and 4 (vLLM 0.25.1, Kaggle 2 × T4)
+
+Build 4 has exactly the same dependency pins, locks and vLLM tree as build 3 (proved by the member delta audit); the sections below describe both. The Kaggle runs cited were executed on build 3.
 
 Status labels used here: **Implemented**, **CPU-tested**, **Kaggle-tested**, **Verification pending**, **Unsupported**. Build 3 was run on Kaggle 2 × T4 on 2026-11-13 (notebook 15: installer 32/32, static 79/79, engine 44/44, parallel 23/23, server 21/21, summary 15/15) and the published install on 2026-11-13/14 (notebooks 16, 18, 19) — see [KAGGLE_ACCEPTANCE.md](KAGGLE_ACCEPTANCE.md). Build 2's Kaggle run is cited only as the evidence of what failed.
 

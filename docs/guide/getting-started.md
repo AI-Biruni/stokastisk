@@ -13,12 +13,12 @@
 One cell:
 
 ```python
-!pip install stokastisk --extra-index-url https://stokastisk-ai.github.io/stokastisk/simple/
+!python -m pip install --index-url https://pypi.org/simple "stokastisk @ https://huggingface.co/waqasm86/stokastisk/resolve/main/wheels/stokastisk-0.1.0-4-cp313-cp313-linux_x86_64.whl#sha256=052156d71adc6ad9966901565f86dbded9ff41c620c782db4ff377a1a2b4f62e"
 ```
 
-pip reads a small index page, downloads the 38 MB wheel from the Hugging Face CDN, verifies its SHA256, and installs 19 pinned dependencies. Kaggle's own PyTorch 2.11.0+cu130 and Triton 3.6.0 are never touched.
+pip downloads the 38 MB wheel from the Hugging Face CDN, **refuses it unless its SHA256 matches**, and installs 19 pinned dependencies from PyPI. Kaggle's own PyTorch 2.11.0+cu130 and Triton 3.6.0 are never touched. The URL names the build‑4 wheel (project version 0.1.0); the current file and hash are in [RELEASE.json](../../RELEASE.json).
 
-!!! `--extra-index-url` also searches PyPI. The name `stokastisk` is not registered there today.
+!!! Why this form and not `pip install stokastisk --extra-index-url …`? That also works, but `--extra-index-url` makes pip consider PyPI as well as the extra index, so a different project with the same name could be chosen. The pinned command above names the exact file and uses PyPI only for ordinary dependencies. To go back to build 3, see [INSTALL.md](../../INSTALL.md).
 
 ## Check the install
 
@@ -71,6 +71,6 @@ Each T4 has about 15 GiB. FP16 weights take about 2 bytes per parameter, plus KV
 | up to about 3B | one GPU, `tensor_parallel_size=1` (fastest) |
 | about 7B (14 GiB of weights) | both GPUs: `tensor_parallel_size=2` |
 
-Ask the SDK: `stokastisk.recommend_parallelism("Qwen/Qwen2.5-Coder-7B-Instruct")` — see [Using both GPUs](multi-gpu.md).
+Ask the SDK: `stokastisk.recommend_parallelism("Qwen/Qwen2.5-Coder-7B-Instruct")` — see [Using both GPUs](multi-gpu.md) — and `stokastisk.check_model("Qwen/Qwen2.5-Coder-7B-Instruct", mode="TP=2")` to see whether that exact model and mode were run on Kaggle ([Checks and diagnostics](diagnostics.md)).
 
 Next: [Configuration](configuration.md).

@@ -31,26 +31,57 @@ Keys: `distributions`, `modules`, `files`, `native_hits`, `binaries`, `clean`. A
 ## Is my model supported? — `check_model`
 
 ```python
-stokastisk.check_model("Qwen/Qwen2.5-Coder-7B-Instruct", architectures=["Qwen2ForCausalLM"])
+import stokastisk
+r = stokastisk.check_model("Qwen/Qwen2.5-Coder-7B-Instruct", mode="TP=2")
+print(r["status"], r["model_status"], r["architecture_status"], r["tested_modes"], r["mode_status"])
+# SUPPORTED SUPPORTED SUPPORTED_WITH_CONDITIONS ['TP=2', 'PP=2'] TESTED
 ```
 
-`check_model` is **offline**: it never downloads the model; it reads the model registry of the *installed* package (so run it after `pip install stokastisk`). Therefore:
+`check_model` is **offline**: it never downloads anything. It reads the model registry of the *installed* package (run it after installing Stokastisk) and a small table of the checkpoints that were actually run on Kaggle. It answers two different questions:
 
-* pass `architectures=[...]` (read it from the model's `config.json` → `architectures`), **or** pass a local directory containing `config.json`;
-* without either, the status is `UNKNOWN_REQUIRES_EVIDENCE` and the note tells you to pass the architecture.
+| Field | Question | Values |
+|---|---|---|
+| `architecture_status` | Is the architecture in the shipped vLLM, and has any verified checkpoint exercised it? | `SUPPORTED_WITH_CONDITIONS` (exercised, for the listed checkpoints only) · `UNKNOWN_REQUIRES_EVIDENCE` |
+| `model_status` | Was **this exact checkpoint** (FP16, unquantized) run on Kaggle? | `SUPPORTED` · `UNKNOWN_REQUIRES_EVIDENCE` |
+| `status` | the overall answer; equal to `model_status` | `SUPPORTED` only for a verified checkpoint |
+| `tested_modes`, `max_tested_model_len`, `evidence`, `limitations` | for a verified checkpoint: what was run and the caveats | |
+| `mode_status` | only if you pass `mode="TP=2"` etc. | `TESTED` · `UNTESTED` |
 
-Result keys: `model`, `dtype`, `quantization`, `architectures`, `note`, `status`.
+An architecture being present in vLLM — or another checkpoint of it having been run — is **never** treated as evidence for your checkpoint.
 
-| Status | Meaning |
-|---|---|
-| `SUPPORTED` | the architecture is shipped and has been run on Kaggle |
-| `UNKNOWN_REQUIRES_EVIDENCE` | shipped or unknown, but never run on Kaggle |
+### The verified models
 
-It raises `StokastiskCompatibilityError` when the architecture's module is missing from this wheel, the dtype is bfloat16, or the quantization cannot work on SM75 (Mistral-family models are refused).
+| Model id | Modes run | Evidence |
+|---|---|---|
+| `Qwen/Qwen2.5-0.5B-Instruct` | TP=1, TP=2, PP=2, two replicas | notebook 15 acceptance (TP=1 engine and server; parallel stage), notebooks 16 and 18 |
+| `Qwen/Qwen2.5-3B-Instruct` | TP=2, PP=2 | notebook 18 |
+| `Qwen/Qwen2.5-Coder-7B-Instruct` | TP=2, PP=2 | notebook 19 (original unquantized checkpoint) |
 
-!!! The evidence note on `Qwen2ForCausalLM` was written at build time and names only the 0.5B/1.5B runs. The 3B and Coder-7B runs described in this guide happened afterwards; the shipped wheel (frozen at 0.1.0) was not rebuilt to mention them.
+All: FP16, `max_model_len` 2048, eager execution, `TRITON_ATTN`, Kaggle 2 × T4. The full registry is `stokastisk.compat.MODEL_EVIDENCE`; the evidence behind it is in `evidence/kaggle/` in the repository.
 
-Related: `check_dtype(dtype)`, `check_quantization(method)`, `check_feature(name)`, `feature_matrix()` (a copy of the feature table: `SUPPORTED`, `SUPPORTED_WITH_CONDITIONS`, `UNKNOWN_REQUIRES_EVIDENCE`, `EXCLUDED_FLASH_DEPENDENCY`, …). Feature evidence strings reflect the state when the wheel was built; for example the OpenAI server is marked "unknown" in the table although it later passed the Kaggle server stage (21/21) — see [KAGGLE_ACCEPTANCE.md](../KAGGLE_ACCEPTANCE.md).
+### Examples
+
+```python
+stokastisk.check_model("Qwen/Qwen2.5-0.5B-Instruct")["status"]                  # SUPPORTED
+stokastisk.check_model("Qwen/Qwen2.5-3B-Instruct", mode="TP=1")["mode_status"]  # UNTESTED  (3B was run with TP=2 and PP=2 only)
+stokastisk.check_model("Qwen/Qwen2.5-Coder-7B-Instruct", dtype="auto")["status"]  # UNKNOWN_REQUIRES_EVIDENCE (only FP16 was run)
+
+# an untested Qwen2-family checkpoint: the architecture is fine, the checkpoint is unproven
+r = stokastisk.check_model("Qwen/Qwen2.5-7B-Instruct", architectures=["Qwen2ForCausalLM"])
+r["status"], r["architecture_status"]       # ('UNKNOWN_REQUIRES_EVIDENCE', 'SUPPORTED_WITH_CONDITIONS')
+```
+
+For a model you have downloaded, pass its directory: `check_model("/kaggle/working/my-model")`. The directory's `config.json` supplies the architecture and quantization; it is matched to a verified checkpoint only through its `_name_or_path` entry (which identifies the configuration, not the weights).
+
+### When it raises
+
+`StokastiskCompatibilityError` is raised, instead of a status being returned, when the architecture cannot run here: its module is missing from the shipped vLLM (e.g. FlashAttention-based models), it is a Mistral‑family architecture, the dtype is bfloat16, or the quantization needs a newer GPU (e.g. `mxfp4`, minimum capability 8.0). Without a model id, architecture or directory, the status is `UNKNOWN_REQUIRES_EVIDENCE` and the note says what to pass.
+
+`UNKNOWN_REQUIRES_EVIDENCE` is not an error and not a prohibition: it means no one has run that checkpoint on these GPUs yet. Related: `check_dtype(dtype)`, `check_quantization(method)`, `check_feature(name)`, `feature_matrix()`.
+
+### Feature matrix
+
+The same module records which *features* were exercised on Kaggle (OpenAI server, streaming, metrics, structured output, parallelism, …) and which were not. The table is on its own page, generated from the code so it cannot drift: [Feature matrix](feature-matrix.md).
 
 ## Kaggle limits
 

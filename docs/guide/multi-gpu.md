@@ -22,6 +22,8 @@ with LLM("Qwen/Qwen2.5-Coder-7B-Instruct", config=cfg) as llm:
 
 Between experiments, close the previous engine first (the `with` block does this) so GPU memory is free.
 
+Memory is tight for a 7B model in FP16. In the Kaggle run (`max_model_len=2048`, `gpu_memory_utilization=0.88`, one prompt) about 1.34 GiB per GPU was free during TP=2 and 2.42 / 1.93 GiB during PP=2. That is one measurement of one model, not a promise that other 7B models, longer contexts or larger batches fit.
+
 ## Pipeline parallel
 
 ```python
