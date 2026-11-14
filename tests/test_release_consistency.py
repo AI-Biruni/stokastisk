@@ -49,6 +49,13 @@ class ReleaseConsistency(unittest.TestCase):
         self.assertIn(REL["pip_index"], (ROOT / "scripts/release/make_pip_index.py").read_text())
         self.assertEqual(mpi.INDEX, REL["pip_index"]); self.assertEqual(mpi.HF + CUR["filename"], CUR["url"])
 
+    def test_github_release_mirror_is_recorded(self):
+        m = CUR["mirrors"]["github_release_asset"]; self.assertEqual(m, f"https://github.com/stokastisk-ai/stokastisk/releases/download/v0.1.0/{CUR['filename']}")
+        gr = REL["github_release"]; self.assertFalse(gr["tag_moves"]); self.assertEqual(gr["assets"]["wheel"], CUR["filename"]); self.assertEqual(gr["assets"]["build_input"], REL["base_vllm_wheel"]["filename"])
+        t = (ROOT / "RELEASE.md").read_text()
+        for name in gr["assets"].values():
+            self.assertIn(name, t)
+
     def test_current_build_is_never_called_kaggle_executed(self):
         self.assertFalse(CUR["executed_on_kaggle"])
         for d in ("README.md", "RELEASE.md", "docs/PRODUCTION_READINESS.md", "docs/HUB_README.md"):
